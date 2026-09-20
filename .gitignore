@@ -1,0 +1,28 @@
+!.env.example
+.env
+.env.*
+*.p8
+AuthKey_*.p8
+.secrets/
+
+ios/DerivedData/
+ios/DerivedDataSim/
+ios/build/
+ios/Packages/
+ios/*.xcarchive
+ios/ExportOptions-AppStore*.plist
+
+# Internal / not for public repo
+# Privacy policy is hosted separately at github.com/foqerhk/koko (GitHub Pages)
+docs/
+ios/scripts/asc_*.py
+ios/scripts/record_review_demo.sh
+.cursor/
+
+*.keystore
+*.jks
+**/android-keystore.env
+
+**/xcuserdata/
+*.xcuserstate
+.DS_Store

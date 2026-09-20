@@ -1,0 +1,573 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		047DB35859AA3BE715301BFE /* TerminalWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EC1278ECDC942CB3C415BC0 /* TerminalWorkspace.swift */; };
+		0D328DEB4AAD6E3B58A739B7 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 4FB378A32ABB7BCF9145F716 /* Localizable.xcstrings */; };
+		0F27C3BD73FDB5A1B76C9F17 /* E2EAutoConnect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1798BB649ED3A7A32A88D676 /* E2EAutoConnect.swift */; };
+		1CD50ABA91A4E831D86242AD /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C45D71EF0ED461369E4386B5 /* RootView.swift */; };
+		1D8FA37B893E6DEC9A668F79 /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51F93AF4A932F7603A1EE5C0 /* AppStore.swift */; };
+		367AAB5A2926BEBED3E75B34 /* KoKoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A64E815AFFA07B8841ABBE8C /* KoKoApp.swift */; };
+		479120EB060AFD313FCB5F92 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1F60B864D21499EFC531AB /* Models.swift */; };
+		487865535B6FDB402AC30CFF /* HostEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A869E30885CCAE81461BA34 /* HostEditorView.swift */; };
+		5E1CF52F21B2E00F1E27A097 /* HostListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 516A263E7AFA7116E5B720AA /* HostListView.swift */; };
+		62BF341B5680002F24369E01 /* TerminalScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 508CCA531677092BA05FFF8D /* TerminalScreenView.swift */; };
+		62ED438B67967FB527A8BAC7 /* Citadel in Frameworks */ = {isa = PBXBuildFile; productRef = EC4CE81F0EAD42B3A629B419 /* Citadel */; };
+		63A37DA781642DC6FE1E51EA /* ScrollbackStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D34656F0E7DCBAEC9471001B /* ScrollbackStore.swift */; };
+		66E0B86DA5FF52B1F33B629E /* TerminalContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C6A9643AA58FE2D0E31A6D7 /* TerminalContainerView.swift */; };
+		673A82DC1BDD98E39777B8CB /* AgentSessionSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D54613695A54DD8613B058 /* AgentSessionSync.swift */; };
+		A9B8C7D6E5F4039281726A5B /* AgentSessionDelete.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C7D6E5F4039281726A5B4C /* AgentSessionDelete.swift */; };
+		6FA2A569FFF708C431899331 /* TerminalMagnifierHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10528D9CBA8DEB6DE649C856 /* TerminalMagnifierHost.swift */; };
+		74039FF15E487903D2E3333A /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E77E3DEEDF36B93CA7D877A0 /* KeychainService.swift */; };
+		898A73263A3EA59F026971AB /* AppLanguageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB242065F4942DA31C38F075 /* AppLanguageStore.swift */; };
+		ADF4A375BC1FD35F664565A3 /* SSHKeyGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2B747A9A2E4C4AF82377C96 /* SSHKeyGenerator.swift */; };
+		B53271091B26097AA2DA1048 /* CountdownDeleteConfirmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59B4D6A1610C1EDC030B9090 /* CountdownDeleteConfirmView.swift */; };
+		BA9B38E74D6358C3CE8617B4 /* RemoteBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B8F9162817F7D87EF7D11F9 /* RemoteBootstrap.swift */; };
+		BC6F764D76C5D42E9BE28004 /* HostKeyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61A8B33796B192E432113EAC /* HostKeyService.swift */; };
+		BE4F94BD0BEE6191C90CA57F /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 7B14073D5387FD4C61F7757B /* SwiftTerm */; };
+		C3790824D5DFA23BAC211D3F /* SSHErrorMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD0D987C0F767543B30F7FDC /* SSHErrorMapper.swift */; };
+		C41B777A9945FCC6CCAF421D /* SessionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25B43E5F20896F83F35E0C9F /* SessionListView.swift */; };
+		C7D6E5F4039281726A5B4C5D /* SessionDeleteViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6E5F4039281726A5B4C5D6E /* SessionDeleteViews.swift */; };
+		CA88603F53366073CD3FA136 /* PublicKeyInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD9B3C037B6CFCD794E8A89B /* PublicKeyInstaller.swift */; };
+		AGENTCLI0123456789ABCDE /* AgentCLIInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = AGENTCLI0987654321FEDCBA /* AgentCLIInstaller.swift */; };
+		A1B2C3D4E5F60718293A4B5C /* AppBuildInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F60718293A4B5C6D /* AppBuildInfo.swift */; };
+		C3D4E5F60718293A4B5C6D7E /* BuildTimestamp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4E5F60718293A4B5C6D7E8F /* BuildTimestamp.swift */; };
+		D2808848C74B4C789753882D /* SSHAuthBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12B098D9D030A7DEC9DA7B55 /* SSHAuthBuilder.swift */; };
+		EFBE2ED8A9C2F4BDB90188F7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0256B8B4B79297A8FA079718 /* Assets.xcassets */; };
+		F4F1DA0C8BD8D218AEEE0CD9 /* KeyListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03DEECE075D529B6103D68CC /* KeyListView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		007881D166918640B031EF08 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		0256B8B4B79297A8FA079718 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		03DEECE075D529B6103D68CC /* KeyListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyListView.swift; sourceTree = "<group>"; };
+		10528D9CBA8DEB6DE649C856 /* TerminalMagnifierHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalMagnifierHost.swift; sourceTree = "<group>"; };
+		1182C80B1E8AC36FE703ACEA /* Citadel */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Citadel; path = Packages/Citadel; sourceTree = SOURCE_ROOT; };
+		12B098D9D030A7DEC9DA7B55 /* SSHAuthBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHAuthBuilder.swift; sourceTree = "<group>"; };
+		1798BB649ED3A7A32A88D676 /* E2EAutoConnect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E2EAutoConnect.swift; sourceTree = "<group>"; };
+		1886D1D2BC29663B8B5FC1A7 /* SwiftTerm */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SwiftTerm; path = Packages/SwiftTerm; sourceTree = SOURCE_ROOT; };
+		25B43E5F20896F83F35E0C9F /* SessionListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionListView.swift; sourceTree = "<group>"; };
+		B8C7D6E5F4039281726A5B4C /* AgentSessionDelete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionDelete.swift; sourceTree = "<group>"; };
+		D6E5F4039281726A5B4C5D6E /* SessionDeleteViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDeleteViews.swift; sourceTree = "<group>"; };
+		4EC1278ECDC942CB3C415BC0 /* TerminalWorkspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalWorkspace.swift; sourceTree = "<group>"; };
+		4FB378A32ABB7BCF9145F716 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		508CCA531677092BA05FFF8D /* TerminalScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalScreenView.swift; sourceTree = "<group>"; };
+		516A263E7AFA7116E5B720AA /* HostListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostListView.swift; sourceTree = "<group>"; };
+		51F93AF4A932F7603A1EE5C0 /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
+		59B4D6A1610C1EDC030B9090 /* CountdownDeleteConfirmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownDeleteConfirmView.swift; sourceTree = "<group>"; };
+		61A8B33796B192E432113EAC /* HostKeyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKeyService.swift; sourceTree = "<group>"; };
+		6A869E30885CCAE81461BA34 /* HostEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostEditorView.swift; sourceTree = "<group>"; };
+		6C6A9643AA58FE2D0E31A6D7 /* TerminalContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalContainerView.swift; sourceTree = "<group>"; };
+		8B8F9162817F7D87EF7D11F9 /* RemoteBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteBootstrap.swift; sourceTree = "<group>"; };
+		A64E815AFFA07B8841ABBE8C /* KoKoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KoKoApp.swift; sourceTree = "<group>"; };
+		AD9B3C037B6CFCD794E8A89B /* PublicKeyInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicKeyInstaller.swift; sourceTree = "<group>"; };
+		AGENTCLI0987654321FEDCBA /* AgentCLIInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentCLIInstaller.swift; sourceTree = "<group>"; };
+		B2C3D4E5F60718293A4B5C6D /* AppBuildInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBuildInfo.swift; sourceTree = "<group>"; };
+		D4E5F60718293A4B5C6D7E8F /* BuildTimestamp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildTimestamp.swift; sourceTree = "<group>"; };
+		BD0D987C0F767543B30F7FDC /* SSHErrorMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHErrorMapper.swift; sourceTree = "<group>"; };
+		BF1F60B864D21499EFC531AB /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		BF99CDA481136CE68BE9D006 /* KoKo.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = KoKo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C45D71EF0ED461369E4386B5 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		CB242065F4942DA31C38F075 /* AppLanguageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguageStore.swift; sourceTree = "<group>"; };
+		D34656F0E7DCBAEC9471001B /* ScrollbackStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollbackStore.swift; sourceTree = "<group>"; };
+		E2B747A9A2E4C4AF82377C96 /* SSHKeyGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHKeyGenerator.swift; sourceTree = "<group>"; };
+		E77E3DEEDF36B93CA7D877A0 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
+		F2D54613695A54DD8613B058 /* AgentSessionSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSync.swift; sourceTree = "<group>"; };
+		F718293A4B5C6D7E8F901234 /* generate_build_timestamp.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_build_timestamp.sh; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		44077155A5A2DF8B0B26EF9D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BE4F94BD0BEE6191C90CA57F /* SwiftTerm in Frameworks */,
+				62ED438B67967FB527A8BAC7 /* Citadel in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		29ED507AE59D9D04422A8BB3 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				59B4D6A1610C1EDC030B9090 /* CountdownDeleteConfirmView.swift */,
+				6A869E30885CCAE81461BA34 /* HostEditorView.swift */,
+				516A263E7AFA7116E5B720AA /* HostListView.swift */,
+				03DEECE075D529B6103D68CC /* KeyListView.swift */,
+				C45D71EF0ED461369E4386B5 /* RootView.swift */,
+				25B43E5F20896F83F35E0C9F /* SessionListView.swift */,
+				D6E5F4039281726A5B4C5D6E /* SessionDeleteViews.swift */,
+				508CCA531677092BA05FFF8D /* TerminalScreenView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		2A83E6C7D98F0D141276D9C9 /* Terminal */ = {
+			isa = PBXGroup;
+			children = (
+				6C6A9643AA58FE2D0E31A6D7 /* TerminalContainerView.swift */,
+				10528D9CBA8DEB6DE649C856 /* TerminalMagnifierHost.swift */,
+				4EC1278ECDC942CB3C415BC0 /* TerminalWorkspace.swift */,
+			);
+			path = Terminal;
+			sourceTree = "<group>";
+		};
+		3AE67B10459C9848921CB793 /* KoKo */ = {
+			isa = PBXGroup;
+			children = (
+				0256B8B4B79297A8FA079718 /* Assets.xcassets */,
+				E5F60718293A4B5C6D7E8F90 /* Generated */,
+				007881D166918640B031EF08 /* Info.plist */,
+				4FB378A32ABB7BCF9145F716 /* Localizable.xcstrings */,
+				50005CF2FA45655C4D5A70D6 /* App */,
+				58A95E3AA9EA1B5A4E74474A /* Models */,
+				86A0C5B83331BC587A5A565B /* Services */,
+				78624AFB17EA2E346610E312 /* Store */,
+				2A83E6C7D98F0D141276D9C9 /* Terminal */,
+				29ED507AE59D9D04422A8BB3 /* Views */,
+			);
+			path = KoKo;
+			sourceTree = "<group>";
+		};
+		50005CF2FA45655C4D5A70D6 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				A64E815AFFA07B8841ABBE8C /* KoKoApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		58A95E3AA9EA1B5A4E74474A /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				BF1F60B864D21499EFC531AB /* Models.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		78624AFB17EA2E346610E312 /* Store */ = {
+			isa = PBXGroup;
+			children = (
+				CB242065F4942DA31C38F075 /* AppLanguageStore.swift */,
+				51F93AF4A932F7603A1EE5C0 /* AppStore.swift */,
+			);
+			path = Store;
+			sourceTree = "<group>";
+		};
+		86A0C5B83331BC587A5A565B /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				F2D54613695A54DD8613B058 /* AgentSessionSync.swift */,
+				B8C7D6E5F4039281726A5B4C /* AgentSessionDelete.swift */,
+				B2C3D4E5F60718293A4B5C6D /* AppBuildInfo.swift */,
+				1798BB649ED3A7A32A88D676 /* E2EAutoConnect.swift */,
+				61A8B33796B192E432113EAC /* HostKeyService.swift */,
+				E77E3DEEDF36B93CA7D877A0 /* KeychainService.swift */,
+				AD9B3C037B6CFCD794E8A89B /* PublicKeyInstaller.swift */,
+				AGENTCLI0987654321FEDCBA /* AgentCLIInstaller.swift */,
+				8B8F9162817F7D87EF7D11F9 /* RemoteBootstrap.swift */,
+				D34656F0E7DCBAEC9471001B /* ScrollbackStore.swift */,
+				12B098D9D030A7DEC9DA7B55 /* SSHAuthBuilder.swift */,
+				BD0D987C0F767543B30F7FDC /* SSHErrorMapper.swift */,
+				E2B747A9A2E4C4AF82377C96 /* SSHKeyGenerator.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		B28E74BD9844DB32F7C7AD66 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				1182C80B1E8AC36FE703ACEA /* Citadel */,
+				1886D1D2BC29663B8B5FC1A7 /* SwiftTerm */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		D3472A8A0E9C632D2575C06C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				BF99CDA481136CE68BE9D006 /* KoKo.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E9316FEDE1ABA859DFBFC24B = {
+			isa = PBXGroup;
+			children = (
+				3AE67B10459C9848921CB793 /* KoKo */,
+				B28E74BD9844DB32F7C7AD66 /* Packages */,
+				F60718293A4B5C6D7E8F9012 /* Scripts */,
+				D3472A8A0E9C632D2575C06C /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E5F60718293A4B5C6D7E8F90 /* Generated */ = {
+			isa = PBXGroup;
+			children = (
+				D4E5F60718293A4B5C6D7E8F /* BuildTimestamp.swift */,
+			);
+			path = Generated;
+			sourceTree = "<group>";
+		};
+		F60718293A4B5C6D7E8F9012 /* Scripts */ = {
+			isa = PBXGroup;
+			children = (
+				F718293A4B5C6D7E8F901234 /* generate_build_timestamp.sh */,
+			);
+			path = Scripts;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		600EDB281B2CA7453793D09E /* KoKo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 292E871CBBF8BA802AE9FAA3 /* Build configuration list for PBXNativeTarget "KoKo" */;
+			buildPhases = (
+				E60718293A4B5C6D7E8F90123 /* Generate Build Timestamp */,
+				8799E8A7F315757FD8EB3942 /* Sources */,
+				BDD6E229C1773F1600211125 /* Resources */,
+				44077155A5A2DF8B0B26EF9D /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KoKo;
+			packageProductDependencies = (
+				7B14073D5387FD4C61F7757B /* SwiftTerm */,
+				EC4CE81F0EAD42B3A629B419 /* Citadel */,
+			);
+			productName = KoKo;
+			productReference = BF99CDA481136CE68BE9D006 /* KoKo.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		351B2BAC053B46E383079623 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					600EDB281B2CA7453793D09E = {
+						DevelopmentTeam = U5SLTWD6AH;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 5BB896D27F9EF3A8EB5BCBB3 /* Build configuration list for PBXProject "KoKo" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+				"zh-Hans",
+			);
+			mainGroup = E9316FEDE1ABA859DFBFC24B;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				2F35C66BF4133B997A0AE6CF /* XCLocalSwiftPackageReference "Packages/Citadel" */,
+				91304CFF77882E5D5CB6FE27 /* XCLocalSwiftPackageReference "Packages/SwiftTerm" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = D3472A8A0E9C632D2575C06C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				600EDB281B2CA7453793D09E /* KoKo */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		BDD6E229C1773F1600211125 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EFBE2ED8A9C2F4BDB90188F7 /* Assets.xcassets in Resources */,
+				0D328DEB4AAD6E3B58A739B7 /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		E60718293A4B5C6D7E8F90123 /* Generate Build Timestamp */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Generate Build Timestamp";
+			outputPaths = (
+				"$(SRCROOT)/KoKo/Generated/BuildTimestamp.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Scripts/generate_build_timestamp.sh\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8799E8A7F315757FD8EB3942 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				673A82DC1BDD98E39777B8CB /* AgentSessionSync.swift in Sources */,
+				A9B8C7D6E5F4039281726A5B /* AgentSessionDelete.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5C /* AppBuildInfo.swift in Sources */,
+				C3D4E5F60718293A4B5C6D7E /* BuildTimestamp.swift in Sources */,
+				898A73263A3EA59F026971AB /* AppLanguageStore.swift in Sources */,
+				1D8FA37B893E6DEC9A668F79 /* AppStore.swift in Sources */,
+				B53271091B26097AA2DA1048 /* CountdownDeleteConfirmView.swift in Sources */,
+				0F27C3BD73FDB5A1B76C9F17 /* E2EAutoConnect.swift in Sources */,
+				487865535B6FDB402AC30CFF /* HostEditorView.swift in Sources */,
+				BC6F764D76C5D42E9BE28004 /* HostKeyService.swift in Sources */,
+				5E1CF52F21B2E00F1E27A097 /* HostListView.swift in Sources */,
+				F4F1DA0C8BD8D218AEEE0CD9 /* KeyListView.swift in Sources */,
+				74039FF15E487903D2E3333A /* KeychainService.swift in Sources */,
+				367AAB5A2926BEBED3E75B34 /* KoKoApp.swift in Sources */,
+				479120EB060AFD313FCB5F92 /* Models.swift in Sources */,
+				CA88603F53366073CD3FA136 /* PublicKeyInstaller.swift in Sources */,
+				AGENTCLI0123456789ABCDE /* AgentCLIInstaller.swift in Sources */,
+				BA9B38E74D6358C3CE8617B4 /* RemoteBootstrap.swift in Sources */,
+				1CD50ABA91A4E831D86242AD /* RootView.swift in Sources */,
+				D2808848C74B4C789753882D /* SSHAuthBuilder.swift in Sources */,
+				C3790824D5DFA23BAC211D3F /* SSHErrorMapper.swift in Sources */,
+				ADF4A375BC1FD35F664565A3 /* SSHKeyGenerator.swift in Sources */,
+				63A37DA781642DC6FE1E51EA /* ScrollbackStore.swift in Sources */,
+				C41B777A9945FCC6CCAF421D /* SessionListView.swift in Sources */,
+				C7D6E5F4039281726A5B4C5D /* SessionDeleteViews.swift in Sources */,
+				66E0B86DA5FF52B1F33B629E /* TerminalContainerView.swift in Sources */,
+				6FA2A569FFF708C431899331 /* TerminalMagnifierHost.swift in Sources */,
+				62BF341B5680002F24369E01 /* TerminalScreenView.swift in Sources */,
+				047DB35859AA3BE715301BFE /* TerminalWorkspace.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		6F49915A0385B58AD6B6C6CB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		820F8424863FE847027BC9F7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		9FC69390DFA29DF205F92B52 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 4;
+				DEVELOPMENT_TEAM = U5SLTWD6AH;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = KoKo/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.foqerhk.koko;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		FCB26CA595AEA8E5E717071D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 4;
+				DEVELOPMENT_TEAM = U5SLTWD6AH;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = KoKo/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.foqerhk.koko;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		292E871CBBF8BA802AE9FAA3 /* Build configuration list for PBXNativeTarget "KoKo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FCB26CA595AEA8E5E717071D /* Debug */,
+				9FC69390DFA29DF205F92B52 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		5BB896D27F9EF3A8EB5BCBB3 /* Build configuration list for PBXProject "KoKo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				820F8424863FE847027BC9F7 /* Debug */,
+				6F49915A0385B58AD6B6C6CB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		2F35C66BF4133B997A0AE6CF /* XCLocalSwiftPackageReference "Packages/Citadel" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/Citadel;
+		};
+		91304CFF77882E5D5CB6FE27 /* XCLocalSwiftPackageReference "Packages/SwiftTerm" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/SwiftTerm;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		7B14073D5387FD4C61F7757B /* SwiftTerm */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SwiftTerm;
+		};
+		EC4CE81F0EAD42B3A629B419 /* Citadel */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Citadel;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 351B2BAC053B46E383079623 /* Project object */;
+}
