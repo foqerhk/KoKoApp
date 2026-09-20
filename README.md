@@ -1,6 +1,6 @@
 # KoKo
 
-KoKo is a native iOS SSH terminal for developers who manage AI coding agents on their own Linux servers from iPhone.
+KoKo is a native iOS SSH terminal for developers who manage AI coding agents on their own Linux servers from iPhone and iPad.
 
 Supported agents (on your server):
 
@@ -20,7 +20,18 @@ chmod +x scripts/setup.sh
 open KoKo.xcodeproj
 ```
 
-Run on a physical iPhone or the iOS Simulator (Xcode 16+, iOS 17+).
+Run on a physical iPhone or the iOS Simulator (Xcode 16+, iOS 17+). Unfolded foldable iPhones automatically use the **Duo** split layout from `ipad/KoKoPad/Views/`.
+
+## iPad app
+
+```bash
+cd ipad
+chmod +x scripts/setup.sh
+./scripts/setup.sh
+open KoKoPad.xcodeproj
+```
+
+See [ipad/README.md](ipad/README.md) for tablet vs foldable layout details.
 
 ### Highlights
 

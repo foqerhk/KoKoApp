@@ -1,4 +1,4 @@
-name: KoKo
+name: KoKoPad
 options:
   bundleIdPrefix: com.foqerhk
   deploymentTarget:
@@ -7,19 +7,25 @@ options:
   developmentLanguage: en
 packages:
   SwiftTerm:
-    path: Packages/SwiftTerm
+    path: ../ios/Packages/SwiftTerm
   Citadel:
-    path: Packages/Citadel
+    path: ../ios/Packages/Citadel
 targets:
-  KoKo:
+  KoKoPad:
     type: application
     platform: iOS
     sources:
-      - path: KoKo
-      - path: ../ipad/KoKoPad/Support
-      - path: ../ipad/KoKoPad/Views
+      - path: KoKoPad
+      - path: ../ios/KoKo/Models
+      - path: ../ios/KoKo/Services
+      - path: ../ios/KoKo/Store
+      - path: ../ios/KoKo/Terminal
+      - path: ../ios/KoKo/Generated
+      - path: ../ios/KoKo/Views
+      - path: ../ios/KoKo/Localizable.xcstrings
+      - path: ../ios/KoKo/Assets.xcassets
     info:
-      path: KoKo/Info.plist
+      path: KoKoPad/Info.plist
       properties:
         CFBundleDisplayName: KoKo
         UILaunchScreen: {}
@@ -31,18 +37,28 @@ targets:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.foqerhk.koko
+      PRODUCT_BUNDLE_IDENTIFIER: com.foqerhk.koko.pad
       MARKETING_VERSION: "1.0.0"
       CURRENT_PROJECT_VERSION: 3
       SWIFT_VERSION: "5.0"
-      TARGETED_DEVICE_FAMILY: "1"
+      TARGETED_DEVICE_FAMILY: "2"
       GENERATE_INFOPLIST_FILE: NO
       ENABLE_PREVIEWS: YES
       ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
       CODE_SIGN_STYLE: Automatic
       DEVELOPMENT_TEAM: U5SLTWD6AH
       CODE_SIGN_IDENTITY: "Apple Development"
+    preBuildScripts:
+      - name: Generate Build Timestamp
+        script: |
+          bash "${SRCROOT}/../ios/scripts/generate_build_timestamp.sh"
+        basedOnDependencyAnalysis: false
     dependencies:
       - package: SwiftTerm
       - package: Citadel

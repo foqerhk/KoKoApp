@@ -1,6 +1,8 @@
 # KoKo iOS
 
-原生 iPhone SSH 终端，用于连接 Linux 服务器上的 AI Agent（Cursor / Claude / Codex / Gemini）。
+原生 iPhone / 折叠屏 / iPad SSH 终端，用于连接 Linux 服务器上的 AI Agent（Cursor / Claude / Codex / Gemini）。
+
+大屏布局（iPad 三栏、折叠屏 Duo 双栏）源码在同级 [`../ipad/`](../ipad/) 目录，与 iOS 工程共享 Services / Store / Terminal。
 
 ## 要求
 

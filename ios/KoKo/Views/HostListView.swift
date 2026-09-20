@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HostListView: View {
     @EnvironmentObject private var store: AppStore
+    var selectedServerId: Binding<UUID?>? = nil
     @State private var showingEditor = false
     @State private var editingServer: ServerProfile?
     @State private var hostsPendingDelete: [ServerProfile] = []
@@ -17,16 +18,7 @@ struct HostListView: View {
                 )
             } else {
                 ForEach(store.servers) { server in
-                    NavigationLink {
-                        ServerDetailView(server: server)
-                    } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(server.name).font(.headline)
-                            Text("\(server.username)@\(server.host):\(server.port)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
+                    hostRow(for: server)
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button {
                             hostsPendingDelete = [server]
@@ -83,6 +75,35 @@ struct HostListView: View {
             )
         }
         return String(localized: "Delete the selected hosts? Related sessions on this device will also be removed.")
+    }
+
+    @ViewBuilder
+    private func hostRow(for server: ServerProfile) -> some View {
+        let label = VStack(alignment: .leading, spacing: 4) {
+            Text(server.name).font(.headline)
+            Text("\(server.username)@\(server.host):\(server.port)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+
+        if let selectedServerId {
+            Button {
+                selectedServerId.wrappedValue = server.id
+            } label: {
+                label
+            }
+            .listRowBackground(
+                selectedServerId.wrappedValue == server.id
+                    ? Color.accentColor.opacity(0.12)
+                    : Color.clear
+            )
+        } else {
+            NavigationLink {
+                ServerDetailView(server: server)
+            } label: {
+                label
+            }
+        }
     }
 }
 

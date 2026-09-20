@@ -26,6 +26,7 @@ final class WorkspaceRegistry: ObservableObject {
 struct SessionListView: View {
     @EnvironmentObject private var store: AppStore
     var serverFilter: UUID?
+    var selectedSessionId: Binding<UUID?>? = nil
     @State private var showingCreator = false
     @State private var sessionsPendingDelete: [TerminalSession] = []
     @State private var showDeleteConfirm = false
@@ -55,11 +56,7 @@ struct SessionListView: View {
                 )
             } else {
                 ForEach(filteredSessions) { session in
-                    NavigationLink {
-                        TerminalScreenView(session: session)
-                    } label: {
-                        SessionRowView(session: session)
-                    }
+                    sessionRow(for: session)
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button {
                             sessionsPendingDelete = [session]
@@ -208,6 +205,28 @@ struct SessionListView: View {
         }
         if !errors.isEmpty {
             syncError = errors.joined(separator: "\n")
+        }
+    }
+
+    @ViewBuilder
+    private func sessionRow(for session: TerminalSession) -> some View {
+        if let selectedSessionId {
+            Button {
+                selectedSessionId.wrappedValue = session.id
+            } label: {
+                SessionRowView(session: session)
+            }
+            .listRowBackground(
+                selectedSessionId.wrappedValue == session.id
+                    ? Color.accentColor.opacity(0.12)
+                    : Color.clear
+            )
+        } else {
+            NavigationLink {
+                TerminalScreenView(session: session)
+            } label: {
+                SessionRowView(session: session)
+            }
         }
     }
 }

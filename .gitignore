@@ -7,6 +7,8 @@ AuthKey_*.p8
 
 ios/DerivedData/
 ios/DerivedDataSim/
+ipad/DerivedData/
+ipad/DerivedDataSim/
 ios/build/
 ios/Packages/
 ios/*.xcarchive

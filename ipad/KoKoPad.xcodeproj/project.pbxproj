@@ -1,0 +1,634 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		05DDB189B77E896A27CA63BB /* SSHAuthBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 289C75EF426937BDF0BE53BC /* SSHAuthBuilder.swift */; };
+		061EDC7F80916859FCE22992 /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67C3BBE1ACDFBF33C58380CE /* AppStore.swift */; };
+		082A21B3CF529DEAD9623EDC /* PhoneRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03AD90962A1DA03CCCA41164 /* PhoneRootView.swift */; };
+		0866F2AC1D0E012AA042BBEE /* SidebarSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FDC316631DCFAA24D4B08D9 /* SidebarSection.swift */; };
+		0A43238DB53B1C09580365E6 /* HostKeyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4FD979344CA1482D59BB143 /* HostKeyService.swift */; };
+		1051E5A9116B75BCCCEA97D1 /* DuoRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F1F6E2CE16072D2E35A1AC /* DuoRootView.swift */; };
+		19A4E7BE7DFF6093406DF477 /* HostEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F1B49E194DAB19808558A72 /* HostEditorView.swift */; };
+		2CD7DD4E25BC5DC3A1822B9B /* PublicKeyInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C68DD2C48082C172A8502CF5 /* PublicKeyInstaller.swift */; };
+		485EA5757E597DC4EF9FC892 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A87E11991A0F5B8C008452 /* KeychainService.swift */; };
+		4E47FE4167E9AA2A37806ED5 /* ScrollbackStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B9A2791B88ABAEFAC7E2220 /* ScrollbackStore.swift */; };
+		6106FADAE10A09E02AF58FC2 /* TerminalContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2423CFB7824E5E5FF92CD974 /* TerminalContainerView.swift */; };
+		656812BF1FA51CC87D792E52 /* AgentCLIInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 465FBB9355365D46EAD4E4B6 /* AgentCLIInstaller.swift */; };
+		6E2E2AB27B6B9E04122355FC /* RemoteBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0E83C793E6A1A2B22749255 /* RemoteBootstrap.swift */; };
+		7027D8F06C90A145F8FACA6C /* BuildTimestamp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CE0005F3C30901DC0F0814F /* BuildTimestamp.swift */; };
+		7C0B82F1348C104FA84CAA2B /* AdaptiveRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63E8822CE4A4AC6444D466B0 /* AdaptiveRootView.swift */; };
+		7D0D454F9EEEA7B3139891CD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 86DEC1675D8B7CB42F055142 /* Assets.xcassets */; };
+		80C8FD75A34458B7C444ECD8 /* AppLanguageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE294735019F96735FD7CD7B /* AppLanguageStore.swift */; };
+		8986A2230EC03630A11B15E3 /* AgentSessionSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D097C0089A53C823487FAB9 /* AgentSessionSync.swift */; };
+		8B679D4BB79115E2CE846C0A /* SplitRootChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42C8A617B2049C4BA1857D4C /* SplitRootChrome.swift */; };
+		91767D50CF832E86E9471422 /* SSHKeyGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4675DA68FA302BEC3EBE6E9 /* SSHKeyGenerator.swift */; };
+		94AE252D10F4B549A9A17F5E /* TerminalScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1DBA003C0B2F863430CE10F /* TerminalScreenView.swift */; };
+		97C9069CE7A1092C2A7F0021 /* SessionDeleteViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31FAE9E4A8A626F393640DA1 /* SessionDeleteViews.swift */; };
+		97CD9AA6AAF47FFC1B92081D /* TabletRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F78424410A6F360B2B9431D7 /* TabletRootView.swift */; };
+		98412A89884D8F0EFAC501C4 /* AppBuildInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CBB3FF459B2FBD2900BCE9C /* AppBuildInfo.swift */; };
+		A20CDD33E15EA808555468CC /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24560CCEE4F721EE391C3ABC /* RootView.swift */; };
+		A2701DB753B5EA1A85667001 /* KeyListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 863AFFD2288D8DAE16722CB9 /* KeyListView.swift */; };
+		A4DCD3ED24D503718ADB77A5 /* Citadel in Frameworks */ = {isa = PBXBuildFile; productRef = 7BEFC32C9A09C1D67208CBBF /* Citadel */; };
+		B08474645AFEB3DA651F2705 /* TerminalMagnifierHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = C26F95BF3875C1DEC7C90A3D /* TerminalMagnifierHost.swift */; };
+		BB8727E59AD909EA981ADB2C /* HostListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4867FC247330DFD1967F3424 /* HostListView.swift */; };
+		BD77920918B7DEAB1C90DD49 /* SessionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 833961C9AF7E2E5BB390BBA9 /* SessionListView.swift */; };
+		CCA7AC82592163431C0EFD9F /* AgentSessionDelete.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11EFC9077AEB6FFA90847133 /* AgentSessionDelete.swift */; };
+		D0E854AB469C5711043C06D5 /* DeviceLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C5F1F0EA84AEFFB628E6BCB /* DeviceLayout.swift */; };
+		DA3E1DFCC9773D1C84F76406 /* TerminalWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07124E37D61BD0122EF61177 /* TerminalWorkspace.swift */; };
+		E093540184864DAD99E56F5F /* CountdownDeleteConfirmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DA406AC3350B6B76410FD8 /* CountdownDeleteConfirmView.swift */; };
+		E42289B12B7417D785244640 /* KoKoPadApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83F407F56906A01319CB7D0 /* KoKoPadApp.swift */; };
+		E7BB3D76256ED56B40EA811D /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 426F8905AA7E10FD00BF5B32 /* Models.swift */; };
+		F528AA66261F3876C2F978DD /* SSHErrorMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F7AA241D8591D73F09E212 /* SSHErrorMapper.swift */; };
+		F65BEB7B29F9EEEEBD2B9312 /* E2EAutoConnect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 749FBC8FF3C282F56287E193 /* E2EAutoConnect.swift */; };
+		F6C5063C909CB078DA8B77D0 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 5D67D826C5DFE0A496D5092E /* Localizable.xcstrings */; };
+		FF9216C8325E389EA6802776 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 4782072F2AB2C2E1E7717A9C /* SwiftTerm */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		03AD90962A1DA03CCCA41164 /* PhoneRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneRootView.swift; sourceTree = "<group>"; };
+		07124E37D61BD0122EF61177 /* TerminalWorkspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalWorkspace.swift; sourceTree = "<group>"; };
+		0CBB3FF459B2FBD2900BCE9C /* AppBuildInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBuildInfo.swift; sourceTree = "<group>"; };
+		11EFC9077AEB6FFA90847133 /* AgentSessionDelete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionDelete.swift; sourceTree = "<group>"; };
+		16F1F6E2CE16072D2E35A1AC /* DuoRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuoRootView.swift; sourceTree = "<group>"; };
+		2297379A195DB844A2328810 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		22DA406AC3350B6B76410FD8 /* CountdownDeleteConfirmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownDeleteConfirmView.swift; sourceTree = "<group>"; };
+		2423CFB7824E5E5FF92CD974 /* TerminalContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalContainerView.swift; sourceTree = "<group>"; };
+		24560CCEE4F721EE391C3ABC /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		289C75EF426937BDF0BE53BC /* SSHAuthBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHAuthBuilder.swift; sourceTree = "<group>"; };
+		31FAE9E4A8A626F393640DA1 /* SessionDeleteViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDeleteViews.swift; sourceTree = "<group>"; };
+		3CE0005F3C30901DC0F0814F /* BuildTimestamp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildTimestamp.swift; sourceTree = "<group>"; };
+		426F8905AA7E10FD00BF5B32 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		42C8A617B2049C4BA1857D4C /* SplitRootChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitRootChrome.swift; sourceTree = "<group>"; };
+		465FBB9355365D46EAD4E4B6 /* AgentCLIInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentCLIInstaller.swift; sourceTree = "<group>"; };
+		4867FC247330DFD1967F3424 /* HostListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostListView.swift; sourceTree = "<group>"; };
+		4A4FAEECBE2AF983444F4C61 /* KoKoPad.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = KoKoPad.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5D67D826C5DFE0A496D5092E /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		63E8822CE4A4AC6444D466B0 /* AdaptiveRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptiveRootView.swift; sourceTree = "<group>"; };
+		67C3BBE1ACDFBF33C58380CE /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
+		6F1B49E194DAB19808558A72 /* HostEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostEditorView.swift; sourceTree = "<group>"; };
+		7494ADEFB6DE32E69FBDA468 /* SwiftTerm */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SwiftTerm; path = ../ios/Packages/SwiftTerm; sourceTree = SOURCE_ROOT; };
+		749FBC8FF3C282F56287E193 /* E2EAutoConnect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E2EAutoConnect.swift; sourceTree = "<group>"; };
+		7D097C0089A53C823487FAB9 /* AgentSessionSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSync.swift; sourceTree = "<group>"; };
+		833961C9AF7E2E5BB390BBA9 /* SessionListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionListView.swift; sourceTree = "<group>"; };
+		863AFFD2288D8DAE16722CB9 /* KeyListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyListView.swift; sourceTree = "<group>"; };
+		86DEC1675D8B7CB42F055142 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		8B9A2791B88ABAEFAC7E2220 /* ScrollbackStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollbackStore.swift; sourceTree = "<group>"; };
+		8FDC316631DCFAA24D4B08D9 /* SidebarSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarSection.swift; sourceTree = "<group>"; };
+		9C5F1F0EA84AEFFB628E6BCB /* DeviceLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceLayout.swift; sourceTree = "<group>"; };
+		A4FD979344CA1482D59BB143 /* HostKeyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKeyService.swift; sourceTree = "<group>"; };
+		B5F7AA241D8591D73F09E212 /* SSHErrorMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHErrorMapper.swift; sourceTree = "<group>"; };
+		B83F407F56906A01319CB7D0 /* KoKoPadApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KoKoPadApp.swift; sourceTree = "<group>"; };
+		C26F95BF3875C1DEC7C90A3D /* TerminalMagnifierHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalMagnifierHost.swift; sourceTree = "<group>"; };
+		C68DD2C48082C172A8502CF5 /* PublicKeyInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicKeyInstaller.swift; sourceTree = "<group>"; };
+		D4675DA68FA302BEC3EBE6E9 /* SSHKeyGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHKeyGenerator.swift; sourceTree = "<group>"; };
+		DE294735019F96735FD7CD7B /* AppLanguageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguageStore.swift; sourceTree = "<group>"; };
+		E2A87E11991A0F5B8C008452 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
+		E61A2574FC08AB7ABB815236 /* Citadel */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Citadel; path = ../ios/Packages/Citadel; sourceTree = SOURCE_ROOT; };
+		F0E83C793E6A1A2B22749255 /* RemoteBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteBootstrap.swift; sourceTree = "<group>"; };
+		F1DBA003C0B2F863430CE10F /* TerminalScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalScreenView.swift; sourceTree = "<group>"; };
+		F78424410A6F360B2B9431D7 /* TabletRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabletRootView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		2FCE13DF57BF1DFA00B085F2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FF9216C8325E389EA6802776 /* SwiftTerm in Frameworks */,
+				A4DCD3ED24D503718ADB77A5 /* Citadel in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0506E3F0FAEECC85986FB7AA /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				E61A2574FC08AB7ABB815236 /* Citadel */,
+				7494ADEFB6DE32E69FBDA468 /* SwiftTerm */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		1DB325253CCEDDF3A08882FF /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				465FBB9355365D46EAD4E4B6 /* AgentCLIInstaller.swift */,
+				11EFC9077AEB6FFA90847133 /* AgentSessionDelete.swift */,
+				7D097C0089A53C823487FAB9 /* AgentSessionSync.swift */,
+				0CBB3FF459B2FBD2900BCE9C /* AppBuildInfo.swift */,
+				749FBC8FF3C282F56287E193 /* E2EAutoConnect.swift */,
+				A4FD979344CA1482D59BB143 /* HostKeyService.swift */,
+				E2A87E11991A0F5B8C008452 /* KeychainService.swift */,
+				C68DD2C48082C172A8502CF5 /* PublicKeyInstaller.swift */,
+				F0E83C793E6A1A2B22749255 /* RemoteBootstrap.swift */,
+				8B9A2791B88ABAEFAC7E2220 /* ScrollbackStore.swift */,
+				289C75EF426937BDF0BE53BC /* SSHAuthBuilder.swift */,
+				B5F7AA241D8591D73F09E212 /* SSHErrorMapper.swift */,
+				D4675DA68FA302BEC3EBE6E9 /* SSHKeyGenerator.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		339844D6293344D9E4041DB5 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				9C5F1F0EA84AEFFB628E6BCB /* DeviceLayout.swift */,
+				8FDC316631DCFAA24D4B08D9 /* SidebarSection.swift */,
+			);
+			path = Support;
+			sourceTree = "<group>";
+		};
+		363F7F4E63BDDAEBE12DDD3F /* KoKoPad */ = {
+			isa = PBXGroup;
+			children = (
+				2297379A195DB844A2328810 /* Info.plist */,
+				EC2810982EBDA0F1B840D3AB /* App */,
+				339844D6293344D9E4041DB5 /* Support */,
+				D856156F584AB6A3B70DFFF1 /* Views */,
+			);
+			path = KoKoPad;
+			sourceTree = "<group>";
+		};
+		5CE1131F60550EDF0F5BA2F6 /* Terminal */ = {
+			isa = PBXGroup;
+			children = (
+				2423CFB7824E5E5FF92CD974 /* TerminalContainerView.swift */,
+				C26F95BF3875C1DEC7C90A3D /* TerminalMagnifierHost.swift */,
+				07124E37D61BD0122EF61177 /* TerminalWorkspace.swift */,
+			);
+			path = Terminal;
+			sourceTree = "<group>";
+		};
+		5DC9D4F63F82A14AAB2FE8EB /* Store */ = {
+			isa = PBXGroup;
+			children = (
+				DE294735019F96735FD7CD7B /* AppLanguageStore.swift */,
+				67C3BBE1ACDFBF33C58380CE /* AppStore.swift */,
+			);
+			path = Store;
+			sourceTree = "<group>";
+		};
+		5E33719DA0F015BC1260FBFF /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				426F8905AA7E10FD00BF5B32 /* Models.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		6E5EAABB1963E0AA2172575B /* KoKo */ = {
+			isa = PBXGroup;
+			children = (
+				9878899C6E045B8B8575B537 /* ios */,
+			);
+			name = KoKo;
+			path = ..;
+			sourceTree = "<group>";
+		};
+		80194D2413953D4FB93C6BAE /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4A4FAEECBE2AF983444F4C61 /* KoKoPad.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		88EEAE32523A4F5B8DD62CEF = {
+			isa = PBXGroup;
+			children = (
+				6E5EAABB1963E0AA2172575B /* KoKo */,
+				363F7F4E63BDDAEBE12DDD3F /* KoKoPad */,
+				0506E3F0FAEECC85986FB7AA /* Packages */,
+				80194D2413953D4FB93C6BAE /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		9878899C6E045B8B8575B537 /* ios */ = {
+			isa = PBXGroup;
+			children = (
+				F62984513F41FE0A84C47982 /* KoKo */,
+			);
+			path = ios;
+			sourceTree = "<group>";
+		};
+		AC32D20D295C4DD89DD428E1 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				22DA406AC3350B6B76410FD8 /* CountdownDeleteConfirmView.swift */,
+				6F1B49E194DAB19808558A72 /* HostEditorView.swift */,
+				4867FC247330DFD1967F3424 /* HostListView.swift */,
+				863AFFD2288D8DAE16722CB9 /* KeyListView.swift */,
+				03AD90962A1DA03CCCA41164 /* PhoneRootView.swift */,
+				24560CCEE4F721EE391C3ABC /* RootView.swift */,
+				31FAE9E4A8A626F393640DA1 /* SessionDeleteViews.swift */,
+				833961C9AF7E2E5BB390BBA9 /* SessionListView.swift */,
+				F1DBA003C0B2F863430CE10F /* TerminalScreenView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		D856156F584AB6A3B70DFFF1 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				63E8822CE4A4AC6444D466B0 /* AdaptiveRootView.swift */,
+				16F1F6E2CE16072D2E35A1AC /* DuoRootView.swift */,
+				42C8A617B2049C4BA1857D4C /* SplitRootChrome.swift */,
+				F78424410A6F360B2B9431D7 /* TabletRootView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		EC2810982EBDA0F1B840D3AB /* App */ = {
+			isa = PBXGroup;
+			children = (
+				B83F407F56906A01319CB7D0 /* KoKoPadApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		F62984513F41FE0A84C47982 /* KoKo */ = {
+			isa = PBXGroup;
+			children = (
+				86DEC1675D8B7CB42F055142 /* Assets.xcassets */,
+				5D67D826C5DFE0A496D5092E /* Localizable.xcstrings */,
+				FC957D663500F74CD18987F3 /* Generated */,
+				5E33719DA0F015BC1260FBFF /* Models */,
+				1DB325253CCEDDF3A08882FF /* Services */,
+				5DC9D4F63F82A14AAB2FE8EB /* Store */,
+				5CE1131F60550EDF0F5BA2F6 /* Terminal */,
+				AC32D20D295C4DD89DD428E1 /* Views */,
+			);
+			path = KoKo;
+			sourceTree = "<group>";
+		};
+		FC957D663500F74CD18987F3 /* Generated */ = {
+			isa = PBXGroup;
+			children = (
+				3CE0005F3C30901DC0F0814F /* BuildTimestamp.swift */,
+			);
+			path = Generated;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B24E98F9666737F21DA56D8D /* KoKoPad */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9D3C345331AB8351AE2A7710 /* Build configuration list for PBXNativeTarget "KoKoPad" */;
+			buildPhases = (
+				5694A18FC57B29C3DEFF642D /* Generate Build Timestamp */,
+				C332E2E02D0734B64BA10677 /* Sources */,
+				37D119D510EF8584AC53456B /* Resources */,
+				2FCE13DF57BF1DFA00B085F2 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KoKoPad;
+			packageProductDependencies = (
+				4782072F2AB2C2E1E7717A9C /* SwiftTerm */,
+				7BEFC32C9A09C1D67208CBBF /* Citadel */,
+			);
+			productName = KoKoPad;
+			productReference = 4A4FAEECBE2AF983444F4C61 /* KoKoPad.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		112D8E7BF14214AA5CAD4C21 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					B24E98F9666737F21DA56D8D = {
+						DevelopmentTeam = U5SLTWD6AH;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 9DC6FBF26BEA6DC512536BE1 /* Build configuration list for PBXProject "KoKoPad" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 88EEAE32523A4F5B8DD62CEF;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				C4281CD8873F1494FABF832F /* XCLocalSwiftPackageReference "../ios/Packages/Citadel" */,
+				2A1AD075423E461F3E75E40C /* XCLocalSwiftPackageReference "../ios/Packages/SwiftTerm" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 80194D2413953D4FB93C6BAE /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B24E98F9666737F21DA56D8D /* KoKoPad */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		37D119D510EF8584AC53456B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7D0D454F9EEEA7B3139891CD /* Assets.xcassets in Resources */,
+				F6C5063C909CB078DA8B77D0 /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		5694A18FC57B29C3DEFF642D /* Generate Build Timestamp */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Generate Build Timestamp";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "bash \"${SRCROOT}/../ios/scripts/generate_build_timestamp.sh\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C332E2E02D0734B64BA10677 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7C0B82F1348C104FA84CAA2B /* AdaptiveRootView.swift in Sources */,
+				656812BF1FA51CC87D792E52 /* AgentCLIInstaller.swift in Sources */,
+				CCA7AC82592163431C0EFD9F /* AgentSessionDelete.swift in Sources */,
+				8986A2230EC03630A11B15E3 /* AgentSessionSync.swift in Sources */,
+				98412A89884D8F0EFAC501C4 /* AppBuildInfo.swift in Sources */,
+				80C8FD75A34458B7C444ECD8 /* AppLanguageStore.swift in Sources */,
+				061EDC7F80916859FCE22992 /* AppStore.swift in Sources */,
+				7027D8F06C90A145F8FACA6C /* BuildTimestamp.swift in Sources */,
+				E093540184864DAD99E56F5F /* CountdownDeleteConfirmView.swift in Sources */,
+				D0E854AB469C5711043C06D5 /* DeviceLayout.swift in Sources */,
+				1051E5A9116B75BCCCEA97D1 /* DuoRootView.swift in Sources */,
+				F65BEB7B29F9EEEEBD2B9312 /* E2EAutoConnect.swift in Sources */,
+				19A4E7BE7DFF6093406DF477 /* HostEditorView.swift in Sources */,
+				0A43238DB53B1C09580365E6 /* HostKeyService.swift in Sources */,
+				BB8727E59AD909EA981ADB2C /* HostListView.swift in Sources */,
+				A2701DB753B5EA1A85667001 /* KeyListView.swift in Sources */,
+				485EA5757E597DC4EF9FC892 /* KeychainService.swift in Sources */,
+				E42289B12B7417D785244640 /* KoKoPadApp.swift in Sources */,
+				E7BB3D76256ED56B40EA811D /* Models.swift in Sources */,
+				082A21B3CF529DEAD9623EDC /* PhoneRootView.swift in Sources */,
+				2CD7DD4E25BC5DC3A1822B9B /* PublicKeyInstaller.swift in Sources */,
+				6E2E2AB27B6B9E04122355FC /* RemoteBootstrap.swift in Sources */,
+				A20CDD33E15EA808555468CC /* RootView.swift in Sources */,
+				05DDB189B77E896A27CA63BB /* SSHAuthBuilder.swift in Sources */,
+				F528AA66261F3876C2F978DD /* SSHErrorMapper.swift in Sources */,
+				91767D50CF832E86E9471422 /* SSHKeyGenerator.swift in Sources */,
+				4E47FE4167E9AA2A37806ED5 /* ScrollbackStore.swift in Sources */,
+				97C9069CE7A1092C2A7F0021 /* SessionDeleteViews.swift in Sources */,
+				BD77920918B7DEAB1C90DD49 /* SessionListView.swift in Sources */,
+				0866F2AC1D0E012AA042BBEE /* SidebarSection.swift in Sources */,
+				8B679D4BB79115E2CE846C0A /* SplitRootChrome.swift in Sources */,
+				97CD9AA6AAF47FFC1B92081D /* TabletRootView.swift in Sources */,
+				6106FADAE10A09E02AF58FC2 /* TerminalContainerView.swift in Sources */,
+				B08474645AFEB3DA651F2705 /* TerminalMagnifierHost.swift in Sources */,
+				94AE252D10F4B549A9A17F5E /* TerminalScreenView.swift in Sources */,
+				DA3E1DFCC9773D1C84F76406 /* TerminalWorkspace.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		B6FFD59936C1816422E66A17 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = U5SLTWD6AH;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = KoKoPad/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.foqerhk.koko.pad;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Release;
+		};
+		CE91DBAB570D2B4926004F73 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = U5SLTWD6AH;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = KoKoPad/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.foqerhk.koko.pad;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Debug;
+		};
+		D4282DE042905C8BF5745DFD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		EB97E66CC348E3C92FB1633E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		9D3C345331AB8351AE2A7710 /* Build configuration list for PBXNativeTarget "KoKoPad" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CE91DBAB570D2B4926004F73 /* Debug */,
+				B6FFD59936C1816422E66A17 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		9DC6FBF26BEA6DC512536BE1 /* Build configuration list for PBXProject "KoKoPad" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EB97E66CC348E3C92FB1633E /* Debug */,
+				D4282DE042905C8BF5745DFD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		2A1AD075423E461F3E75E40C /* XCLocalSwiftPackageReference "../ios/Packages/SwiftTerm" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../ios/Packages/SwiftTerm;
+		};
+		C4281CD8873F1494FABF832F /* XCLocalSwiftPackageReference "../ios/Packages/Citadel" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../ios/Packages/Citadel;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		4782072F2AB2C2E1E7717A9C /* SwiftTerm */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SwiftTerm;
+		};
+		7BEFC32C9A09C1D67208CBBF /* Citadel */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Citadel;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 112D8E7BF14214AA5CAD4C21 /* Project object */;
+}
