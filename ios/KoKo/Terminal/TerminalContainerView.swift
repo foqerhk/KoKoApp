@@ -4,8 +4,21 @@ import UIKit
 
 struct TerminalContainerView: View {
     @ObservedObject var workspace: TerminalWorkspace
+    var showsAccessoryBar: Bool = true
+    var acceptsFirstResponder: Bool = true
+    @ObservedObject private var hinge = DuoHingeMonitor.shared
     @State private var adapter = TerminalViewAdapter()
     @State private var statusExpanded = false
+
+    /// Native `inputAccessoryView` — used when hinge is flat (not half-folded).
+    private var useInlineAccessory: Bool {
+        showsAccessoryBar && acceptsFirstResponder && !hinge.prefersFloatingAccessory
+    }
+
+    /// Window-level bar glued to keyboard top — used in Duo half-fold / flex.
+    private var useFloatingAccessory: Bool {
+        showsAccessoryBar && acceptsFirstResponder && hinge.prefersFloatingAccessory
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -15,7 +28,9 @@ struct TerminalContainerView: View {
                 TerminalRepresentable(
                     terminalView: workspace.terminalView,
                     adapter: adapter,
-                    workspace: workspace
+                    workspace: workspace,
+                    interactionEnabled: acceptsFirstResponder,
+                    showsAccessoryBar: useInlineAccessory
                 )
                 if !workspace.isPinnedToBottom {
                     Button {
@@ -29,38 +44,113 @@ struct TerminalContainerView: View {
                     .padding()
                 }
             }
-
-            TerminalAccessoryBar(workspace: workspace)
         }
         .onAppear {
             adapter.workspace = workspace
-            workspace.terminalView.accessoryClearInputHandler = { [weak workspace] in
-                workspace?.clearAgentInputLine()
-            }
+            wireAccessoryHandlers(for: workspace)
             workspace.terminalView.terminalDelegate = adapter
             workspace.ensureMetalRenderer(enabled: false)
-            focusTerminal(workspace)
+            workspace.terminalView.isUserInteractionEnabled = acceptsFirstResponder
+            workspace.terminalView.isScrollEnabled = acceptsFirstResponder
+            refreshAccessoryMode()
+            if acceptsFirstResponder {
+                focusTerminal(workspace)
+            }
+        }
+        .onDisappear {
+            FloatingAccessoryCoordinator.shared.setActive(false, terminal: workspace.terminalView)
+        }
+        .onChange(of: acceptsFirstResponder) { _, shouldFocus in
+            workspace.terminalView.isUserInteractionEnabled = shouldFocus
+            workspace.terminalView.isScrollEnabled = shouldFocus
+            refreshAccessoryMode()
+            if shouldFocus {
+                focusTerminal(workspace)
+            } else {
+                workspace.terminalView.resignFirstResponder()
+            }
+        }
+        .onChange(of: showsAccessoryBar) { _, _ in
+            refreshAccessoryMode()
+        }
+        .onChange(of: hinge.prefersFloatingAccessory) { _, _ in
+            refreshAccessoryMode()
+            if acceptsFirstResponder {
+                workspace.terminalView.reloadInputViews()
+            }
         }
         .onChange(of: workspace.connectionState) { _, state in
-            if state == .connected {
+            if state == .connected, acceptsFirstResponder {
                 focusTerminal(workspace)
             }
         }
     }
 
-    private func focusTerminal(_ workspace: TerminalWorkspace) {
+    func focusTerminal(_ workspace: TerminalWorkspace) {
+        guard acceptsFirstResponder else { return }
+        refreshAccessoryMode()
         DispatchQueue.main.async {
             workspace.syncRemoteTerminalSize()
+            workspace.terminalView.reloadInputViews()
             _ = workspace.terminalView.becomeFirstResponder()
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
             workspace.syncRemoteTerminalSize()
+            workspace.terminalView.reloadInputViews()
             _ = workspace.terminalView.becomeFirstResponder()
         }
+    }
+
+    private func refreshAccessoryMode() {
+        FloatingAccessoryCoordinator.shared.setActive(
+            useFloatingAccessory,
+            terminal: workspace.terminalView
+        )
+        syncKeyboardAccessory(for: workspace, enabled: useInlineAccessory)
+    }
+
+    private func wireAccessoryHandlers(for workspace: TerminalWorkspace) {
+        let terminalView = workspace.terminalView
+        terminalView.accessoryClearInputHandler = { [weak workspace] in
+            workspace?.clearAgentInputLine()
+        }
+        terminalView.accessoryFontSizeStepHandler = { [weak workspace] step in
+            guard let workspace else { return }
+            if step < 0 {
+                workspace.decreaseTerminalFontSize()
+            } else {
+                workspace.increaseTerminalFontSize()
+            }
+        }
+    }
+
+    /// Use SwiftTerm's native `TerminalAccessory` as `inputAccessoryView` (flat / unfolded).
+    private func syncKeyboardAccessory(for workspace: TerminalWorkspace, enabled: Bool) {
+        let terminalView = workspace.terminalView
+        if enabled {
+            if !(terminalView.inputAccessoryView is TerminalAccessory) {
+                let short = UIDevice.current.userInterfaceIdiom == .phone
+                let height: CGFloat = short ? 36 : 48
+                let width = max(terminalView.bounds.width, UIScreen.main.bounds.width)
+                let accessory = TerminalAccessory(
+                    frame: CGRect(x: 0, y: 0, width: width, height: height),
+                    inputViewStyle: .keyboard,
+                    container: terminalView
+                )
+                accessory.sizeToFit()
+                terminalView.inputAccessoryView = accessory
+            }
+            terminalView.inputAssistantItem.leadingBarButtonGroups = []
+            terminalView.inputAssistantItem.trailingBarButtonGroups = []
+        } else {
+            terminalView.inputAccessoryView = nil
+        }
+        terminalView.reloadInputViews()
     }
 }
 
 /// Collapsible KoKo-local status strip (never mixed into remote PTY output).
+/// Collapsed: ▸ message … N   Expanded: ▼ + scrollable history.
 private struct LocalStatusBanner: View {
     @ObservedObject var workspace: TerminalWorkspace
     @Binding var expanded: Bool
@@ -183,18 +273,20 @@ private struct TerminalRepresentable: UIViewRepresentable {
     let terminalView: TerminalView
     let adapter: TerminalViewAdapter
     @ObservedObject var workspace: TerminalWorkspace
+    var interactionEnabled: Bool = true
+    var showsAccessoryBar: Bool = true
 
     func makeUIView(context: Context) -> TerminalHostView {
         let host = TerminalHostView(terminalView: terminalView)
         host.onPinchFontScale = { proposed in
             workspace.setTerminalFontSize(proposed)
         }
-        configure(host.terminalView)
+        configure(host.terminalView, interactionEnabled: interactionEnabled, showsAccessoryBar: showsAccessoryBar)
         return host
     }
 
     func updateUIView(_ uiView: TerminalHostView, context: Context) {
-        configure(uiView.terminalView)
+        configure(uiView.terminalView, interactionEnabled: interactionEnabled, showsAccessoryBar: showsAccessoryBar)
         if abs(uiView.terminalView.font.pointSize - workspace.terminalFontSize) >= 0.5 {
             uiView.terminalView.font = UIFont.monospacedSystemFont(
                 ofSize: workspace.terminalFontSize,
@@ -203,12 +295,39 @@ private struct TerminalRepresentable: UIViewRepresentable {
         }
     }
 
-    private func configure(_ uiView: TerminalView) {
+    private func configure(_ uiView: TerminalView, interactionEnabled: Bool, showsAccessoryBar: Bool) {
         uiView.terminalDelegate = adapter
         uiView.accessoryClearInputHandler = { [weak workspace] in
             workspace?.clearAgentInputLine()
         }
-        uiView.isScrollEnabled = true
+        uiView.accessoryFontSizeStepHandler = { [weak workspace] step in
+            guard let workspace else { return }
+            if step < 0 {
+                workspace.decreaseTerminalFontSize()
+            } else {
+                workspace.increaseTerminalFontSize()
+            }
+        }
+        uiView.isUserInteractionEnabled = interactionEnabled
+        uiView.isScrollEnabled = interactionEnabled
+        if showsAccessoryBar {
+            if !(uiView.inputAccessoryView is TerminalAccessory) {
+                let short = UIDevice.current.userInterfaceIdiom == .phone
+                let height: CGFloat = short ? 36 : 48
+                let width = max(uiView.bounds.width, UIScreen.main.bounds.width)
+                let accessory = TerminalAccessory(
+                    frame: CGRect(x: 0, y: 0, width: width, height: height),
+                    inputViewStyle: .keyboard,
+                    container: uiView
+                )
+                accessory.sizeToFit()
+                uiView.inputAccessoryView = accessory
+            }
+            uiView.inputAssistantItem.leadingBarButtonGroups = []
+            uiView.inputAssistantItem.trailingBarButtonGroups = []
+        } else {
+            uiView.inputAccessoryView = nil
+        }
         uiView.delaysContentTouches = false
         uiView.canCancelContentTouches = true
         uiView.allowMouseReporting = false
@@ -223,49 +342,4 @@ private struct TerminalRepresentable: UIViewRepresentable {
     }
 
     final class Coordinator {}
-}
-
-struct TerminalAccessoryBar: View {
-    @ObservedObject var workspace: TerminalWorkspace
-    @State private var ctrlPressed = false
-
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                keyButton("A−") { workspace.decreaseTerminalFontSize() }
-                Text("\(Int(workspace.terminalFontSize))pt")
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
-                    .frame(minWidth: 34)
-                keyButton("A+") { workspace.increaseTerminalFontSize() }
-
-                Divider().frame(height: 20)
-
-                keyButton("Esc") { workspace.sendControlKey(0x1B) }
-                keyButton("Tab") { workspace.sendControlKey(0x09) }
-                keyButton(ctrlPressed ? "Ctrl ✓" : "Ctrl") { ctrlPressed.toggle() }
-                keyButton("Ctrl+C") { workspace.sendControlKey(0x03); ctrlPressed = false }
-                keyButton("Ctrl+J") { workspace.sendControlKey(0x0A); ctrlPressed = false }
-                keyButton("⇧Tab") { workspace.sendEscapeSequence("\u{1b}[Z") }
-                keyButton("PgUp") { workspace.sendEscapeSequence("\u{1b}[5~") }
-                keyButton("PgDn") { workspace.sendEscapeSequence("\u{1b}[6~") }
-                keyButton("↑") { workspace.sendEscapeSequence("\u{1b}[A") }
-                keyButton("↓") { workspace.sendEscapeSequence("\u{1b}[B") }
-                keyButton("←") { workspace.sendEscapeSequence("\u{1b}[D") }
-                keyButton("→") { workspace.sendEscapeSequence("\u{1b}[C") }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-        }
-        .background(SwiftUI.Color(uiColor: .secondarySystemBackground))
-    }
-
-    private func keyButton(_ title: String, action: @escaping () -> Void) -> some View {
-        Button(title, action: action)
-            .font(.caption.weight(.semibold))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .background(SwiftUI.Color(uiColor: .tertiarySystemFill))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
 }

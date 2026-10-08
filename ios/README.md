@@ -1,8 +1,16 @@
 # KoKo iOS
 
-原生 iPhone / 折叠屏 / iPad SSH 终端，用于连接 Linux 服务器上的 AI Agent（Cursor / Claude / Codex / Gemini）。
+原生 iPhone / 折叠屏 Duo / iPad SSH 终端，用于连接 Linux 服务器上的 AI Agent（Cursor / Claude / Codex / Gemini）。
 
-大屏布局（iPad 三栏、折叠屏 Duo 双栏）源码在同级 [`../ipad/`](../ipad/) 目录，与 iOS 工程共享 Services / Store / Terminal。
+同一套 Universal App（`TARGETED_DEVICE_FAMILY = 1,2`）由 `AdaptiveRootView` 自动选择：
+
+| 设备 | 根视图 |
+|------|--------|
+| 普通 iPhone / 折叠外屏 | `PhoneRootView` |
+| iPhone Duo 展开 | `DuoRootView` |
+| iPad | `TabletRootView` |
+
+大屏源码在 `KoKo/Support/` 与 `KoKo/Views/`（原 `ipad/KoKoPad` 已并入）。
 
 ## 要求
 
@@ -53,4 +61,4 @@ xcodebuild -project KoKo.xcodeproj -scheme KoKo \
   ONLY_ACTIVE_ARCH=YES ARCHS=arm64 build
 ```
 
-设置页 **关于 → 版本** 显示 `v1.0.0.YYYYMMDDHH:mm:ss` 构建时间戳，便于确认是否为最新安装。
+设置页 **关于 → 版本** 显示 `v1.1.0.YYYYMMDDHH:mm:ss` 构建时间戳，便于确认是否为最新安装。

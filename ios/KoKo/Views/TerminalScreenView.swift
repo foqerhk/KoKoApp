@@ -4,6 +4,20 @@ struct TerminalScreenView: View {
     @EnvironmentObject private var store: AppStore
     @StateObject private var workspaceRegistry = WorkspaceRegistry.shared
     let session: TerminalSession
+    var compactChrome: Bool = false
+    /// When false (Duo top-chrome mode), the pane has no local header.
+    var showsCompactHeader: Bool = true
+    var slotIndex: Int? = nil
+    var slotCount: Int = 1
+    var showsAccessoryBar: Bool = true
+    var acceptsFirstResponder: Bool = true
+    var isMaximized: Bool = false
+    var onToggleMaximize: (() -> Void)? = nil
+    var onRemoveFromSlot: (() -> Void)? = nil
+    var onSwitchSession: (() -> Void)? = nil
+    /// When set (keyboard up), Hosts/Sessions/Keys/Settings collapse to ⋯ under the back button.
+    var onOpenSection: ((SidebarSection) -> Void)? = nil
+    var compactChromeTrailingInset: CGFloat = 0
 
     @State private var workspace: TerminalWorkspace?
 
@@ -15,7 +29,22 @@ struct TerminalScreenView: View {
         Group {
             if let workspace {
                 // Must observe the workspace — `@State` alone won't refresh toolbar on connect.
-                TerminalScreenContent(workspace: workspace, session: liveSession)
+                TerminalScreenContent(
+                    workspace: workspace,
+                    session: liveSession,
+                    compactChrome: compactChrome,
+                    showsCompactHeader: showsCompactHeader,
+                    slotIndex: slotIndex,
+                    slotCount: slotCount,
+                    showsAccessoryBar: showsAccessoryBar,
+                    acceptsFirstResponder: acceptsFirstResponder,
+                    isMaximized: isMaximized,
+                    onToggleMaximize: onToggleMaximize,
+                    onRemoveFromSlot: onRemoveFromSlot,
+                    onSwitchSession: onSwitchSession,
+                    onOpenSection: onOpenSection,
+                    compactChromeTrailingInset: compactChromeTrailingInset
+                )
             } else {
                 ProgressView("Initializing terminal…")
             }
@@ -33,6 +62,19 @@ private struct TerminalScreenContent: View {
     @EnvironmentObject private var store: AppStore
     @ObservedObject var workspace: TerminalWorkspace
     let session: TerminalSession
+    var compactChrome: Bool = false
+    var showsCompactHeader: Bool = true
+    var slotIndex: Int? = nil
+    var slotCount: Int = 1
+    var showsAccessoryBar: Bool = true
+    var acceptsFirstResponder: Bool = true
+    var isMaximized: Bool = false
+    var onToggleMaximize: (() -> Void)? = nil
+    var onRemoveFromSlot: (() -> Void)? = nil
+    var onSwitchSession: (() -> Void)? = nil
+    /// Hosts / Sessions / Keys / Settings — shown as chrome ⋯ under the system back.
+    var onOpenSection: ((SidebarSection) -> Void)? = nil
+    var compactChromeTrailingInset: CGFloat = 0
 
     @State private var showTerminateConfirm = false
     @State private var showForceNewConfirm = false
@@ -46,30 +88,81 @@ private struct TerminalScreenContent: View {
     }
 
     var body: some View {
-        TerminalContainerView(workspace: workspace)
-            .navigationTitle(liveSession.displayName)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    connectionBadge
-                    Menu {
-                        Button("Reconnect") {
-                            connect(mode: .preferExisting)
+        Group {
+            if compactChrome {
+                VStack(spacing: 0) {
+                    if showsCompactHeader {
+                        SessionChromeBar(
+                            workspace: workspace,
+                            session: liveSession,
+                            slotIndex: slotIndex,
+                            slotCount: slotCount,
+                            isMaximized: isMaximized,
+                            showsSlotHandle: true,
+                            trailingInset: compactChromeTrailingInset,
+                            onToggleMaximize: onToggleMaximize,
+                            onRemoveFromSlot: onRemoveFromSlot,
+                            onSwitchSession: onSwitchSession,
+                            style: .pane
+                        )
+                    }
+                    TerminalContainerView(
+                        workspace: workspace,
+                        showsAccessoryBar: showsAccessoryBar,
+                        acceptsFirstResponder: acceptsFirstResponder
+                    )
+                }
+            } else {
+                TerminalContainerView(
+                    workspace: workspace,
+                    showsAccessoryBar: showsAccessoryBar,
+                    acceptsFirstResponder: acceptsFirstResponder
+                )
+                // Let SwiftUI’s keyboard safe area lift the terminal. Manual
+                // keyboardOverlap padding double-counted and left a huge white gap.
+                .navigationBarTitleDisplayMode(.inline)
+                // Hide tab bar on the terminal page (keep TabView for push animation).
+                .toolbar(.hidden, for: .tabBar)
+                .background(HideTabBarWhenVisible())
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        HStack(spacing: 6) {
+                            connectionBadge
+                            Text(liveSession.displayName)
+                                .font(.headline)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.75)
                         }
-                        Button("New Agent Session") {
-                            showForceNewConfirm = true
+                        .accessibilityElement(children: .combine)
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Menu {
+                            if let onSwitchSession {
+                                Button("Switch Session…") {
+                                    onSwitchSession()
+                                }
+                                Divider()
+                            }
+                            Button("Reconnect") {
+                                connect(mode: .preferExisting)
+                            }
+                            Button("New Agent Session") {
+                                showForceNewConfirm = true
+                            }
+                            Button("Disconnect") {
+                                workspace.disconnect()
+                            }
+                            Button("Terminate Session", role: .destructive) {
+                                showTerminateConfirm = true
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis.circle")
                         }
-                        Button("Disconnect") {
-                            workspace.disconnect()
-                        }
-                        Button("Terminate Session", role: .destructive) {
-                            showTerminateConfirm = true
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
+                        .accessibilityLabel("Session")
                     }
                 }
             }
+        }
             .onAppear {
                 ensureConnected()
             }
@@ -81,9 +174,10 @@ private struct TerminalScreenContent: View {
             .onChange(of: scenePhase) { _, phase in
                 switch phase {
                 case .background:
-                    // App 进后台再断 SSH；切 Tab / 回列表不断线，回来还能接着用。
-                    workspace.disconnect()
+                    // 进后台超过宽限期才断 SSH；短暂切出去（设置、控制中心）回来接着用。
+                    workspace.enterBackground()
                 case .active:
+                    workspace.enterForeground()
                     ensureConnected()
                 default:
                     break
@@ -141,13 +235,13 @@ private struct TerminalScreenContent: View {
                 ),
                 titleVisibility: .visible
             ) {
-                Button("一键安装") {
+                Button(String(localized: "Install Now")) {
                     workspace.respondToAgentInstall(install: true)
                 }
-                Button("仅用 SSH") {
+                Button(String(localized: "SSH Only")) {
                     workspace.respondToAgentInstall(install: false)
                 }
-                Button("取消", role: .cancel) {
+                Button(String(localized: "Cancel"), role: .cancel) {
                     workspace.cancelAgentInstallPrompt()
                 }
             } message: {
@@ -158,12 +252,16 @@ private struct TerminalScreenContent: View {
     }
 
     private func agentInstallTitle(for kind: AgentKind?) -> String {
-        guard let kind else { return "安装 CLI？" }
-        return "安装 \(kind.displayName) CLI？"
+        guard let kind else { return String(localized: "Install CLI?") }
+        return String(format: String(localized: "Install %@ CLI?"), kind.displayName)
     }
 
     private func agentInstallMessage(for prompt: AgentInstallPrompt) -> String {
-        "服务器「\(prompt.serverName)」未检测到 \(prompt.agentKind.displayName) 命令行。安装后可像 Mac 终端一样连接；选择「仅用 SSH」则进入普通 shell。"
+        String(
+            format: String(localized: "Server “%@” has no %@ CLI. Install it to connect like a Mac terminal, or choose SSH Only for a plain shell."),
+            prompt.serverName,
+            prompt.agentKind.displayName
+        )
     }
 
     @ViewBuilder
@@ -171,19 +269,23 @@ private struct TerminalScreenContent: View {
         switch workspace.connectionState {
         case .connected:
             Image(systemName: "circle.fill")
+                .font(.system(size: 7))
                 .foregroundStyle(.green)
                 .accessibilityLabel("Connected")
         case .connecting, .reconnecting:
             ProgressView()
-                .controlSize(.small)
+                .controlSize(.mini)
         case .failed:
             Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 11))
                 .foregroundStyle(.orange)
         case .ended:
             Image(systemName: "moon.fill")
+                .font(.system(size: 11))
                 .foregroundStyle(.secondary)
         case .disconnected:
             Image(systemName: "circle")
+                .font(.system(size: 7))
                 .foregroundStyle(.secondary)
         }
     }
@@ -346,7 +448,7 @@ struct AgentLoginView: View {
     }
 
     private var headline: String {
-        String(localized: "\(agentKind.displayName) is not signed in")
+        String(format: String(localized: "%@ is not signed in"), agentKind.displayName)
     }
 
     private var instructions: String {
@@ -507,9 +609,20 @@ struct AgentLoginView: View {
 struct SettingsView: View {
     @EnvironmentObject private var store: AppStore
     @EnvironmentObject private var languageStore: AppLanguageStore
+    @EnvironmentObject private var appearanceStore: AppAppearanceStore
 
     var body: some View {
         List {
+            Section {
+                Picker("Appearance", selection: $appearanceStore.appearance) {
+                    ForEach(AppAppearance.allCases) { mode in
+                        Text(mode.displayName).tag(mode)
+                    }
+                }
+            } header: {
+                Text("Appearance")
+            }
+
             Section {
                 Picker("Language", selection: $languageStore.language) {
                     ForEach(AppLanguage.allCases) { lang in
@@ -518,8 +631,6 @@ struct SettingsView: View {
                 }
             } header: {
                 Text("Language")
-            } footer: {
-                Text("Affects KoKo UI only. Terminal / agent output follows the remote session.")
             }
 
             Section {

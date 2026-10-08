@@ -121,6 +121,12 @@ struct ProjectPath: Identifiable, Codable, Hashable {
         self.label = label
         self.remotePath = remotePath
     }
+
+    /// Projects are identified by their directory; an empty path is the login home.
+    var displayPath: String {
+        let path = remotePath.trimmingCharacters(in: .whitespacesAndNewlines)
+        return path.isEmpty ? "~" : path
+    }
 }
 
 struct ServerProfile: Identifiable, Codable, Hashable {
@@ -196,6 +202,117 @@ struct ServerProfile: Identifiable, Codable, Hashable {
 
     var isSSHConfigured: Bool {
         !host.isEmpty && !username.isEmpty
+    }
+}
+
+/// AI conversation discovered on a paired RunEverything desktop (data-only sync).
+/// Opening it resumes the CLI in a persistent `screen` over the Agent PTY channel.
+struct DesktopAgentChat: Identifiable, Codable, Hashable {
+    var id: UUID
+    var desktopId: UUID
+    var desktopName: String
+    var agentKind: AgentKind
+    var chatId: String
+    var title: String
+    var cwd: String?
+    var updatedAt: Date
+    var screenName: String
+    var screenAlive: Bool
+    /// `cli` or `client` as reported by the Agent; nil from Agents that predate it.
+    var source: String? = nil
+    var clientName: String? = nil
+
+    var isClientSession: Bool {
+        source == "client"
+    }
+
+    /// Older Agents only scanned the Cursor / Gemini CLI stores, so nil still means CLI there.
+    var isCLISession: Bool {
+        source == "cli" || (source == nil && (agentKind == .cursor || agentKind == .gemini))
+    }
+
+    /// Cursor IDE composers live outside the CLI chat store; `agent --resume` cannot reopen them.
+    var resumableInTerminal: Bool {
+        !(isClientSession && agentKind == .cursor)
+    }
+
+    /// Cursor IDE chats are mirrored live: output streams from the IDE, typed lines go into its window.
+    var mirrorsIDEChat: Bool {
+        isClientSession && agentKind == .cursor
+    }
+
+    var originLabel: String? {
+        if isClientSession {
+            var name = clientName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if name.hasSuffix("IDE extension") {
+                name = String(name.dropLast("IDE extension".count)) + String(localized: "IDE extension")
+            }
+            return name.isEmpty
+                ? String(localized: "Client")
+                : String(format: String(localized: "Client · %@"), name)
+        }
+        return isCLISession ? "CLI" : nil
+    }
+
+    /// Codex records injected environment/AGENTS payloads as user messages.
+    /// Never expose those implementation details as a conversation title.
+    var displayTitle: String {
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        if agentKind == .codex {
+            if let query = Self.codexUserQuery(in: trimmed), !query.isEmpty {
+                return query
+            }
+            let lower = trimmed.lowercased()
+            let injected = lower.hasPrefix("<environment_context")
+                || lower.hasPrefix("# agents.md instructions")
+                || lower.contains("<instructions>")
+                || lower.contains("<approval_policy>")
+                || lower.contains("<cwd>")
+            if injected {
+                return "Codex \(chatId.prefix(8))"
+            }
+        }
+        return trimmed.isEmpty ? String(chatId.prefix(8)) : trimmed
+    }
+
+    private static func codexUserQuery(in value: String) -> String? {
+        guard let open = value.range(of: "<user_query>", options: .caseInsensitive),
+              let close = value.range(
+                of: "</user_query>",
+                options: .caseInsensitive,
+                range: open.upperBound..<value.endIndex
+              ) else { return nil }
+        let query = value[open.upperBound..<close.lowerBound]
+        return query.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    static func stableID(desktopId: UUID, kind: AgentKind, chatId: String) -> UUID {
+        let seed = Array("koko.deskchat|\(desktopId.uuidString)|\(kind.rawValue)|\(chatId)".utf8)
+        var bytes = [UInt8](repeating: 0, count: 16)
+        var h: UInt64 = 0xcbf2_9ce4_8422_2325
+        for b in seed {
+            h ^= UInt64(b)
+            h &*= 0x100_0000_01b3
+        }
+        for i in 0..<8 {
+            bytes[i] = UInt8(truncatingIfNeeded: h >> (UInt64(i) * 8))
+        }
+        h = 0x8422_2325_cbf2_9ce4
+        for b in seed.reversed() {
+            h ^= UInt64(b)
+            h &*= 0x100_0000_01b3
+        }
+        for i in 0..<8 {
+            bytes[8 + i] = UInt8(truncatingIfNeeded: h >> (UInt64(i) * 8))
+        }
+        bytes[6] = (bytes[6] & 0x0F) | 0x40 // UUID version 4-ish
+        bytes[8] = (bytes[8] & 0x3F) | 0x80
+        return UUID(uuid: (
+            bytes[0], bytes[1], bytes[2], bytes[3],
+            bytes[4], bytes[5], bytes[6], bytes[7],
+            bytes[8], bytes[9], bytes[10], bytes[11],
+            bytes[12], bytes[13], bytes[14], bytes[15]
+        ))
     }
 }
 

@@ -6,6 +6,9 @@ final class AppStore: ObservableObject {
     @Published var servers: [ServerProfile] = []
     @Published var keyPairs: [SSHKeyPair] = []
     @Published var sessions: [TerminalSession] = []
+    @Published var desktops: [PairedDesktop] = []
+    /// AI chats from paired RunEverything Agents (Cursor/Claude/Codex/Gemini).
+    @Published var desktopAgentChats: [DesktopAgentChat] = []
     @Published var hostKeyPrompt: HostKeyPrompt?
     @Published var cursorLoginPrompt: CursorLoginPrompt?
     /// Simulator E2E: when set, RootView opens this session's terminal screen.
@@ -14,42 +17,39 @@ final class AppStore: ObservableObject {
     private let serversKey = "koko.servers"
     private let keysKey = "koko.keys"
     private let sessionsKey = "koko.sessions"
+    private let desktopsKey = "koko.desktops"
+    private let desktopChatsKey = "koko.desktopAgentChats"
 
     init() {
         load()
         if ProcessInfo.processInfo.arguments.contains("-ScreenshotDemo") ||
             ProcessInfo.processInfo.environment["KOKO_SCREENSHOT_DEMO"] == "1" {
-            seedScreenshotDemoIfNeeded()
+            ensureLabHostIfNeeded()
         }
     }
 
-    /// Demo data for App Store screenshots only (simulator launch arg).
-    /// Uses RFC 5737 TEST-NET addresses — never put real hosts here.
-    private func seedScreenshotDemoIfNeeded() {
-        let project = ProjectPath(label: "demo-project", remotePath: "/home/demo/project")
+    /// Lab / screenshot host only — never wipes sessions or auto-opens a terminal.
+    private func ensureLabHostIfNeeded() {
+        let host = "8.137.32.163"
+        if servers.contains(where: { $0.host == host && $0.username == "root" }) {
+            return
+        }
+        let project = ProjectPath(label: "home", remotePath: "/root")
         let server = ServerProfile(
-            name: "Demo Server",
-            host: "203.0.113.10",
+            name: host,
+            host: host,
             port: 22,
-            username: "demo",
+            username: "root",
             authType: .password,
+            hostKeyFingerprint: "SHA256:m+4MHb0EeV35pcQKIvjddF6W1bFqcL+5TgVPuG7vqnI=",
             projects: [project]
         )
-        let key = SSHKeyPair(
-            label: "Demo Ed25519",
-            algorithm: .ed25519,
-            publicKeyOpenSSH: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDemoKeyForScreenshotOnly koko@demo"
+        upsertServer(server)
+        try? KeychainService.shared.save(
+            data: Data("Koko@2026".utf8),
+            account: KeychainAccount.password.rawValue,
+            keyId: server.id
         )
-        let session = TerminalSession(
-            serverId: server.id,
-            projectId: project.id,
-            displayName: "demo-project · agent",
-            lastConnectedAt: .now
-        )
-        servers = [server]
-        keyPairs = [key]
-        sessions = [session]
-        persist()
     }
 
     func load() {
@@ -57,12 +57,103 @@ final class AppStore: ObservableObject {
         servers = decoded.filter(\.isSSHConfigured)
         keyPairs = Self.decode([SSHKeyPair].self, key: keysKey) ?? []
         sessions = Self.decode([TerminalSession].self, key: sessionsKey) ?? []
+        desktops = Self.decode([PairedDesktop].self, key: desktopsKey) ?? []
+        let savedDesktopChats = Self.decode([DesktopAgentChat].self, key: desktopChatsKey) ?? []
+        desktopAgentChats = normalizedDesktopAgentChats(savedDesktopChats)
+        if desktopAgentChats != savedDesktopChats {
+            persist()
+        }
     }
 
     private func persist() {
         Self.encode(servers, key: serversKey)
         Self.encode(keyPairs, key: keysKey)
         Self.encode(sessions, key: sessionsKey)
+        Self.encode(desktops, key: desktopsKey)
+        Self.encode(desktopAgentChats, key: desktopChatsKey)
+    }
+
+    @discardableResult
+    func upsertDesktop(_ desktop: PairedDesktop) -> PairedDesktop {
+        if let index = desktops.firstIndex(where: { $0.deviceID == desktop.deviceID }) {
+            var updated = desktop
+            updated.id = desktops[index].id
+            let existing = desktops[index]
+            // Never let a probe/E2E stripLAN profile wipe known LAN peers — that forces
+            // every later reconnect onto WSS·Relay.
+            if updated.lanCandidates.isEmpty, !existing.lanCandidates.isEmpty {
+                updated.lanCandidates = existing.lanCandidates
+            }
+            desktops[index] = updated
+            persist()
+            return updated
+        } else {
+            desktops.append(desktop)
+            persist()
+            return desktop
+        }
+    }
+
+    func deleteDesktop(_ desktop: PairedDesktop) {
+        desktops.removeAll { $0.id == desktop.id || $0.deviceID == desktop.deviceID }
+        desktopAgentChats.removeAll { $0.desktopId == desktop.id }
+        try? KeychainService.shared.delete(
+            account: KeychainAccount.desktopAccessPassword.rawValue,
+            keyId: desktop.id
+        )
+        persist()
+    }
+
+    func replaceDesktopAgentChats(desktopId: UUID, chats: [DesktopAgentChat]) {
+        let canonicalId: UUID = {
+            if desktops.contains(where: { $0.id == desktopId }) {
+                return desktopId
+            }
+            let names = Set(chats.map(\.desktopName))
+            let matches = desktops.filter { names.contains($0.name) }
+            return matches.count == 1 ? matches[0].id : desktopId
+        }()
+        // Never persist rows under a transient pairing UUID. A fresh QR profile
+        // gets a new local id before upsertDesktop restores the device's stable id.
+        guard desktops.contains(where: { $0.id == canonicalId }) else { return }
+
+        desktopAgentChats.removeAll { $0.desktopId == canonicalId }
+        desktopAgentChats.append(contentsOf: chats.map { chat in
+            var canonical = chat
+            canonical.desktopId = canonicalId
+            canonical.id = DesktopAgentChat.stableID(
+                desktopId: canonicalId,
+                kind: chat.agentKind,
+                chatId: chat.chatId
+            )
+            return canonical
+        })
+        desktopAgentChats = normalizedDesktopAgentChats(desktopAgentChats)
+        persist()
+    }
+
+    /// Remove chats left under obsolete pairing UUIDs and collapse duplicate rows.
+    /// Identity is stable per physical desktop + agent kind + remote chat id.
+    private func normalizedDesktopAgentChats(_ chats: [DesktopAgentChat]) -> [DesktopAgentChat] {
+        let validDesktopIds = Set(desktops.map(\.id))
+        var best: [String: DesktopAgentChat] = [:]
+        for saved in chats where validDesktopIds.contains(saved.desktopId) {
+            var chat = saved
+            chat.id = DesktopAgentChat.stableID(
+                desktopId: chat.desktopId,
+                kind: chat.agentKind,
+                chatId: chat.chatId
+            )
+            let key = "\(chat.desktopId.uuidString)|\(chat.agentKind.rawValue)|\(chat.chatId)"
+            if let existing = best[key] {
+                if chat.screenAlive && !existing.screenAlive || chat.updatedAt > existing.updatedAt {
+                    best[key] = chat
+                }
+            } else {
+                best[key] = chat
+            }
+        }
+        return best.values.sorted { $0.updatedAt > $1.updatedAt }
     }
 
     func upsertServer(_ server: ServerProfile) {

@@ -1,211 +1,5207 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "Hosts" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "主机" } } } },
-    "Sessions" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "会话" } } } },
-    "Keys" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "密钥" } } } },
-    "Settings" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "设置" } } } },
-    "No Hosts" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂无主机" } } } },
-    "Add a Linux server to connect Cursor Agent over SSH" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加 Linux 服务器以通过 SSH 连接 Cursor Agent" } } } },
-    "Connection" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "连接" } } } },
-    "Address" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "地址" } } } },
-    "Port" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "端口" } } } },
-    "User" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "用户" } } } },
-    "Auth" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "认证" } } } },
-    "Key" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "密钥" } } } },
-    "Password" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "密码" } } } },
-    "Fingerprint" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "指纹" } } } },
-    "Projects" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "项目目录" } } } },
-    "No projects configured" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "尚未配置项目目录" } } } },
-    "Session List" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "会话列表" } } } },
-    "Edit" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "编辑" } } } },
-    "Host" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "主机" } } } },
-    "Name" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "名称" } } } },
-    "Username" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "用户名" } } } },
-    "Authentication" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "认证" } } } },
-    "Method" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "方式" } } } },
-    "SSH Key" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "SSH 密钥" } } } },
-    "Select…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请选择" } } } },
-    "Generate an SSH key on the Keys tab first" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请先在「密钥」页生成 SSH 密钥" } } } },
-    "SSH Password" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "SSH 密码" } } } },
-    "Label" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "标签" } } } },
-    "Remote path, e.g. /home/user/project" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "远端路径，如 /home/user/project" } } } },
-    "Add Project" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加项目" } } } },
-    "New Host" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "新主机" } } } },
-    "Edit Host" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "编辑主机" } } } },
-    "Cancel" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "取消" } } } },
-    "Save" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保存" } } } },
-    "No Sessions" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂无会话" } } } },
-    "No Conversations" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂无对话" } } } },
-    "Create a tmux / agent persist session to start Cursor Agent" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "连接服务器上的 Cursor Agent（agent persist）" } } } },
-    "Pull to refresh — KoKo loads Agent chats from the project directory on the server" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "下拉刷新 — KoKo 会从服务器项目目录加载 Agent 对话" } } } },
-    "Session Name" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "会话名称" } } } },
-    "Project" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "项目" } } } },
-    "Persistence" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "持久化" } } } },
-    "New Session" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "新建会话" } } } },
-    "Create" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "创建" } } } },
-    "New Conversation" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "新建对话" } } } },
-    "New Agent Chat" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "新 Agent 对话" } } } },
-    "New" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "新建" } } } },
-    "Title (optional)" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "标题（可选）" } } } },
-    "Starts a new Agent conversation in this project directory. Existing chats appear after refresh." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在该项目目录启动新的 Agent 对话。已有对话刷新后会出现在列表中。" } } } },
-    "Add a host and project path first" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请先添加主机和项目路径" } } } },
-    "Only SSH hosts support syncing agent conversations" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "仅 SSH 主机支持同步 Agent 对话" } } } },
-    "Could not parse agent conversation list from server" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法解析服务器返回的 Agent 对话列表" } } } },
-    "Could not parse agent session list from server" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法解析服务器返回的 Agent 会话列表" } } } },
-    "Remove %@ from this list? The Agent chat on the server is not deleted." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "从列表移除“%@”？服务器上的 Agent 对话不会被删除。" } } } },
-    "Delete %@ on the server and on this device? This cannot be undone." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除“%@”在服务器和本机上的会话？此操作不可撤销。" } } } },
-    "Delete the selected conversations on the server and on this device? This cannot be undone." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除所选会话在服务器和本机上的记录？此操作不可撤销。" } } } },
-    "Deleting Session" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在删除会话" } } } },
-    "Stopping remote session…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在停止远端会话…" } } } },
-    "Removing remote session data…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在删除远端会话数据…" } } } },
-    "Removing local cache…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在清理本机缓存…" } } } },
-    "Session deleted" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "会话已删除" } } } },
-    "Delete failed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除失败" } } } },
-    "Session deleted on server and this device." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务器和本机上的会话均已删除。" } } } },
-    "Server did not confirm session deletion" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务器未确认会话删除成功" } } } },
-    "Host or project path is missing" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "缺少主机或项目路径" } } } },
-    "Deleting %lld of %lld: %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在删除 %lld / %lld：%@" } } } },
-    "Trust the host key to continue deleting the remote session." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "信任主机指纹以继续删除远端会话。" } } } },
-    "Remove the selected items from this list? Agent chats on the server are not deleted." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "从列表移除所选项目？服务器上的 Agent 对话不会被删除。" } } } },
-    "Host Fingerprint" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "主机指纹" } } } },
-    "Trust & Continue" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "信任并继续" } } } },
-    "Host has no password or usable key" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "主机没有可用的密码或密钥" } } } },
-    "No Keys" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂无密钥" } } } },
-    "Generate Ed25519 / ECDSA / RSA keys stored in Keychain" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "生成 Ed25519 / ECDSA / RSA 密钥并保存在 Keychain" } } } },
-    "Copy Public Key" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "复制公钥" } } } },
-    "Error" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "错误" } } } },
-    "OK" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "好" } } } },
-    "Algorithm" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "算法" } } } },
-    "Private keys stay in Keychain on this device. Add the public key to the server’s authorized_keys." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "私钥仅保存在本机 Keychain；请将公钥写入服务器 authorized_keys。" } } } },
-    "Generate Key" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "生成密钥" } } } },
-    "Generate" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "生成" } } } },
-    "Initializing terminal…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在初始化终端…" } } } },
-    "Reconnect" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重新连接" } } } },
-    "Disconnect" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "断开连接" } } } },
-    "Terminate Session" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "终止会话" } } } },
-    "Terminate Session?" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "终止会话？" } } } },
-    "Terminate" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "终止" } } } },
-    "This ends the remote tmux / agent session — different from Disconnect." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这将结束远端 agent persist 会话，与「断开连接」不同。" } } } },
-    "Confirm the server host key fingerprint" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "首次连接，请确认服务器主机指纹" } } } },
-    "Connections are blocked if the fingerprint changes. Verify it with your server admin." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "指纹变化时将阻止连接。请与你服务器管理员提供的指纹核对。" } } } },
-    "Host Fingerprint" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "主机指纹" } } } },
-    "Reject" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "拒绝" } } } },
-    "Trust & Connect" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "信任并连接" } } } },
-    "Cursor is not signed in" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Cursor 尚未登录" } } } },
-    "Copy the link, sign in with a browser, then return to the app and reconnect." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "复制链接到浏览器完成登录，完成后回到 App 重新连接。" } } } },
-    "Copy Link" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "复制链接" } } } },
-    "Open in Browser" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在浏览器打开" } } } },
-    "Cursor Login" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Cursor 登录" } } } },
-    "Claude Login" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Claude 登录" } } } },
-    "Codex Login" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Codex 登录" } } } },
-    "Gemini Login" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Gemini 登录" } } } },
-    "Done signing in, reconnect" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已完成登录，重新连接" } } } },
-    "Switch back to KoKo to reconnect automatically." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "完成浏览器操作后切回 KoKo，将自动重新连接。" } } } },
-    "Copy the link and sign in in your browser. Switch back to KoKo when done — the session reconnects automatically." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "复制链接到浏览器完成登录，完成后切回 KoKo 即可自动重新连接。" } } } },
-    "Open the link in your browser and enter the one-time code there. Switch back to KoKo when done — the session reconnects automatically." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在浏览器打开链接并输入一次性验证码，完成后切回 KoKo 即可自动重新连接。" } } } },
-    "Open the link and sign in. Copy the authorization code, paste it to the server with the button below. If you leave KoKo for the browser, switch back to reconnect automatically, then paste the code." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开链接完成登录，复制 authorization code 后点下方按钮粘贴到服务器。若切出 App 去浏览器，切回后会自动重连，再粘贴授权码即可。" } } } },
-    "Waiting for login link in terminal…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "等待终端输出登录链接…" } } } },
-    "Open the link in a browser, enter the one-time code, then return here and tap the button below to reconnect." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在浏览器打开链接并输入一次性验证码，完成后回到 App，点击下方按钮重新连接。" } } } },
-    "One-time code" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "一次性验证码" } } } },
-    "Copy Code" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "复制验证码" } } } },
-    "Login link" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "登录链接" } } } },
-    "Authorization code" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "授权码" } } } },
-    "Send authorization code to terminal" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "发送到服务器终端" } } } },
-    "Open the link and sign in. Paste the authorization code into the field below, then tap Send to server terminal." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开链接完成登录，将 authorization code 粘贴到下方输入框，再点「发送到服务器终端」。" } } } },
-    "Code sent to server terminal" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已发送到服务器终端" } } } },
-    "Open the link and sign in. Copy the authorization code from the browser, then paste it into the server terminal with the button below." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在浏览器打开链接并完成登录，复制 authorization code，再点击下方按钮粘贴到服务器终端。" } } } },
-    "Clear All Session History" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "清理全部会话历史" } } } },
-    "About" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "关于" } } } },
-    "Version" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "版本" } } } },
-    "Platform" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "平台" } } } },
-    "Clear all scrollback?" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "清理全部 scrollback？" } } } },
-    "Clear" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "清理" } } } },
-    "KoKo connects to your servers over SSH so you can run Cursor Agent." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "KoKo 通过 SSH 连接你的服务器以操作 Cursor Agent。" } } } },
-    "New Agent Session" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "新建 Agent 会话" } } } },
-    "Start a new agent?" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "启动新的 Agent？" } } } },
-    "This kills the existing remote session and starts a fresh agent." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将结束现有远端会话并启动全新 Agent。" } } } },
-    "Connection timed out. Check the network, then tap Reconnect." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "连接超时。请检查网络后点「重新连接」。" } } } },
-    "System" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "跟随系统" } } } },
-    "Language" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "语言" } } } },
-    "About" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "关于" } } } },
-    "Version" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "版本" } } } },
-    "Build time is stamped on each install so you can confirm the latest sync." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "每次构建都会写入时间戳，便于确认是否为最新同步版本。" } } } },
-    "Affects KoKo UI only. Terminal / agent output follows the remote session." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "仅影响 KoKo 界面；终端 / Agent 输出仍跟随远端会话。" } } } },
-    "Add an SSH server or pair a RunEverything agent" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加 SSH 主机，或配对 RunEverything Agent" } } } },
-    "Add SSH Host" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加 SSH 主机" } } } },
-    "Pair RunEverything" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "配对 RunEverything" } } } },
-    "Scan RunEverything QR" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "扫描 RunEverything 二维码" } } } },
-    "Scan QR Code" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "扫描二维码" } } } },
-    "Scan QR" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "扫码" } } } },
-    "Point the camera at the QR from `runeverything pair`, or paste the JSON / koko:// link below." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "对准 `runeverything pair` 显示的二维码，或在下方粘贴 JSON / koko:// 链接。" } } } },
-    "Or Paste" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "或粘贴" } } } },
-    "Pairing payload" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "配对内容" } } } },
-    "Pair" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "配对" } } } },
-    "Camera Unavailable" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法使用相机" } } } },
-    "QR scanning needs a device camera. On Simulator, paste the QR JSON instead." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "扫码需要真机相机。模拟器请粘贴二维码 JSON。" } } } },
-    "Scanner Error" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "扫码错误" } } } },
-    "Transport" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "通道" } } } },
-    "Device" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "设备" } } } },
-    "Relay" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "中继" } } } },
-    "Quick Setup on Server" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "快捷设置到服务器" } } } },
-    "Choose which SSH host should receive this public key." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择要把公钥安装到哪台 SSH 主机。" } } } },
-    "Install Public Key" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "安装公钥" } } } },
-    "Connecting to server…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在连接服务器…" } } } },
-    "Authenticating…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在认证…" } } } },
-    "Writing authorized_keys…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在写入 authorized_keys…" } } } },
-    "Enabling public-key login on server…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在开启服务器公钥登录…" } } } },
-    "Could not enable public-key login on the server" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法开启服务器公钥登录" } } } },
-    "Need sudo (password) to turn on PubkeyAuthentication in sshd_config" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "需要 sudo 密码才能在 sshd_config 中开启 PubkeyAuthentication" } } } },
-    "sudo failed while enabling PubkeyAuthentication. Check the account can use sudo." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "用 sudo 开启 PubkeyAuthentication 失败，请确认该账号有 sudo 权限。" } } } },
-    "sshd still reports PubkeyAuthentication no after reload" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "reload 之后 sshd 仍报告 PubkeyAuthentication no" } } } },
-    "Switching host to key login…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在切换为主机密钥登录…" } } } },
-    "Public key installed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "公钥已安装" } } } },
-    "This host now uses key login. The saved password was removed from KoKo." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "该主机已改为密钥登录，KoKo 中保存的密码已清除。" } } } },
-    "Done" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "完成" } } } },
-    "Cancelled" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已取消" } } } },
-    "Only SSH hosts support public key install" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "仅 SSH 主机支持安装公钥" } } } },
-    "Host has no password or usable key to connect with first" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "主机尚无密码或其他可用密钥，无法先登录安装" } } } },
-    "Server did not confirm key install" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务器未确认公钥安装成功" } } } },
-    "Confirm host fingerprint to continue…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请确认主机指纹以继续…" } } } },
-    "Setup complete" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "设置完成" } } } },
-    "Setup failed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "设置失败" } } } },
-    "Setup succeeded" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "设置成功" } } } },
-    "Public key is on the server. This host now uses key login in KoKo; the saved password was removed." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "公钥已写入服务器。该主机已在 KoKo 中改为密钥登录，并已清除保存的密码。" } } } },
-    "After you trust it, KoKo will finish installing the public key and switch this host to key login." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "信任后，KoKo 会继续安装公钥，并把该主机切换为密钥登录。" } } } },
-    "Host key was rejected" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已拒绝主机指纹" } } } },
-    "Delete Key" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除密钥" } } } },
-    "Delete Key?" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除密钥？" } } } },
-    "Delete %@ from this device? The private key will be removed from Keychain and cannot be recovered." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "要从本机删除“%@”吗？私钥将从 Keychain 移除且无法恢复。" } } } },
-    "Delete the selected keys from this device? Private keys will be removed from Keychain and cannot be recovered." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "要删除选中的密钥吗？私钥将从 Keychain 移除且无法恢复。" } } } },
-    "Delete in %llds" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%lld 秒后可删除" } } } },
-    "Pre-filled — change only if you want." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已自动填写，无需改也可直接保存。" } } } },
-    "SSH authentication failed. Check username / key / password. If you switched to key login, re-run Quick Setup on Server or restore password auth." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "SSH 认证失败。请检查用户名 / 密钥 / 密码。若刚改成密钥登录，请重新「快捷设置到服务器」，或暂时改回密码登录。" } } } },
-    "SSH channel could not be opened. Try Reconnect." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法打开 SSH 通道，请点重新连接。" } } } },
-    "Server rejected password authentication." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务器拒绝了密码认证。" } } } },
-    "Server rejected key authentication." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务器拒绝了密钥认证。" } } } },
-    "Server disabled public-key login (PubkeyAuthentication no). Ask the admin to enable it in sshd_config, then retry." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务器关闭了公钥登录（PubkeyAuthentication no）。请在 sshd_config 中开启后再试。" } } } },
-    "Server rejected host-based authentication." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务器拒绝了基于主机的认证。" } } } },
-    "SSH authentication failed. Check username / key / password." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "SSH 认证失败。请检查用户名 / 密钥 / 密码。" } } } },
-    "Delete Host" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除主机" } } } },
-    "Delete Host?" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除主机？" } } } },
-    "Delete %@? Related sessions on this device will also be removed." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "要删除“%@”吗？本机上的相关会话也会被移除。" } } } },
-    "Delete the selected hosts? Related sessions on this device will also be removed." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "要删除选中的主机吗？本机上的相关会话也会被移除。" } } } },
-    "Delete Session" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除会话" } } } },
-    "Delete Session?" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除会话？" } } } },
-    "Delete %@ from this device? The remote tmux / agent is not terminated." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "要从本机删除“%@”吗？远端 agent persist 不会被终止。" } } } },
-    "Verifying key login…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在验证密钥登录…" } } } },
-    "Public key was written, but key login still failed. Password login was kept." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "公钥已写入，但密钥登录仍失败，已保留密码登录。" } } } },
-    "Public key was written, but key login still failed: %@. Password login was kept." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "公钥已写入，但密钥登录仍失败：%@。已保留密码登录。" } } } },
-    "Could not resolve remote home directory" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法解析远端用户主目录" } } } },
-    "Checking/installing Node.js/npm on server…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在检查/安装服务器上的 Node.js/npm…" } } } },
-    "Checking server outbound network…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在检测服务器出网…" } } } },
-    "Could not install Node.js/npm on the server" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法在服务器上安装 Node.js/npm" } } } },
-    "Server outbound network is restricted — cannot reach %@ install sources. Configure an HTTP/HTTPS proxy on the server, or install the CLI manually on a machine with internet access." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务器出网受限，无法访问 %@ 的安装源。请在服务器上配置 HTTP/HTTPS 代理，或在可联网的机器上手动安装 CLI 后同步到服务器。" } } } },
-    "%@ CLI install did not finish successfully on the server" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务器上 %@ CLI 安装未成功完成" } } } },
-    "Generated public key is invalid" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "生成的公钥无效" } } } },
-    "Remote command failed (exit %lld)" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "远端命令失败（退出码 %lld）" } } } },
-    "Server install command failed (exit %lld)" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务器安装命令失败（退出码 %lld）" } } } }
+    "#%@" : {},
+    "%@" : {},
+    "%@ CLI install did not finish successfully on the server" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器上 %@ CLI 安装未成功完成"
+          }
+        }
+      }
+    },
+    "%@ is not signed in" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 尚未登录"
+          }
+        }
+      }
+    },
+    "%@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "%@ · %@ · b14" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@ · b14"
+          }
+        }
+      }
+    },
+    "%@ · ~%dp · %dfps" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · 约 %dp · %dfps"
+          }
+        }
+      }
+    },
+    "%@ → %@ (%@@%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ → %2$@ (%3$@@%4$@)"
+          }
+        }
+      }
+    },
+    "%@, %@, %lld bars" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@，%@，信号 %lld 格"
+          }
+        }
+      }
+    },
+    "%@, Wi‑Fi, %lld bars" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@，Wi‑Fi，信号 %lld 格"
+          }
+        }
+      }
+    },
+    "%@@%@:%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@@%2$@:%3$@"
+          }
+        }
+      }
+    },
+    "%@×%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@×%2$@"
+          }
+        }
+      }
+    },
+    "%d%% of host · %dfps" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主机分辨率 %d%% · %dfps"
+          }
+        }
+      }
+    },
+    "%lld ms · %.1f%% loss · %lld kbps · %.0ffps · %@ · %@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 毫秒 · %.1f%% 丢包 · %lld kbps · %.0ffps · %@ · %@"
+          }
+        }
+      }
+    },
+    "%lld ms · %.1f%% loss · %lld kbps · %@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 毫秒 · 丢包 %.1f%% · %lld kbps · %@"
+          }
+        }
+      }
+    },
+    "%lld ms · %.1f%% loss · %lld kbps · %@ · %@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 毫秒 · %.1f%% 丢包 · %lld kbps · %@ · %@"
+          }
+        }
+      }
+    },
+    "%lld ms · %.1f%% · %lld kb/s · %.0ffps · %@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 毫秒 · %.1f%% · %lld kb/s · %.0ffps · %@"
+          }
+        }
+      }
+    },
+    "About" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关于"
+          }
+        }
+      }
+    },
+    "Absolute Mouse" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "绝对鼠标"
+          }
+        }
+      }
+    },
+    "Add Project" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加项目"
+          }
+        }
+      }
+    },
+    "Add SSH Host" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加 SSH 主机"
+          }
+        }
+      }
+    },
+    "Add a Linux server to connect Cursor Agent over SSH" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加 Linux 服务器以通过 SSH 连接 Cursor Agent"
+          }
+        }
+      }
+    },
+    "Add a host and project path first" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先添加主机和项目路径"
+          }
+        }
+      }
+    },
+    "Add an SSH host or pair a desktop Agent first" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add an SSH host or pair a desktop Agent first"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先添加 SSH 主机，或配对桌面 Agent"
+          }
+        }
+      }
+    },
+    "Add an SSH server or pair a RunEverything agent" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加 SSH 主机，或配对 RunEverything Agent"
+          }
+        }
+      }
+    },
+    "Add an SSH server to connect AI agents over screen or Cursor persist" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加 SSH 服务器，通过 screen 或 Cursor persist 连接 AI Agent"
+          }
+        }
+      }
+    },
+    "Add an SSH server, or scan an Agent QR to pair a remote desktop." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加 SSH 服务器，或扫描 Agent 二维码配对远程桌面。"
+          }
+        }
+      }
+    },
+    "Address" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "地址"
+          }
+        }
+      }
+    },
+    "Affects KoKo UI only. Terminal / agent output follows the remote session." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅影响 KoKo 界面；终端 / Agent 输出仍跟随远端会话。"
+          }
+        }
+      }
+    },
+    "After you trust it, KoKo will finish installing the public key and switch this host to key login." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "信任后，KoKo 会继续安装公钥，并把该主机切换为密钥登录。"
+          }
+        }
+      }
+    },
+    "Agent" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agent"
+          }
+        }
+      }
+    },
+    "Agent did not answer the data channel handshake. If the remote desktop is open on another phone, close it there and retry." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agent 未响应数据通道握手。如果另一台手机正在使用远程桌面，请先关闭后重试。"
+          }
+        }
+      }
+    },
+    "Agent identity changed. Re-scan the current QR to re-pair." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agent 身份已变更。请重新扫描当前二维码以再次配对。"
+          }
+        }
+      }
+    },
+    "Agent identity mismatch (noise_pub)" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agent 身份不匹配（noise_pub）"
+          }
+        }
+      }
+    },
+    "Agent is offline" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agent 离线"
+          }
+        }
+      }
+    },
+    "Agent is offline. Wake the PC or re-scan when it is online." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agent 离线。请唤醒电脑，或在其上线后重新扫描。"
+          }
+        }
+      }
+    },
+    "Agent re-paired or session credentials no longer match. Scan a fresh QR." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agent 已重新配对或会话凭证失效。请扫描新的二维码。"
+          }
+        }
+      }
+    },
+    "Algorithm" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "算法"
+          }
+        }
+      }
+    },
+    "Another client is using this Agent. Close it there, then reconnect from Hosts." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "其他客户端正在使用此 Agent。请先关闭那边的连接，再从「主机」重连。"
+          }
+        }
+      }
+    },
+    "Another client is using this Agent. Close it there, then tap Reconnect." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "其他客户端正在使用此 Agent。请先关闭那边，再点重连。"
+          }
+        }
+      }
+    },
+    "Another client may be connected. Close it there, then tap Reconnect." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可能有其他客户端已连接。请先关闭那边，再点重连。"
+          }
+        }
+      }
+    },
+    "Appearance" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外观"
+          }
+        }
+      }
+    },
+    "Applies to KoKo UI on iPhone, Duo, and iPad. Terminal colors stay dark for readability." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作用于 iPhone、Duo、iPad 的 KoKo 界面。终端为便于阅读保持深色。"
+          }
+        }
+      }
+    },
+    "Applying quality…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在切换画质…"
+          }
+        }
+      }
+    },
+    "Ask the Agent to print a fresh QR (do not reuse an old terminal QR after reconnect)." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请让 Agent 重新打印二维码（重连后不要继续用终端里旧的码）。"
+          }
+        }
+      }
+    },
+    "Auth" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "认证"
+          }
+        }
+      }
+    },
+    "Authenticating…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在认证…"
+          }
+        }
+      }
+    },
+    "Authentication" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "认证"
+          }
+        }
+      }
+    },
+    "Authorization code" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授权码"
+          }
+        }
+      }
+    },
+    "Auto" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动"
+          }
+        }
+      }
+    },
+    "Back Camera" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back Camera"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后置摄像头"
+          }
+        }
+      }
+    },
+    "Background" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后台"
+          }
+        }
+      }
+    },
+    "Balanced" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标清"
+          }
+        }
+      }
+    },
+    "Best for this link" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "带宽允许下最高画质"
+          }
+        }
+      }
+    },
+    "Best quality" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最佳画质"
+          }
+        }
+      }
+    },
+    "Bind failed" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "绑定失败"
+          }
+        }
+      }
+    },
+    "Binding timed out. Check network / Agent online, then reconnect." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "绑定超时。请检查网络或 Agent 是否在线，然后重连。"
+          }
+        }
+      }
+    },
+    "Binding…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在绑定…"
+          }
+        }
+      }
+    },
+    "Build time is stamped on each install so you can confirm the latest sync." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每次构建都会写入时间戳，便于确认是否为最新同步版本。"
+          }
+        }
+      }
+    },
+    "Camera" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "摄像头"
+          }
+        }
+      }
+    },
+    "Camera Unavailable" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法使用相机"
+          }
+        }
+      }
+    },
+    "Camera permission denied" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera permission denied"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未授予相机权限"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
+          }
+        }
+      }
+    },
+    "Cancelled" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已取消"
+          }
+        }
+      }
+    },
+    "Cellular" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "蜂窝"
+          }
+        }
+      }
+    },
+    "Changed Files" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "改动的文件"
+          }
+        }
+      }
+    },
+    "Checking server outbound network…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在检测服务器出网…"
+          }
+        }
+      }
+    },
+    "Checking/installing Node.js/npm on server…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在检查/安装服务器上的 Node.js/npm…"
+          }
+        }
+      }
+    },
+    "Choose Session" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择会话"
+          }
+        }
+      }
+    },
+    "Choose a conversation to run an agent here." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择一个对话，在此运行 Agent。"
+          }
+        }
+      }
+    },
+    "Choose which SSH host should receive this public key." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择要把公钥安装到哪台 SSH 主机。"
+          }
+        }
+      }
+    },
+    "Claude Login" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude 登录"
+          }
+        }
+      }
+    },
+    "Clear" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清理"
+          }
+        }
+      }
+    },
+    "Clear All Session History" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清理全部会话历史"
+          }
+        }
+      }
+    },
+    "Clear all scrollback?" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清理全部 scrollback？"
+          }
+        }
+      }
+    },
+    "Client" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "客户端"
+          }
+        }
+      }
+    },
+    "Client · %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "客户端 · %@"
+          }
+        }
+      }
+    },
+    "Close Remote Desktop Camera" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close Remote Desktop Camera"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭远程桌面的摄像头"
+          }
+        }
+      }
+    },
+    "Close pane" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭窗格"
+          }
+        }
+      }
+    },
+    "Code sent to server terminal" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已发送到服务器终端"
+          }
+        }
+      }
+    },
+    "Codex Login" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codex 登录"
+          }
+        }
+      }
+    },
+    "Confirm host fingerprint to continue…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请确认主机指纹以继续…"
+          }
+        }
+      }
+    },
+    "Confirm the server host key fingerprint" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请确认服务器主机密钥指纹"
+          }
+        }
+      }
+    },
+    "Connect" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接"
+          }
+        }
+      }
+    },
+    "Connected" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已连接"
+          }
+        }
+      }
+    },
+    "Connecting LAN…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在连接局域网…"
+          }
+        }
+      }
+    },
+    "Connecting UDP…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在连接 UDP…"
+          }
+        }
+      }
+    },
+    "Connecting to server…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在连接服务器…"
+          }
+        }
+      }
+    },
+    "Connecting…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在连接…"
+          }
+        }
+      }
+    },
+    "Connection" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接"
+          }
+        }
+      }
+    },
+    "Connection Failed" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接失败"
+          }
+        }
+      }
+    },
+    "Connection lost" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接已断开"
+          }
+        }
+      }
+    },
+    "Connection timed out. Check the network, then tap Reconnect." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接超时。请检查网络后点「重新连接」。"
+          }
+        }
+      }
+    },
+    "Connections are blocked if the fingerprint changes. Verify it with your server admin." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指纹变化时将阻止连接。请与服务器管理员核对。"
+          }
+        }
+      }
+    },
+    "Controls" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controls"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "控件"
+          }
+        }
+      }
+    },
+    "Copy Code" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制验证码"
+          }
+        }
+      }
+    },
+    "Copy Link" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制链接"
+          }
+        }
+      }
+    },
+    "Copy Public Key" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制公钥"
+          }
+        }
+      }
+    },
+    "Copy the link and sign in in your browser. Switch back to KoKo when done — the session reconnects automatically." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制链接到浏览器完成登录，完成后切回 KoKo 即可自动重新连接。"
+          }
+        }
+      }
+    },
+    "Copy the link, sign in with a browser, then return to the app and reconnect." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制链接到浏览器完成登录，完成后回到 App 重新连接。"
+          }
+        }
+      }
+    },
+    "Could not enable public-key login on the server" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法开启服务器公钥登录"
+          }
+        }
+      }
+    },
+    "Could not install Node.js/npm on the server" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法在服务器上安装 Node.js/npm"
+          }
+        }
+      }
+    },
+    "Could not parse agent conversation list from server" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法解析服务器返回的 Agent 对话列表"
+          }
+        }
+      }
+    },
+    "Could not parse agent session list from server" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法解析服务器返回的 Agent 会话列表"
+          }
+        }
+      }
+    },
+    "Could not resolve remote home directory" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法解析远端用户主目录"
+          }
+        }
+      }
+    },
+    "Create" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "创建"
+          }
+        }
+      }
+    },
+    "Create a tmux / agent persist session to start Cursor Agent" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接服务器上的 Cursor Agent（agent persist）"
+          }
+        }
+      }
+    },
+    "Cursor IDE" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor IDE"
+          }
+        }
+      }
+    },
+    "Cursor Login" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor 登录"
+          }
+        }
+      }
+    },
+    "Cursor is not signed in" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor 尚未登录"
+          }
+        }
+      }
+    },
+    "Cursor uses agent persist. Claude, Codex, and Gemini run inside a named GNU screen session on the server." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor 使用 agent persist。Claude、Codex、Gemini 在服务器上的具名 GNU screen 会话中运行。"
+          }
+        }
+      }
+    },
+    "Dark" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "深色"
+          }
+        }
+      }
+    },
+    "Delete" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除"
+          }
+        }
+      }
+    },
+    "Delete %@ from this device? The private key will be removed from Keychain and cannot be recovered." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要从本机删除“%@”吗？私钥将从 Keychain 移除且无法恢复。"
+          }
+        }
+      }
+    },
+    "Delete %@ from this device? The remote tmux / agent is not terminated." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要从本机删除“%@”吗？远端 agent persist 不会被终止。"
+          }
+        }
+      }
+    },
+    "Delete %@ on the server and on this device? This cannot be undone." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除“%@”在服务器和本机上的会话？此操作不可撤销。"
+          }
+        }
+      }
+    },
+    "Delete %@? Related sessions on this device will also be removed." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要删除“%@”吗？本机上的相关会话也会被移除。"
+          }
+        }
+      }
+    },
+    "Delete Host" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除主机"
+          }
+        }
+      }
+    },
+    "Delete Host?" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除主机？"
+          }
+        }
+      }
+    },
+    "Delete Key" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除密钥"
+          }
+        }
+      }
+    },
+    "Delete Key?" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除密钥？"
+          }
+        }
+      }
+    },
+    "Delete Session" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除会话"
+          }
+        }
+      }
+    },
+    "Delete Session?" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除会话？"
+          }
+        }
+      }
+    },
+    "Delete failed" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除失败"
+          }
+        }
+      }
+    },
+    "Delete in %llds" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 秒后可删除"
+          }
+        }
+      }
+    },
+    "Delete the selected conversations on the server and on this device? This cannot be undone." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除所选会话在服务器和本机上的记录？此操作不可撤销。"
+          }
+        }
+      }
+    },
+    "Delete the selected hosts? Related sessions on this device will also be removed." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要删除选中的主机吗？本机上的相关会话也会被移除。"
+          }
+        }
+      }
+    },
+    "Delete the selected keys from this device? Private keys will be removed from Keychain and cannot be recovered." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要删除选中的密钥吗？私钥将从 Keychain 移除且无法恢复。"
+          }
+        }
+      }
+    },
+    "Deleting %lld of %lld: %@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在删除 %lld / %lld：%@"
+          }
+        }
+      }
+    },
+    "Deleting Session" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在删除会话"
+          }
+        }
+      }
+    },
+    "Desktop" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "桌面"
+          }
+        }
+      }
+    },
+    "Desktop closed" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "桌面已关闭"
+          }
+        }
+      }
+    },
+    "Desktop did not open in time. Confirm the prompt on the host, then reconnect." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "桌面未能及时打开。请在主机上确认提示后重连。"
+          }
+        }
+      }
+    },
+    "Device" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设备"
+          }
+        }
+      }
+    },
+    "Disable Privacy Blank" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭隐私遮罩"
+          }
+        }
+      }
+    },
+    "Disconnect" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "断开连接"
+          }
+        }
+      }
+    },
+    "Disconnected" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已断开"
+          }
+        }
+      }
+    },
+    "Disconnected — another client took over this session." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已断开 — 其他客户端接管了此会话。"
+          }
+        }
+      }
+    },
+    "Disconnected — another client took over this session. Reconnect from Hosts if needed." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已断开 — 其他客户端接管了此会话。如需继续，请从「主机」重新连接。"
+          }
+        }
+      }
+    },
+    "Display switch failed" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换显示器失败"
+          }
+        }
+      }
+    },
+    "Displays" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示器"
+          }
+        }
+      }
+    },
+    "Displays…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示器…"
+          }
+        }
+      }
+    },
+    "Do not reuse the old pairing code. Delete this desktop and scan a new Agent QR." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不要复用旧配对码。请删除此桌面并扫描新的 Agent 二维码。"
+          }
+        }
+      }
+    },
+    "Done" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成"
+          }
+        }
+      }
+    },
+    "Done signing in, reconnect" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已完成登录，重新连接"
+          }
+        }
+      }
+    },
+    "Drag to reorder" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖动排序"
+          }
+        }
+      }
+    },
+    "Edit" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑"
+          }
+        }
+      }
+    },
+    "Edit Host" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑主机"
+          }
+        }
+      }
+    },
+    "Empty Slot %lld" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "空槽位 %lld"
+          }
+        }
+      }
+    },
+    "Empty pairing link" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配对链接为空"
+          }
+        }
+      }
+    },
+    "Enabling public-key login on server…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在开启服务器公钥登录…"
+          }
+        }
+      }
+    },
+    "Encrypting…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在加密…"
+          }
+        }
+      }
+    },
+    "Error" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "错误"
+          }
+        }
+      }
+    },
+    "Everyday office" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "日常办公"
+          }
+        }
+      }
+    },
+    "Expired" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已过期"
+          }
+        }
+      }
+    },
+    "Files" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件"
+          }
+        }
+      }
+    },
+    "Files…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件…"
+          }
+        }
+      }
+    },
+    "Fingerprint" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指纹"
+          }
+        }
+      }
+    },
+    "Flip Camera" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flip Camera"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换前后摄像头"
+          }
+        }
+      }
+    },
+    "Folder path on the desktop" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "桌面上的目录路径"
+          }
+        }
+      }
+    },
+    "Frame timeout" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帧超时"
+          }
+        }
+      }
+    },
+    "Front Camera" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Front Camera"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前置摄像头"
+          }
+        }
+      }
+    },
+    "Game Mouse" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "游戏鼠标"
+          }
+        }
+      }
+    },
+    "Gemini Login" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gemini 登录"
+          }
+        }
+      }
+    },
+    "Generate" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "生成"
+          }
+        }
+      }
+    },
+    "Generate Ed25519 / ECDSA / RSA keys stored in Keychain" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "生成 Ed25519 / ECDSA / RSA 密钥并保存在 Keychain"
+          }
+        }
+      }
+    },
+    "Generate Key" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "生成密钥"
+          }
+        }
+      }
+    },
+    "Generate an SSH key on the Keys tab first" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先在「密钥」页生成 SSH 密钥"
+          }
+        }
+      }
+    },
+    "Generated public key is invalid" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "生成的公钥无效"
+          }
+        }
+      }
+    },
+    "High" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "高清"
+          }
+        }
+      }
+    },
+    "Host" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主机"
+          }
+        }
+      }
+    },
+    "Host Fingerprint" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主机指纹"
+          }
+        }
+      }
+    },
+    "Host has no password or usable key" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主机没有可用的密码或密钥"
+          }
+        }
+      }
+    },
+    "Host has no password or usable key to connect with first" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主机尚无密码或其他可用密钥，无法先登录安装"
+          }
+        }
+      }
+    },
+    "Host key was rejected" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已拒绝主机指纹"
+          }
+        }
+      }
+    },
+    "Host or project path is missing" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缺少主机或项目路径"
+          }
+        }
+      }
+    },
+    "Hosts" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主机"
+          }
+        }
+      }
+    },
+    "IDE extension" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IDE 插件"
+          }
+        }
+      }
+    },
+    "If the host shows a permission / privacy dialog, accept it, then tap Reconnect." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "若主机弹出权限/隐私确认，请先同意，再点重连。"
+          }
+        }
+      }
+    },
+    "Initializing terminal…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在初始化终端…"
+          }
+        }
+      }
+    },
+    "Install %@ CLI?" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装 %@ CLI？"
+          }
+        }
+      }
+    },
+    "Install CLI?" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装 CLI？"
+          }
+        }
+      }
+    },
+    "Install Now" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一键安装"
+          }
+        }
+      }
+    },
+    "Install Public Key" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装公钥"
+          }
+        }
+      }
+    },
+    "Invalid RE2 frame" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无效的 RE2 帧"
+          }
+        }
+      }
+    },
+    "Invalid RE2 inner message" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无效的 RE2 内部消息"
+          }
+        }
+      }
+    },
+    "Invalid pairing JSON" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无效的配对 JSON"
+          }
+        }
+      }
+    },
+    "Invalid video fragment" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无效的视频分片"
+          }
+        }
+      }
+    },
+    "Keep All" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部保留"
+          }
+        }
+      }
+    },
+    "Key" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "密钥"
+          }
+        }
+      }
+    },
+    "Keys" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "密钥"
+          }
+        }
+      }
+    },
+    "KoKo connects to your servers over SSH so you can run Cursor Agent." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KoKo 通过 SSH 连接你的服务器以操作 Cursor Agent。"
+          }
+        }
+      }
+    },
+    "Label" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标签"
+          }
+        }
+      }
+    },
+    "Language" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "语言"
+          }
+        }
+      }
+    },
+    "Layout" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "布局"
+          }
+        }
+      }
+    },
+    "Light" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浅色"
+          }
+        }
+      }
+    },
+    "Live" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在线"
+          }
+        }
+      }
+    },
+    "Loading conversations… Please wait." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在加载会话，请稍候…"
+          }
+        }
+      }
+    },
+    "Login link" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录链接"
+          }
+        }
+      }
+    },
+    "Maximize pane" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最大化窗格"
+          }
+        }
+      }
+    },
+    "Method" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "方式"
+          }
+        }
+      }
+    },
+    "Missing session ticket" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缺少会话票据"
+          }
+        }
+      }
+    },
+    "Mode" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "模式"
+          }
+        }
+      }
+    },
+    "Model" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "模型"
+          }
+        }
+      }
+    },
+    "More" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更多"
+          }
+        }
+      }
+    },
+    "Name" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "名称"
+          }
+        }
+      }
+    },
+    "Need sudo (password) to turn on PubkeyAuthentication in sshd_config" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要 sudo 密码才能在 sshd_config 中开启 PubkeyAuthentication"
+          }
+        }
+      }
+    },
+    "Network changed — reconnecting…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网络已切换，正在重连…"
+          }
+        }
+      }
+    },
+    "Network glitch during encryption handshake. Tap Reconnect to retry." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加密握手时网络异常。请点重连重试。"
+          }
+        }
+      }
+    },
+    "Network poor · holding picture" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网络较差 · 保持画面"
+          }
+        }
+      }
+    },
+    "Network unavailable…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网络不可用…"
+          }
+        }
+      }
+    },
+    "New" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建"
+          }
+        }
+      }
+    },
+    "New Agent Chat" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新 Agent 对话"
+          }
+        }
+      }
+    },
+    "New Agent Session" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建 Agent 会话"
+          }
+        }
+      }
+    },
+    "New CLI Session in This Project" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在此项目新开 CLI 会话"
+          }
+        }
+      }
+    },
+    "New Conversation" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新对话"
+          }
+        }
+      }
+    },
+    "New Host" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新主机"
+          }
+        }
+      }
+    },
+    "New Session" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建会话"
+          }
+        }
+      }
+    },
+    "New Window" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新窗口"
+          }
+        }
+      }
+    },
+    "New file" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新文件"
+          }
+        }
+      }
+    },
+    "No Conversations" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无对话"
+          }
+        }
+      }
+    },
+    "No Hosts" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无主机"
+          }
+        }
+      }
+    },
+    "No Keys" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无密钥"
+          }
+        }
+      }
+    },
+    "No Session" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无会话"
+          }
+        }
+      }
+    },
+    "No Sessions" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无会话"
+          }
+        }
+      }
+    },
+    "No UDP endpoint" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无 UDP 端点"
+          }
+        }
+      }
+    },
+    "No camera available" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No camera available"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有可用摄像头"
+          }
+        }
+      }
+    },
+    "No projects configured" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未配置项目目录"
+          }
+        }
+      }
+    },
+    "Not connected to Agent" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not connected to Agent"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未连接到 Agent"
+          }
+        }
+      }
+    },
+    "OK" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "好"
+          }
+        }
+      }
+    },
+    "Offline" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离线"
+          }
+        }
+      }
+    },
+    "One-time code" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一次性验证码"
+          }
+        }
+      }
+    },
+    "Only SSH hosts support public key install" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅 SSH 主机支持安装公钥"
+          }
+        }
+      }
+    },
+    "Only SSH hosts support syncing agent conversations" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅 SSH 主机支持同步 Agent 对话"
+          }
+        }
+      }
+    },
+    "Open Remote Desktop Camera" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Remote Desktop Camera"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开远程桌面的摄像头"
+          }
+        }
+      }
+    },
+    "Open in Browser" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在浏览器打开"
+          }
+        }
+      }
+    },
+    "Open in New Window" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在新窗口打开"
+          }
+        }
+      }
+    },
+    "Open the link and sign in. Copy the authorization code from the browser, then paste it into the server terminal with the button below." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在浏览器打开链接并完成登录，复制 authorization code，再点击下方按钮粘贴到服务器终端。"
+          }
+        }
+      }
+    },
+    "Open the link and sign in. Copy the authorization code, paste it to the server with the button below. If you leave KoKo for the browser, switch back to reconnect automatically, then paste the code." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开链接完成登录，复制 authorization code 后点下方按钮粘贴到服务器。若切出 App 去浏览器，切回后会自动重连，再粘贴授权码即可。"
+          }
+        }
+      }
+    },
+    "Open the link and sign in. Paste the authorization code into the field below, then tap Send to server terminal." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开链接完成登录，将 authorization code 粘贴到下方输入框，再点「发送到服务器终端」。"
+          }
+        }
+      }
+    },
+    "Open the link in a browser, enter the one-time code, then return here and tap the button below to reconnect." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在浏览器打开链接并输入一次性验证码，完成后回到 App，点击下方按钮重新连接。"
+          }
+        }
+      }
+    },
+    "Open the link in your browser and enter the one-time code there. Switch back to KoKo when done — the session reconnects automatically." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在浏览器打开链接并输入一次性验证码，完成后切回 KoKo 即可自动重新连接。"
+          }
+        }
+      }
+    },
+    "Opening desktop…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在打开桌面…"
+          }
+        }
+      }
+    },
+    "Opening desktop… Confirm on the host if prompted." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在打开桌面…如有提示请在主机上确认。"
+          }
+        }
+      }
+    },
+    "Opens a new chat in Cursor on the desktop for this folder and mirrors it here." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在桌面的 Cursor 中为该目录新建对话，并同步到手机。"
+          }
+        }
+      }
+    },
+    "Or Paste" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "或粘贴"
+          }
+        }
+      }
+    },
+    "Other Sessions" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "其他会话"
+          }
+        }
+      }
+    },
+    "Other folder…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "其他目录…"
+          }
+        }
+      }
+    },
+    "P2P" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "直连"
+          }
+        }
+      }
+    },
+    "Pair" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配对"
+          }
+        }
+      }
+    },
+    "Pair Desktop" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配对桌面"
+          }
+        }
+      }
+    },
+    "Pair RunEverything" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配对 RunEverything"
+          }
+        }
+      }
+    },
+    "Pairing QR expired — scan again" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配对二维码已过期 — 请重新扫描"
+          }
+        }
+      }
+    },
+    "Pairing QR expired. Generate a new QR on the Agent and scan again." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配对二维码已过期。请在 Agent 上生成新二维码并重新扫描。"
+          }
+        }
+      }
+    },
+    "Pairing QR uses a LAN-only relay. Join the same Wi‑Fi as the Mac, or refresh the Agent QR with a public relay." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配对码指向局域网中继。请连上与 Mac 相同的 Wi‑Fi，或在 Agent 刷新带公网中继的二维码后重试。"
+          }
+        }
+      }
+    },
+    "Pairing code is missing %@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配对码缺少 %@"
+          }
+        }
+      }
+    },
+    "Pairing code is missing relay, device_id, or pairing_token" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配对码缺少 relay、device_id 或 pairing_token"
+          }
+        }
+      }
+    },
+    "Pairing payload" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配对内容"
+          }
+        }
+      }
+    },
+    "Pairing timed out. On cellular you need a public relay QR; on Wi‑Fi join the Mac’s network and retry." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配对超时。蜂窝网络需使用公网中继二维码；Wi‑Fi 下请加入 Mac 同一网络后重试。"
+          }
+        }
+      }
+    },
+    "Pairing token unknown or superseded. Refresh the QR on the Agent and scan again." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配对令牌无效或已被替换。请在 Agent 上刷新二维码后重新扫描。"
+          }
+        }
+      }
+    },
+    "Pairing…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在配对…"
+          }
+        }
+      }
+    },
+    "Password" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "密码"
+          }
+        }
+      }
+    },
+    "Paste Pairing" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴配对"
+          }
+        }
+      }
+    },
+    "Paste Pairing Code" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴配对码"
+          }
+        }
+      }
+    },
+    "Paste QR JSON or koko://pair link" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴二维码 JSON 或 koko://pair 链接"
+          }
+        }
+      }
+    },
+    "Paste to Remote" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴到远程"
+          }
+        }
+      }
+    },
+    "Persistence" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "持久化"
+          }
+        }
+      }
+    },
+    "Phone webcam failed on the desktop Agent." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phone webcam failed on the desktop Agent."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "桌面 Agent 端手机摄像头接入失败。"
+          }
+        }
+      }
+    },
+    "Picture stalled" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Picture stalled"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画面卡住"
+          }
+        }
+      }
+    },
+    "Platform" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "平台"
+          }
+        }
+      }
+    },
+    "Point the camera at the QR from `runeverything pair`, or paste the JSON / koko:// link below." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "对准 `runeverything pair` 显示的二维码，或在下方粘贴 JSON / koko:// 链接。"
+          }
+        }
+      }
+    },
+    "Port" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "端口"
+          }
+        }
+      }
+    },
+    "Pre-filled — change only if you want." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已自动填写，无需改也可直接保存。"
+          }
+        }
+      }
+    },
+    "Primary" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主显示器"
+          }
+        }
+      }
+    },
+    "Privacy Blank" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐私遮罩"
+          }
+        }
+      }
+    },
+    "Private keys stay in Keychain on this device. Add the public key to the server’s authorized_keys." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "私钥仅保存在本机 Keychain；请将公钥写入服务器 authorized_keys。"
+          }
+        }
+      }
+    },
+    "Project" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "项目"
+          }
+        }
+      }
+    },
+    "Projects" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "项目目录"
+          }
+        }
+      }
+    },
+    "Public key installed" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公钥已安装"
+          }
+        }
+      }
+    },
+    "Public key is on the server. This host now uses key login in KoKo; the saved password was removed." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公钥已写入服务器。该主机已在 KoKo 中改为密钥登录，并已清除保存的密码。"
+          }
+        }
+      }
+    },
+    "Public key was written, but key login still failed. Password login was kept." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公钥已写入，但密钥登录仍失败，已保留密码登录。"
+          }
+        }
+      }
+    },
+    "Public key was written, but key login still failed: %@. Password login was kept." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公钥已写入，但密钥登录仍失败：%@。已保留密码登录。"
+          }
+        }
+      }
+    },
+    "Pull to refresh — KoKo loads Agent chats from the project directory on the server" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下拉刷新 — KoKo 会从服务器项目目录加载 Agent 对话"
+          }
+        }
+      }
+    },
+    "Pull to refresh — KoKo loads agent sessions and live screen names from the server" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下拉刷新 — KoKo 会从服务器加载 Agent 会话与正在运行的 screen 名称"
+          }
+        }
+      }
+    },
+    "QR scanning needs a device camera. On Simulator, paste the QR JSON instead." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "扫码需要真机相机。模拟器请粘贴二维码 JSON。"
+          }
+        }
+      }
+    },
+    "Quality" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画质"
+          }
+        }
+      }
+    },
+    "Quick Setup on Server" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快捷设置到服务器"
+          }
+        }
+      }
+    },
+    "RE2 frame too large" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RE2 帧过大"
+          }
+        }
+      }
+    },
+    "Re-pair" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需重新配对"
+          }
+        }
+      }
+    },
+    "Re-pair required — scan a fresh Agent QR." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要重新配对——请扫描 Agent 的新二维码。"
+          }
+        }
+      }
+    },
+    "Recommended" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "推荐"
+          }
+        }
+      }
+    },
+    "Reconnect" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新连接"
+          }
+        }
+      }
+    },
+    "Reconnect failed repeatedly. Re-scan the Agent QR if pairing expired." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重连多次失败。若配对已过期，请重新扫描 Agent 二维码。"
+          }
+        }
+      }
+    },
+    "Reconnect failed repeatedly. Re-scan the Agent QR if the host refreshed pairing." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重连多次失败。若主机已刷新配对，请重新扫描 Agent 二维码。"
+          }
+        }
+      }
+    },
+    "Reconnect from Hosts, or scan a new QR if the Agent restarted pairing." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请从「主机」重连；若 Agent 已重新配对，请扫描新二维码。"
+          }
+        }
+      }
+    },
+    "Reconnecting in %.0fs…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%.0f 秒后重连…"
+          }
+        }
+      }
+    },
+    "Reconnecting video…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在恢复画面…"
+          }
+        }
+      }
+    },
+    "Reconnecting…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在重连…"
+          }
+        }
+      }
+    },
+    "Refresh" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刷新"
+          }
+        }
+      }
+    },
+    "Reject" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拒绝"
+          }
+        }
+      }
+    },
+    "Relay" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中继"
+          }
+        }
+      }
+    },
+    "Relay is full — try another node or later" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中继已满 — 请换节点或稍后再试"
+          }
+        }
+      }
+    },
+    "Relay memory was cleared. Pair again with a fresh Agent QR." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中继内存已清空。请用新的 Agent 二维码重新配对。"
+          }
+        }
+      }
+    },
+    "Relay restarted — session ticket is gone. Scan a fresh Agent QR." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中继已重启，会话票据失效。请扫描新的 Agent 二维码。"
+          }
+        }
+      }
+    },
+    "Remote (Agent xfer)" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "远程（Agent 传输）"
+          }
+        }
+      }
+    },
+    "Remote Desktop" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "远程桌面"
+          }
+        }
+      }
+    },
+    "Remote Desktop Camera" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote Desktop Camera"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "远程桌面摄像头"
+          }
+        }
+      }
+    },
+    "Remote Desktop · AI" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote Desktop · AI"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "远程桌面 · AI"
+          }
+        }
+      }
+    },
+    "Remote command failed (exit %lld)" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "远端命令失败（退出码 %lld）"
+          }
+        }
+      }
+    },
+    "Remote path, e.g. /home/user/project" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "远端路径，如 /home/user/project"
+          }
+        }
+      }
+    },
+    "Remove %@ from this list? The Agent chat on the server is not deleted." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从列表移除“%@”？服务器上的 Agent 对话不会被删除。"
+          }
+        }
+      }
+    },
+    "Remove the selected items from this list? Agent chats on the server are not deleted." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从列表移除所选项目？服务器上的 Agent 对话不会被删除。"
+          }
+        }
+      }
+    },
+    "Removing local cache…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在清理本机缓存…"
+          }
+        }
+      }
+    },
+    "Removing remote session data…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在删除远端会话数据…"
+          }
+        }
+      }
+    },
+    "Request Keyframe" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请求关键帧"
+          }
+        }
+      }
+    },
+    "Restore pane size" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还原窗格大小"
+          }
+        }
+      }
+    },
+    "Retry P2P" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重试直连"
+          }
+        }
+      }
+    },
+    "Retry reconnect. If it keeps failing, the relay may have restarted — scan a new QR." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请重试重连。若持续失败，可能是中继已重启 — 请扫描新二维码。"
+          }
+        }
+      }
+    },
+    "Reverts every file this chat changed in Cursor on the computer." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "会在电脑上的 Cursor 中还原此对话改动的所有文件。"
+          }
+        }
+      }
+    },
+    "Run Reload Window in Cursor on the computer to enable mode, model and Keep / Undo." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请在电脑上的 Cursor 里执行 Reload Window，才能切换模式、模型和使用保留/撤销。"
+          }
+        }
+      }
+    },
+    "SSH" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SSH"
+          }
+        }
+      }
+    },
+    "SSH Key" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SSH 密钥"
+          }
+        }
+      }
+    },
+    "SSH Only" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅用 SSH"
+          }
+        }
+      }
+    },
+    "SSH Password" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SSH 密码"
+          }
+        }
+      }
+    },
+    "SSH authentication failed. Check username / key / password." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SSH 认证失败。请检查用户名 / 密钥 / 密码。"
+          }
+        }
+      }
+    },
+    "SSH authentication failed. Check username / key / password. If you switched to key login, re-run Quick Setup on Server or restore password auth." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SSH 认证失败。请检查用户名 / 密钥 / 密码。若刚改成密钥登录，请重新「快捷设置到服务器」，或暂时改回密码登录。"
+          }
+        }
+      }
+    },
+    "SSH channel could not be opened. Try Reconnect." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法打开 SSH 通道，请点重新连接。"
+          }
+        }
+      }
+    },
+    "Save" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存"
+          }
+        }
+      }
+    },
+    "Scan Desktop QR" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "扫描桌面二维码"
+          }
+        }
+      }
+    },
+    "Scan QR" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "扫码"
+          }
+        }
+      }
+    },
+    "Scan QR Code" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "扫描二维码"
+          }
+        }
+      }
+    },
+    "Scan RunEverything QR" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "扫描 RunEverything 二维码"
+          }
+        }
+      }
+    },
+    "Scan a fresh Agent QR from Hosts to re-pair." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请在「主机」中扫描新的 Agent 二维码以重新配对。"
+          }
+        }
+      }
+    },
+    "Scan the Agent QR code" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "扫描 Agent 二维码"
+          }
+        }
+      }
+    },
+    "Scanner Error" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "扫码错误"
+          }
+        }
+      }
+    },
+    "Select…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请选择"
+          }
+        }
+      }
+    },
+    "Send a magic packet via the Agent." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通过 Agent 发送魔术包。"
+          }
+        }
+      }
+    },
+    "Send authorization code to terminal" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将授权码发送到终端"
+          }
+        }
+      }
+    },
+    "Server did not confirm key install" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器未确认公钥安装成功"
+          }
+        }
+      }
+    },
+    "Server did not confirm session deletion" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器未确认会话删除成功"
+          }
+        }
+      }
+    },
+    "Server disabled public-key login (PubkeyAuthentication no). Ask the admin to enable it in sshd_config, then retry." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器关闭了公钥登录（PubkeyAuthentication no）。请在 sshd_config 中开启后再试。"
+          }
+        }
+      }
+    },
+    "Server install command failed (exit %lld)" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器安装命令失败（退出码 %lld）"
+          }
+        }
+      }
+    },
+    "Server outbound network is restricted — cannot reach %@ install sources. Configure an HTTP/HTTPS proxy on the server, or install the CLI manually on a machine with internet access." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器出网受限，无法访问 %@ 的安装源。请在服务器上配置 HTTP/HTTPS 代理，或在可联网的机器上手动安装 CLI 后同步到服务器。"
+          }
+        }
+      }
+    },
+    "Server rejected host-based authentication." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器拒绝了基于主机的认证。"
+          }
+        }
+      }
+    },
+    "Server rejected key authentication." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器拒绝了密钥认证。"
+          }
+        }
+      }
+    },
+    "Server rejected password authentication." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器拒绝了密码认证。"
+          }
+        }
+      }
+    },
+    "Server “%@” has no %@ CLI. Install it to connect like a Mac terminal, or choose SSH Only for a plain shell." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器「%@」未检测到 %@ 命令行。安装后可像 Mac 终端一样连接；选择「仅用 SSH」则进入普通 shell。"
+          }
+        }
+      }
+    },
+    "Session" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "会话"
+          }
+        }
+      }
+    },
+    "Session Info" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "会话信息"
+          }
+        }
+      }
+    },
+    "Session List" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "会话列表"
+          }
+        }
+      }
+    },
+    "Session Name" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "会话名称"
+          }
+        }
+      }
+    },
+    "Session Password" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "会话密码"
+          }
+        }
+      }
+    },
+    "Session Unavailable" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "会话不可用"
+          }
+        }
+      }
+    },
+    "Session deleted" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "会话已删除"
+          }
+        }
+      }
+    },
+    "Session deleted on server and this device." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器和本机上的会话均已删除。"
+          }
+        }
+      }
+    },
+    "Session detail and resume will arrive in a later update. The list is already synced over a data-only Agent channel (no remote desktop video)." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Session detail and resume will arrive in a later update. The list is already synced over a data-only Agent channel (no remote desktop video)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "会话详情与恢复稍后实现。当前列表已通过纯数据通道从 Agent 同步（不打开远程桌面画面）。"
+          }
+        }
+      }
+    },
+    "Session missing" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "会话不存在"
+          }
+        }
+      }
+    },
+    "Session ticket rejected by relay" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中继拒绝了会话票据"
+          }
+        }
+      }
+    },
+    "Sessions" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "会话"
+          }
+        }
+      }
+    },
+    "Settings" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置"
+          }
+        }
+      }
+    },
+    "Setup complete" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置完成"
+          }
+        }
+      }
+    },
+    "Setup failed" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置失败"
+          }
+        }
+      }
+    },
+    "Setup succeeded" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置成功"
+          }
+        }
+      }
+    },
+    "Smooth" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "流畅"
+          }
+        }
+      }
+    },
+    "Smooth mode · weak network" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "流畅模式 · 弱网"
+          }
+        }
+      }
+    },
+    "Source" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "来源"
+          }
+        }
+      }
+    },
+    "Start Camera" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Camera"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开启摄像头"
+          }
+        }
+      }
+    },
+    "Start a new agent?" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动新的 Agent？"
+          }
+        }
+      }
+    },
+    "Starts a new Agent conversation in this project directory. Existing chats appear after refresh." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在该项目目录启动新的 Agent 对话。已有对话刷新后会出现在列表中。"
+          }
+        }
+      }
+    },
+    "Stop Camera" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop Camera"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭摄像头"
+          }
+        }
+      }
+    },
+    "Stop Phone as Webcam" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop Phone as Webcam"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止手机当摄像头"
+          }
+        }
+      }
+    },
+    "Stopping remote session…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在停止远端会话…"
+          }
+        }
+      }
+    },
+    "Stops the AI process on the desktop. Disconnect only closes this phone's link; the AI keeps running." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将结束电脑上的 AI 进程。断开连接只会关闭手机这一端，AI 会继续运行。"
+          }
+        }
+      }
+    },
+    "Stops the current remote session and starts a fresh one." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "结束当前远端会话并启动新的会话。"
+          }
+        }
+      }
+    },
+    "Stops the remote agent or screen session on the server. Disconnect only closes this phone's SSH link." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "终止服务器上的 Agent 或 screen 会话。断开连接仅关闭本机 SSH。"
+          }
+        }
+      }
+    },
+    "Switch Session…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换会话…"
+          }
+        }
+      }
+    },
+    "Switch back to KoKo to reconnect automatically." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切回 KoKo 后将自动重连。"
+          }
+        }
+      }
+    },
+    "Switch to Absolute Mouse" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch to Absolute Mouse"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换为绝对鼠标"
+          }
+        }
+      }
+    },
+    "Switch to Trackpad Mouse" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch to Trackpad Mouse"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换为触控板鼠标"
+          }
+        }
+      }
+    },
+    "Switching display…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在切换显示器…"
+          }
+        }
+      }
+    },
+    "Switching host to key login…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在切换为主机密钥登录…"
+          }
+        }
+      }
+    },
+    "System" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟随系统"
+          }
+        }
+      }
+    },
+    "Terminate" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "终止"
+          }
+        }
+      }
+    },
+    "Terminate Session" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "终止会话"
+          }
+        }
+      }
+    },
+    "Terminate Session?" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "终止会话？"
+          }
+        }
+      }
+    },
+    "The CLI starts in this folder inside a GNU screen session on the desktop, so it keeps running when the phone disconnects." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CLI 会在桌面上该目录的 GNU screen 会话中启动，手机断开后仍会继续运行。"
+          }
+        }
+      }
+    },
+    "The RunEverything Agent on this computer is too old to sync IDE chats. Update the Agent, then choose Reconnect." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这台电脑上的 RunEverything Agent 版本太旧，无法同步 IDE 会话。请先更新 Agent，再选择“重新连接”。"
+          }
+        }
+      }
+    },
+    "This Agent requires a session password." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此 Agent 需要会话密码。"
+          }
+        }
+      }
+    },
+    "This conversation lives in %@. Its CLI cannot resume it — open the remote desktop to continue it there, or start a new CLI session in the same project." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "该会话来自 %@，CLI 无法续接。可打开远程桌面在客户端中继续，或在同一项目新开一个 CLI 会话。"
+          }
+        }
+      }
+    },
+    "This conversation was removed from the device." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此对话已从本机移除。"
+          }
+        }
+      }
+    },
+    "This ends the remote tmux / agent session — different from Disconnect." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这将结束远端 agent persist 会话，与「断开连接」不同。"
+          }
+        }
+      }
+    },
+    "This host now uses key login. The saved password was removed from KoKo." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "该主机已改为密钥登录，KoKo 中保存的密码已清除。"
+          }
+        }
+      }
+    },
+    "This kills the existing remote session and starts a fresh agent." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将结束现有远端会话并启动全新 Agent。"
+          }
+        }
+      }
+    },
+    "This volunteer relay is full. Ask the Agent to pick another node, or try again later." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前志愿者中继已满。请让 Agent 换一个节点，或稍后再试。"
+          }
+        }
+      }
+    },
+    "Remote desktop is reconnecting — try again in a moment." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote desktop is reconnecting — try again in a moment."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "远程桌面正在重连，请稍后再试。"
+          }
+        }
+      }
+    },
+    "Timed out waiting for AI session list" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Timed out waiting for AI session list"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待 AI 会话列表超时"
+          }
+        }
+      }
+    },
+    "Title (optional)" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标题（可选）"
+          }
+        }
+      }
+    },
+    "Trackpad Mouse" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "触控板鼠标"
+          }
+        }
+      }
+    },
+    "Transfers" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "传输"
+          }
+        }
+      }
+    },
+    "Transport" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通道"
+          }
+        }
+      }
+    },
+    "Trust & Connect" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "信任并连接"
+          }
+        }
+      }
+    },
+    "Trust & Continue" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "信任并继续"
+          }
+        }
+      }
+    },
+    "Trust the host key to continue deleting the remote session." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "信任主机指纹以继续删除远端会话。"
+          }
+        }
+      }
+    },
+    "Trying LAN…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在检测局域网…"
+          }
+        }
+      }
+    },
+    "Trying backup relay…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在尝试备用中继…"
+          }
+        }
+      }
+    },
+    "UDP association timed out. Wait until the Agent log shows reudp associated, then retry. The relay UDP port may be blocked." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UDP 关联超时。请等 Agent 日志出现 reudp associated 后再重试；中继 UDP 端口可能被拦截。"
+          }
+        }
+      }
+    },
+    "Ultra" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "超清"
+          }
+        }
+      }
+    },
+    "Undo All" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部撤销"
+          }
+        }
+      }
+    },
+    "Undo all changes?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "撤销全部改动？"
+          }
+        }
+      }
+    },
+    "Unexpected pair response" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "意外的配对响应"
+          }
+        }
+      }
+    },
+    "Unrecognized QR content" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法识别的二维码内容"
+          }
+        }
+      }
+    },
+    "Unsupported pairing version %lld (need %lld)" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不支持的配对版本 %lld（需要 %lld）"
+          }
+        }
+      }
+    },
+    "Upload File…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上传文件…"
+          }
+        }
+      }
+    },
+    "Use Phone as Webcam" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use Phone as Webcam"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用手机当摄像头"
+          }
+        }
+      }
+    },
+    "User" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用户"
+          }
+        }
+      }
+    },
+    "Username" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用户名"
+          }
+        }
+      }
+    },
+    "Verifying key login…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在验证密钥登录…"
+          }
+        }
+      }
+    },
+    "Version" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "版本"
+          }
+        }
+      }
+    },
+    "Virtual Keyboard" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "虚拟键盘"
+          }
+        }
+      }
+    },
+    "Waiting for login link in terminal…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待终端输出登录链接…"
+          }
+        }
+      }
+    },
+    "Waiting for picture…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for picture…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在出画…"
+          }
+        }
+      }
+    },
+    "Wake" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "唤醒"
+          }
+        }
+      }
+    },
+    "Wake on LAN" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网络唤醒"
+          }
+        }
+      }
+    },
+    "Wake on LAN…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网络唤醒…"
+          }
+        }
+      }
+    },
+    "Weak network" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网络较差"
+          }
+        }
+      }
+    },
+    "Weak network · lowered quality" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网络较差 · 已降清晰度"
+          }
+        }
+      }
+    },
+    "Weak network · snappy" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "弱网优先"
+          }
+        }
+      }
+    },
+    "Writing authorized_keys…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在写入 authorized_keys…"
+          }
+        }
+      }
+    },
+    "desktop.gestures.help" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gestures\n• One finger: tap = click; two quick taps = double-click (e.g. title-bar zoom); slide = move; hold ~200ms then drag = select text\n• Two fingers: scroll (trackpad direction); pinch = zoom view; long-press = right-click\n• Three fingers: swipe left/right = switch Mac Spaces (including fullscreen apps)\nWhen zoomed in, one-finger drag pans the picture; pinch back to 1× to control the mouse again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手势说明\n• 单指：轻点=单击；连点两次=双击（如标题栏缩放窗口）；滑动=移动光标；按住约 200ms 再拖=选中文字\n• 双指：滚动（与触控板同向）；捏合=缩放画面；长按=右键\n• 三指：左右滑=切换 Mac 桌面空间（含全屏 App）\n放大画面后，单指拖动为平移画面；捏合回 1× 后可再控制鼠标。"
+          }
+        }
+      }
+    },
+    "desktop.quality.res.mismatch" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actual %@ · Set %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实际 %@ · 设置 %@"
+          }
+        }
+      }
+    },
+    "desktop.tip.audio.noperm" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unavailable — enable Microphone for the Agent in the desktop System Settings."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不可用 — 请在桌面端系统设置里为 Agent 开启麦克风权限。"
+          }
+        }
+      }
+    },
+    "desktop.tip.audio.off" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote audio is muted on this phone. Tap to unmute."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本机已静音远程声音。点按可取消静音。"
+          }
+        }
+      }
+    },
+    "desktop.tip.audio.on" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote audio is playing. Tap to mute on this phone."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在播放远程声音。点按可在本机静音。"
+          }
+        }
+      }
+    },
+    "desktop.tip.camera.noperm" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unavailable — enable Camera for the Agent in the desktop System Settings."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不可用 — 请在桌面端系统设置里为 Agent 开启摄像头权限。"
+          }
+        }
+      }
+    },
+    "desktop.tip.camera.off" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show the remote Mac’s camera in a small preview on this phone."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "把远程桌面电脑的摄像头画面传到手机小窗预览。"
+          }
+        }
+      }
+    },
+    "desktop.tip.camera.on" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote desktop camera preview is on. Tap to stop."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "远程桌面摄像头预览已开启。点按可停止。"
+          }
+        }
+      }
+    },
+    "desktop.tip.displays" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If the Mac has several monitors, pick which one to view and control."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac 有多块屏幕时，选择要观看和操控的那一块。"
+          }
+        }
+      }
+    },
+    "desktop.tip.files" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Browse folders on the remote Mac and download files to this phone."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浏览远程 Mac 上的文件夹，并把文件下载到本机。"
+          }
+        }
+      }
+    },
+    "desktop.tip.keyframe" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask for a fresh full video frame if the picture looks stuck or blocky."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画面卡住或出现色块时，请求一帧完整画面。"
+          }
+        }
+      }
+    },
+    "desktop.tip.mouse.absolute" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Now: Absolute — tap where you want the cursor. Switch to Trackpad for relative finger-slide movement."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前：绝对鼠标 — 点哪里光标到哪里。可切换为触控板（相对滑动移动）。"
+          }
+        }
+      }
+    },
+    "desktop.tip.mouse.trackpad" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Now: Trackpad — slide to move the cursor. Switch to Absolute to tap directly on targets."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前：触控板 — 滑动移动光标。可切换为绝对鼠标（直接点选目标）。"
+          }
+        }
+      }
+    },
+    "desktop.tip.paste" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send this phone’s clipboard text to the Mac."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "把本机剪贴板文字发送到 Mac。"
+          }
+        }
+      }
+    },
+    "desktop.tip.phoneWebcam.off" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send this phone’s camera to the Mac as “KoKo Phone Camera”. Flip front/back on the phone. In Zoom/Meet pick that device (needs AkVirtualCamera on the Mac if it doesn’t appear)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "把本机摄像头传到电脑，显示为 “KoKo Phone Camera”。可在手机上切换前/后置；会议软件里选该设备（若列表没有，需在 Mac 安装 AkVirtualCamera）。"
+          }
+        }
+      }
+    },
+    "desktop.tip.phoneWebcam.on" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phone is feeding the Mac webcam. Tap to stop; use flip to switch front/back."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手机正在向电脑摄像头推流。点按停止；小窗可切换前/后置。"
+          }
+        }
+      }
+    },
+    "desktop.tip.privacy.off" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cover the Mac’s local screen so nearby people can’t see what you’re doing remotely."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "遮住 Mac 本机屏幕，避免旁边的人看到你的远程操作。"
+          }
+        }
+      }
+    },
+    "desktop.tip.privacy.on" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy blank is on — the physical Mac display is covered while you control remotely."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐私遮罩已开启 — 远程操控时本机屏幕会被遮住。"
+          }
+        }
+      }
+    },
+    "desktop.tip.retryP2P" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try again for a direct LAN/P2P video path — usually lower latency than the cloud relay."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再试一次局域网/点对点直连画面，延迟通常比走云中继更低。"
+          }
+        }
+      }
+    },
+    "desktop.tip.upload" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick a file on this phone and send it to the remote Mac."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从本机选一个文件，上传到远程 Mac。"
+          }
+        }
+      }
+    },
+    "desktop.tip.wol" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask the Agent to send a Wake-on-LAN packet to a sleeping PC’s MAC address (that machine must have WoL enabled)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通过 Agent 向休眠电脑的网卡 MAC 发送唤醒包（对方需开启网络唤醒/WoL）。"
+          }
+        }
+      }
+    },
+    "encrypted data channel" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加密数据通道"
+          }
+        }
+      }
+    },
+    "remote desktop tunnel" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "远程桌面通道"
+          }
+        }
+      }
+    },
+    "sshd still reports PubkeyAuthentication no after reload" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "reload 之后 sshd 仍报告 PubkeyAuthentication no"
+          }
+        }
+      }
+    },
+    "sudo failed while enabling PubkeyAuthentication. Check the account can use sudo." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用 sudo 开启 PubkeyAuthentication 失败，请确认该账号有 sudo 权限。"
+          }
+        }
+      }
+    },
+    "the desktop client" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "桌面客户端"
+          }
+        }
+      }
+    }
   },
   "version" : "1.0"
 }

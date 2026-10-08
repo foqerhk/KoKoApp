@@ -12,6 +12,9 @@ struct RemoteAgentConversation: Equatable, Sendable {
     var updatedAt: Date
     var screenName: String
     var screenAlive: Bool
+    /// `cli` or `client` (desktop app / IDE); nil when the Agent predates origin reporting.
+    var source: String? = nil
+    var client: String? = nil
 }
 
 enum AgentSessionSyncError: LocalizedError {
@@ -435,6 +438,22 @@ enum AgentSessionSync {
             except Exception:
                 return False
 
+        def codex_title(text):
+            if not text:
+                return None
+            text = str(text).strip()
+            m = re.search(r"<user_query>\\s*(.*?)\\s*</user_query>", text, re.I | re.S)
+            if m:
+                return " ".join(m.group(1).split())[:80]
+            lower = text.lower()
+            if (lower.startswith("<environment_context")
+                    or lower.startswith("# agents.md instructions")
+                    or "<instructions>" in lower
+                    or "<approval_policy>" in lower
+                    or "<cwd>" in lower):
+                return None
+            return " ".join(text.split())[:80]
+
         chats_root = pathlib.Path.home() / ".cursor" / "chats"
 
         def add_cursor_dir(d, require_cwd_match=False):
@@ -489,16 +508,49 @@ enum AgentSessionSync {
                         add("claude", sid, title, updated_ms=mtime)
 
         codex_root = pathlib.Path.home() / ".codex" / "sessions"
-        if codex_root.is_dir():
-            for d in codex_root.iterdir():
-                if not d.is_dir():
+        codex_archived = pathlib.Path.home() / ".codex" / "archived_sessions"
+        for root in [codex_root, codex_archived]:
+            if not root.is_dir():
+                continue
+            for f in root.rglob("*.jsonl"):
+                sid = None
+                title = None
+                cwd = None
+                created_ms = None
+                try:
+                    with f.open(errors="replace") as fh:
+                        for line_no, line in enumerate(fh):
+                            if line_no >= 80:
+                                break
+                            try:
+                                row = json.loads(line)
+                            except Exception:
+                                continue
+                            payload = row.get("payload") or {}
+                            if row.get("type") == "session_meta":
+                                sid = payload.get("id") or sid
+                                cwd = payload.get("cwd") or cwd
+                                ts = payload.get("timestamp") or row.get("timestamp")
+                                if ts:
+                                    try:
+                                        created_ms = __import__("datetime").datetime.fromisoformat(
+                                            ts.replace("Z", "+00:00")
+                                        ).timestamp() * 1000
+                                    except Exception:
+                                        pass
+                            if not title and row.get("type") == "event_msg" and payload.get("type") == "user_message":
+                                title = codex_title(payload.get("message"))
+                            if sid and title and cwd:
+                                break
+                except Exception:
+                    pass
+                if not sid:
+                    m = re.search(r"[0-9a-fA-F]{8}-[0-9a-fA-F-]{27,}", f.stem)
+                    sid = m.group(0) if m else f.stem
+                if cwd and not cwd_matches(cwd):
                     continue
-                sid = d.name
-                mtime = d.stat().st_mtime * 1000
-                jsonl = d / "session.jsonl"
-                if jsonl.is_file():
-                    mtime = max(mtime, jsonl.stat().st_mtime * 1000)
-                add("codex", sid, sid[:8], updated_ms=mtime)
+                mtime = f.stat().st_mtime * 1000
+                add("codex", sid, title or sid[:8], cwd=cwd, created_ms=created_ms, updated_ms=mtime)
 
         gemini_root = pathlib.Path.home() / ".gemini"
         for sub in ["chats", "tmp"]:

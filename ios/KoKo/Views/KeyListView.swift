@@ -16,10 +16,10 @@ struct KeyListView: View {
     var body: some View {
         List {
             if store.keyPairs.isEmpty {
-                ContentUnavailableView(
-                    "No Keys",
+                EmptyListStatusView(
+                    title: "No Keys",
                     systemImage: "key",
-                    description: Text("Generate Ed25519 / ECDSA / RSA keys stored in Keychain")
+                    description: "Generate Ed25519 / ECDSA / RSA keys stored in Keychain"
                 )
             } else {
                 ForEach(store.keyPairs) { key in

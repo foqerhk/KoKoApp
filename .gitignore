@@ -7,6 +7,8 @@ AuthKey_*.p8
 
 ios/DerivedData/
 ios/DerivedDataSim/
+/DerivedData*/
+ios/DerivedData*/
 ipad/DerivedData/
 ipad/DerivedDataSim/
 ios/build/
@@ -20,6 +22,11 @@ docs/
 ios/scripts/asc_*.py
 ios/scripts/record_review_demo.sh
 .cursor/
+
+# Local-only joint-debug runbook (also at ~/Downloads/KOKO_RE_LOCAL_DEVICE_AGENT_SERVER.md)
+KOKO_RE_LOCAL_DEVICE_AGENT_SERVER.md
+**/KOKO_RE_LOCAL_DEVICE_AGENT_SERVER.md
+
 
 *.keystore
 *.jks

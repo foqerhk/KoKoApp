@@ -11,7 +11,7 @@ Supported agents (on your server):
 | **Codex CLI** | GNU `screen` (`koko-codex-*`) |
 | **Gemini CLI** | GNU `screen` (`koko-gemini-*`) |
 
-## iOS app
+## iOS app (Universal: iPhone + Duo + iPad)
 
 ```bash
 cd ios
@@ -20,18 +20,13 @@ chmod +x scripts/setup.sh
 open KoKo.xcodeproj
 ```
 
-Run on a physical iPhone or the iOS Simulator (Xcode 16+, iOS 17+). Unfolded foldable iPhones automatically use the **Duo** split layout from `ipad/KoKoPad/Views/`.
+One App Store binary (`com.foqerhk.koko`). `AdaptiveRootView` picks:
 
-## iPad app
+- compact iPhone → `PhoneRootView`
+- unfolded Duo → `DuoRootView`
+- iPad → `TabletRootView`
 
-```bash
-cd ipad
-chmod +x scripts/setup.sh
-./scripts/setup.sh
-open KoKoPad.xcodeproj
-```
-
-See [ipad/README.md](ipad/README.md) for tablet vs foldable layout details.
+Large-screen sources live under `ios/KoKo/Support/` and `ios/KoKo/Views/` (formerly a separate `ipad/` target, now merged into this Universal app).
 
 ### Highlights
 

@@ -20,6 +20,7 @@ enum KeychainError: LocalizedError {
 enum KeychainAccount: String {
     case privateKey = "ssh-private-key"
     case password = "ssh-password"
+    case desktopAccessPassword = "re2-desktop-password"
 }
 
 final class KeychainService {

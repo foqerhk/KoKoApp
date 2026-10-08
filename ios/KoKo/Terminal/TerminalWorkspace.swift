@@ -1,4 +1,5 @@
 import Citadel
+import Combine
 import Foundation
 import NIO
 import NIOSSH
@@ -18,6 +19,11 @@ final class TerminalWorkspace: ObservableObject {
     /// Local KoKo connect / status log — shown above the PTY, never inside it.
     @Published private(set) var localStatusEvents: [LocalStatusEvent] = []
     @Published private(set) var terminalFontSize: CGFloat
+    /// Mode / model / changed files of a mirrored Cursor IDE chat.
+    @Published private(set) var ideState: IDEChatState?
+    private var backgroundDisconnectTask: Task<Void, Never>?
+    private var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
+    private var ideExtractor = IDEStateExtractor()
 
     let terminalView: TerminalView
     private let sessionId: UUID
@@ -30,6 +36,13 @@ final class TerminalWorkspace: ObservableObject {
     private var intentionalClose = false
     private var activeSession: TerminalSession?
     private var activeServer: ServerProfile?
+    /// Paired-desktop AI CLI over the Agent PTY channel instead of SSH.
+    private var agentPTY: (transport: AgentPTYTransport, id: String)?
+    private var dataTunnel: RE2DataTunnel?
+    private var desktopChat: DesktopAgentChat?
+    private var desktopProfile: PairedDesktop?
+    private var hubPhaseObserver: AnyCancellable?
+    private var desktopAutoReconnects = 0
     private var connectGeneration = 0
     /// Batched scrollback/login parsing — never block the SSH reader.
     private var pendingScrollback = Data()
@@ -194,6 +207,8 @@ final class TerminalWorkspace: ObservableObject {
         intentionalClose = false
         activeSession = session
         activeServer = server
+        desktopChat = nil
+        desktopProfile = nil
         title = session.displayName
         detectedLoginURL = nil
         detectedLoginCode = nil
@@ -253,8 +268,235 @@ final class TerminalWorkspace: ObservableObject {
         }
     }
 
+    /// Attach a paired desktop's AI CLI (Cursor / Claude / Codex / Gemini) through the
+    /// Agent PTY channel — same editor as SSH, no remote-desktop video.
+    func connectDesktopAgent(
+        desk: PairedDesktop,
+        chat: DesktopAgentChat,
+        mode: RemoteBootstrap.LaunchMode = .preferExisting
+    ) {
+        closeConnection(updateState: .connecting, feedErrors: false)
+        intentionalClose = false
+        activeSession = nil
+        activeServer = nil
+        desktopChat = chat
+        desktopProfile = desk
+        desktopAutoReconnects = 0
+        ideExtractor = IDEStateExtractor()
+        if ideState?.composerId != chat.chatId { ideState = nil }
+        title = chat.displayTitle
+        detectedLoginURL = nil
+        detectedLoginCode = nil
+        loginAgentKind = nil
+        awaitingAgentLogin = false
+        loginDetectionBuffer = ""
+        clearLocalStatus()
+        didWarnInputNotReady = false
+        resetScreenForConnect(mode: mode)
+        appendLocalStatus("Connecting to \(desk.name)…", kind: .info)
+        connectGeneration += 1
+        let generation = connectGeneration
+        startConnectingWatchdog(generation: generation)
+
+        connectionTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                try await self.runDesktopAgentConnection(desk: desk, chat: chat, mode: mode, generation: generation)
+            } catch {
+                guard generation == self.connectGeneration, !self.intentionalClose else { return }
+                if error is CancellationError { return }
+                let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                self.closeConnection(updateState: .failed(message), feedErrors: false)
+                self.appendLocalStatus(message, kind: .error)
+            }
+        }
+    }
+
+    private func runDesktopAgentConnection(
+        desk: PairedDesktop,
+        chat: DesktopAgentChat,
+        mode: RemoteBootstrap.LaunchMode,
+        generation: Int
+    ) async throws {
+        let hubSession = DesktopSessionHub.shared.session
+        let transport: AgentPTYTransport
+        if try await DesktopSessionHub.shared.sharedTunnel(for: desk) {
+            transport = DesktopTunnelPTYTransport(session: hubSession)
+        } else {
+            appendLocalStatus("Opening encrypted data channel (no desktop video)…", kind: .info)
+            let tunnel = RE2DataTunnel(profile: desk)
+            try await tunnel.connect()
+            guard generation == connectGeneration, !intentionalClose else {
+                tunnel.shutdown()
+                throw CancellationError()
+            }
+            dataTunnel = tunnel
+            transport = tunnel
+            watchDesktopTakeover(deviceID: desk.deviceID, generation: generation)
+        }
+        appendLocalStatus("Agent reached via \(transport.label) — attaching \(chat.agentKind.displayName)…", kind: .success)
+
+        terminalView.layoutIfNeeded()
+        let dimensions = terminalView.terminalDimensions
+        let id = DesktopAgentLaunch.ptySessionID(for: chat)
+        let launch = DesktopAgentLaunch.request(
+            chat: chat,
+            mode: mode,
+            cols: max(dimensions.cols, 80),
+            rows: max(dimensions.rows, 24)
+        )
+        // Loader output until its marker is local plumbing, never shown.
+        var staging: Data? = Data()
+        try await transport.open(
+            id: id,
+            request: launch.open,
+            onReady: {},
+            onData: { [weak self] data in
+                guard let self, generation == self.connectGeneration else { return }
+                var output = data
+                if var buffered = staging {
+                    buffered.append(data)
+                    guard let marker = buffered.range(of: DesktopAgentLaunch.stageReadyMarker) else {
+                        staging = buffered
+                        return
+                    }
+                    staging = nil
+                    output = buffered.subdata(in: marker.upperBound..<buffered.endIndex)
+                    self.restoreScrollbackIfPending()
+                    Task { [weak self] in
+                        do {
+                            try await transport.write(id: id, data: launch.script)
+                        } catch {
+                            self?.handleDesktopAgentClosed(reason: error.localizedDescription, generation: generation)
+                            return
+                        }
+                        guard let self, generation == self.connectGeneration else { return }
+                        self.agentPTY = (transport, id)
+                        self.desktopAutoReconnects = 0
+                        self.connectionState = .connected
+                        self.appendLocalStatus("\(chat.agentKind.displayName) attached on \(desk.name)", kind: .success)
+                        self.syncRemoteTerminalSize()
+                        if !self.stdinPending.isEmpty { self.startStdinDrainIfNeeded() }
+                    }
+                }
+                if chat.mirrorsIDEChat {
+                    let split = self.ideExtractor.process(output)
+                    output = split.output
+                    if let state = split.states.last { self.applyIDEState(state) }
+                }
+                guard !output.isEmpty else { return }
+                self.terminalView.feed(byteArray: ArraySlice(output))
+                self.enqueueScrollback(output)
+            },
+            onClose: { [weak self] reason in
+                self?.handleDesktopAgentClosed(reason: reason, generation: generation)
+            }
+        )
+    }
+
+    /// The desktop chat this workspace is attached to; a new IDE chat gains its id here.
+    var currentDesktopChat: DesktopAgentChat? { desktopChat }
+
+    private func applyIDEState(_ state: IDEChatState) {
+        ideState = state
+        // A chat created from the phone learns its Cursor id from the first state, so
+        // reconnects reopen it instead of creating another one.
+        if var chat = desktopChat, chat.chatId.isEmpty, !state.composerId.isEmpty {
+            chat.chatId = state.composerId
+            if !state.name.isEmpty { chat.title = state.name }
+            desktopChat = chat
+        }
+    }
+
+    func sendIDEAction(_ op: String, id: String? = nil) {
+        sendBytes(IDEChatState.actionBytes(op: op, id: id))
+    }
+
+    /// Opening the remote desktop moves the Agent to a new Noise session, which
+    /// silently orphans this data tunnel's PTY — reattach through the desktop tunnel.
+    private func watchDesktopTakeover(deviceID: String, generation: Int) {
+        let hubSession = DesktopSessionHub.shared.session
+        hubPhaseObserver = hubSession.$phase
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] phase in
+                guard let self, generation == self.connectGeneration,
+                      phase == .streaming,
+                      hubSession.currentPaired?.deviceID == deviceID else { return }
+                self.handleDesktopAgentClosed(reason: "tunnel_reset", generation: generation)
+            }
+    }
+
+    private func handleDesktopAgentClosed(reason: String?, generation: Int) {
+        guard generation == connectGeneration, !intentionalClose else { return }
+        if reason == "pty_exit" {
+            appendLocalStatus("Remote terminal closed", kind: .info)
+            closeConnection(updateState: .ended, feedErrors: false)
+            return
+        }
+        let detail = reason ?? "connection lost"
+        guard let desk = desktopProfile, let chat = desktopChat, desktopAutoReconnects < 3 else {
+            closeConnection(updateState: .failed(detail), feedErrors: false)
+            appendLocalStatus(detail, kind: .error)
+            return
+        }
+        desktopAutoReconnects += 1
+        appendLocalStatus("Link changed (\(detail)) — reattaching…", kind: .warning)
+        closeConnection(updateState: .reconnecting, feedErrors: false)
+        let retryGeneration = connectGeneration
+        Task { [weak self] in
+            // Let the Agent finish its Noise switch before the next OPEN.
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            guard let self, retryGeneration == self.connectGeneration else { return }
+            let attempts = self.desktopAutoReconnects
+            self.connectDesktopAgent(desk: desk, chat: chat, mode: .preferExisting)
+            self.desktopAutoReconnects = attempts
+        }
+    }
+
+    /// App went to background: keep the link for a grace period so quick trips out
+    /// (Settings, Control Center, a reply) do not drop and reattach the session.
+    func enterBackground(grace: TimeInterval = 20) {
+        guard backgroundDisconnectTask == nil else { return }
+        if backgroundTaskID == .invalid {
+            backgroundTaskID = UIApplication.shared.beginBackgroundTask(withName: "koko.terminal.grace") { [weak self] in
+                Task { @MainActor [weak self] in self?.finishBackgroundGrace() }
+            }
+        }
+        backgroundDisconnectTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(grace * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+            self?.finishBackgroundGrace()
+        }
+    }
+
+    /// Back in foreground: cancel the pending disconnect. The caller then runs its usual
+    /// `ensureConnected()`, which reconnects only if the link dropped meanwhile.
+    func enterForeground() {
+        backgroundDisconnectTask?.cancel()
+        backgroundDisconnectTask = nil
+        endBackgroundTime()
+    }
+
+    private func finishBackgroundGrace() {
+        backgroundDisconnectTask?.cancel()
+        backgroundDisconnectTask = nil
+        if UIApplication.shared.applicationState != .active {
+            disconnect()
+        }
+        endBackgroundTime()
+    }
+
+    private func endBackgroundTime() {
+        guard backgroundTaskID != .invalid else { return }
+        UIApplication.shared.endBackgroundTask(backgroundTaskID)
+        backgroundTaskID = .invalid
+    }
+
     /// Disconnect SSH; the remote agent / screen session keeps running.
     func disconnect() {
+        backgroundDisconnectTask?.cancel()
+        backgroundDisconnectTask = nil
         pendingScrollbackRestore = false
         closeConnection(updateState: .disconnected, feedErrors: false)
         clearTerminalDisplay()
@@ -264,7 +506,24 @@ final class TerminalWorkspace: ObservableObject {
     func terminateSession() {
         intentionalClose = true
         connectionState = .ended
-        if let activeSession, stdinWriter != nil {
+        if let chat = desktopChat, let agentPTY {
+            let transport = agentPTY.transport
+            let killID = agentPTY.id + "-quit"
+            Task {
+                try? await transport.open(
+                    id: killID,
+                    request: DesktopAgentLaunch.terminateRequest(chat: chat),
+                    onReady: {},
+                    onData: { _ in },
+                    onClose: { _ in }
+                )
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                await transport.close(id: killID)
+                transport.shutdown()
+            }
+            self.agentPTY = nil
+            dataTunnel = nil
+        } else if let activeSession, stdinWriter != nil {
             sendText(RemoteBootstrap.killSessionCommand(session: activeSession))
         }
         closeConnection(updateState: .ended, feedErrors: false)
@@ -284,7 +543,7 @@ final class TerminalWorkspace: ObservableObject {
     func sendBytes(_ data: Data) {
         guard !data.isEmpty else { return }
         if suppressTerminalResponsesDuringReplay { return }
-        guard let writer = stdinWriter else {
+        guard stdinWriter != nil || agentPTY != nil else {
             if !didWarnInputNotReady {
                 didWarnInputNotReady = true
                 appendLocalStatus("Input ignored — session not attached yet", kind: .warning)
@@ -305,6 +564,12 @@ final class TerminalWorkspace: ObservableObject {
             guard let self else { return }
             defer { self.stdinDrainTask = nil }
             while !self.stdinPending.isEmpty {
+                if let agentPTY = self.agentPTY {
+                    let chunk = self.stdinPending
+                    self.stdinPending = Data()
+                    try? await agentPTY.transport.write(id: agentPTY.id, data: chunk)
+                    continue
+                }
                 guard let writer = self.stdinWriter else {
                     self.stdinPending.removeAll(keepingCapacity: false)
                     return
@@ -363,6 +628,10 @@ final class TerminalWorkspace: ObservableObject {
     }
 
     func resizeTerminal(cols: Int, rows: Int) {
+        if let agentPTY {
+            Task { await agentPTY.transport.resize(id: agentPTY.id, cols: cols, rows: rows) }
+            return
+        }
         guard let stdinWriter else { return }
         let writer = stdinWriter
         Task {
@@ -420,6 +689,18 @@ final class TerminalWorkspace: ObservableObject {
         connectionState = updateState
         // Unblock any host-key sheet still awaiting approval from a prior attempt.
         HostKeyApprovalGate.shared.reset()
+
+        hubPhaseObserver = nil
+        let pty = agentPTY
+        let tunnel = dataTunnel
+        agentPTY = nil
+        dataTunnel = nil
+        if pty != nil || tunnel != nil {
+            Task {
+                if let pty { await pty.transport.close(id: pty.id) }
+                tunnel?.shutdown()
+            }
+        }
 
         let client = sshClient
         sshClient = nil
@@ -723,7 +1004,7 @@ final class TerminalWorkspace: ObservableObject {
     }
 
     private func scanForLoginCredentials(in output: String) {
-        let preferredKind = loginAgentKind ?? activeSession?.agentKind
+        let preferredKind = loginAgentKind ?? activeSession?.agentKind ?? desktopChat?.agentKind
         let activelyLoggingIn = awaitingAgentLogin || loginAgentKind != nil
 
         if detectedLoginURL == nil {

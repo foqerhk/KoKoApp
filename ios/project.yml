@@ -10,33 +10,46 @@ packages:
     path: Packages/SwiftTerm
   Citadel:
     path: Packages/Citadel
+  Opus:
+    path: Packages/swift-opus
 targets:
   KoKo:
     type: application
     platform: iOS
     sources:
       - path: KoKo
-      - path: ../ipad/KoKoPad/Support
-      - path: ../ipad/KoKoPad/Views
     info:
       path: KoKo/Info.plist
       properties:
         CFBundleDisplayName: KoKo
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         UILaunchScreen: {}
         UIApplicationSceneManifest:
-          UIApplicationSupportsMultipleScenes: false
-        NSLocalNetworkUsageDescription: KoKo connects to your servers over SSH so you can run AI agents in a terminal.
+          UIApplicationSupportsMultipleScenes: true
+        NSLocalNetworkUsageDescription: KoKo connects to your servers over SSH and Relay so you can run AI agents and remote desktops.
+        NSCameraUsageDescription: KoKo uses the camera to scan Agent pairing QR codes and to use this phone as a webcam on the remote desktop.
+        CFBundleURLTypes:
+          - CFBundleURLName: com.foqerhk.koko.pair
+            CFBundleURLSchemes:
+              - koko
         ITSAppUsesNonExemptEncryption: false
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.foqerhk.koko
-      MARKETING_VERSION: "1.0.0"
-      CURRENT_PROJECT_VERSION: 3
+      MARKETING_VERSION: "1.1.0"
+      CURRENT_PROJECT_VERSION: 42
       SWIFT_VERSION: "5.0"
-      TARGETED_DEVICE_FAMILY: "1"
+      # Universal: compact iPhone + Duo (phone) + iPad — AdaptiveRootView picks the shell.
+      TARGETED_DEVICE_FAMILY: "1,2"
       GENERATE_INFOPLIST_FILE: NO
       ENABLE_PREVIEWS: YES
       ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -46,3 +59,5 @@ targets:
     dependencies:
       - package: SwiftTerm
       - package: Citadel
+      - package: Opus
+        product: Opus
