@@ -1,16 +1,20 @@
 import Foundation
+import UIKit
 
-/// Short-lived RE2 WSS client for AI session inventory.
+/// RE2 data-channel handshake, plus a one-shot AI session list for relays / Agents
+/// without separate channels (`DesktopSessionHub` otherwise uses a shared `RE2DataTunnel`).
 /// Does **not** open desktop, video, mouse, or PTY — data only.
 enum RE2AgentChatClient {
     /// Fetch Cursor / Claude / Codex / Gemini chats from a paired Agent.
     static func listChats(
         profile: PairedDesktop,
         projectPath: String? = nil,
-        kind: AgentKind? = nil
+        kind: AgentKind? = nil,
+        force: Bool = false,
+        channel: Bool = true
     ) async throws -> [RemoteAgentConversation] {
-        let deviceID = profile.deviceID
-        let (sig, send, recv) = try await handshake(profile: profile)
+        let link = try await handshake(profile: profile, force: force, channel: channel)
+        let (sig, send, recv, route) = (link.sig, link.send, link.recv, link.route)
         defer { sig.close() }
 
         var offset = 0
@@ -24,7 +28,7 @@ enum RE2AgentChatClient {
                 msgType: RE2.Msg.agentChatList,
                 body: RE2Codec.jsonData(req)
             ))
-            try await sig.writeFrame(RE2Frame(type: RE2.OuterType.tunnel, routeID: deviceID, payload: ct))
+            try await sig.writeFrame(RE2Frame(type: RE2.OuterType.tunnel, routeID: route, payload: ct))
 
             let deadline = Date().addingTimeInterval(20)
             var page: AgentChatPage?
@@ -57,19 +61,27 @@ enum RE2AgentChatClient {
         throw RE2Error.signaling("AI session list exceeded page limit")
     }
 
-    /// BIND with the session ticket and run Noise XX+PSK over WSS (no PairRedeem, no desktop).
-    static func handshake(
-        profile: PairedDesktop
-    ) async throws -> (RE2SignalingClient, NoiseCipherState, NoiseCipherState) {
+    struct DataLink {
+        var sig: RE2SignalingClient
+        var send: NoiseCipherState
+        var recv: NoiseCipherState
+        /// RouteID for tunnel frames: the data channel's, or the bare device id on old relays.
+        var route: String
+        /// `false` on a relay that ignored the channel: this link holds the desktop slot.
+        var separate: Bool
+    }
+
+    /// BIND the data channel with the session ticket and run Noise XX+PSK over WSS
+    /// (no PairRedeem, no desktop). `force` takes over from another phone;
+    /// `channel: false` is the pre-channel bind for old relays / Agents.
+    static func handshake(profile: PairedDesktop, force: Bool = false, channel: Bool = true) async throws -> DataLink {
         guard profile.canReconnect else {
             throw RE2Error.signaling(String(localized: "Re-pair required — scan a fresh Agent QR."))
         }
-        let deviceID = profile.deviceID
         let sig = RE2SignalingClient()
         try await sig.connect(relay: profile.relayURL)
         do {
-            let (send, recv) = try await bindAndHandshake(sig: sig, profile: profile, deviceID: deviceID)
-            return (sig, send, recv)
+            return try await bindAndHandshake(sig: sig, profile: profile, force: force, channel: channel)
         } catch {
             sig.close()
             throw error
@@ -79,40 +91,39 @@ enum RE2AgentChatClient {
     private static func bindAndHandshake(
         sig: RE2SignalingClient,
         profile: PairedDesktop,
-        deviceID: String
-    ) async throws -> (NoiseCipherState, NoiseCipherState) {
-        // BIND with session ticket (no PairRedeem).
+        force: Bool,
+        channel: Bool
+    ) async throws -> DataLink {
+        let deviceID = profile.deviceID
+        await MainActor.run { RE2ControllerIdentity.name = UIDevice.current.name }
         try await sig.writeFrame(RE2Frame(
             type: RE2.OuterType.bind,
             routeID: deviceID,
             payload: RE2ControllerIdentity.bindPayload(
-                deviceID: deviceID, sessionTicket: profile.sessionTicket, force: false
+                deviceID: deviceID, sessionTicket: profile.sessionTicket, force: force,
+                channel: channel ? RE2Channel.data : nil
             )
         ))
         let bindFrame = try await readSkippingPing(sig)
         if bindFrame.type == RE2.OuterType.error {
-            throw RE2Error.fromRelayError(
-                code: RE2Codec.jsonObject(bindFrame.payload)["code"] as? String ?? "",
-                message: RE2Codec.jsonObject(bindFrame.payload)["message"] as? String ?? "bind failed"
-            )
+            throw relayError(bindFrame.payload, fallback: "bind failed")
         }
         guard bindFrame.type == RE2.OuterType.bindOK else {
             throw RE2Error.signaling("unexpected bind reply")
         }
+        let separate = (RE2Codec.jsonObject(bindFrame.payload)["channel"] as? String) == RE2Channel.data
+        let route = separate ? RE2Channel.route(deviceID: deviceID, channel: RE2Channel.data) : deviceID
 
         // Noise XX+PSK over WSS.
         let psk = RE2.derivePSK(pairingToken: profile.pairingToken)
         let hs = try NoiseXXPSK3(psk: psk)
         let msg1 = try hs.writeMessage1()
-        try await sig.writeFrame(RE2Frame(type: RE2.OuterType.noise, routeID: deviceID, payload: msg1))
+        try await sig.writeFrame(RE2Frame(type: RE2.OuterType.noise, routeID: route, payload: msg1))
         var msg2: Data?
         for _ in 0..<8 {
             let f = try await readSkippingPing(sig)
             if f.type == RE2.OuterType.error {
-                throw RE2Error.fromRelayError(
-                    code: RE2Codec.jsonObject(f.payload)["code"] as? String ?? "",
-                    message: RE2Codec.jsonObject(f.payload)["message"] as? String ?? "noise failed"
-                )
+                throw relayError(f.payload, fallback: "noise failed")
             }
             if f.type == RE2.OuterType.noise {
                 msg2 = f.payload
@@ -124,8 +135,18 @@ enum RE2AgentChatClient {
         }
         try hs.readMessage2(msg2)
         let (msg3, send, recv) = try hs.writeMessage3()
-        try await sig.writeFrame(RE2Frame(type: RE2.OuterType.noise, routeID: deviceID, payload: msg3))
-        return (send, recv)
+        try await sig.writeFrame(RE2Frame(type: RE2.OuterType.noise, routeID: route, payload: msg3))
+        return DataLink(sig: sig, send: send, recv: recv, route: route, separate: separate)
+    }
+
+    /// Relay error frame → RE2Error, keeping the busy controller's name.
+    static func relayError(_ payload: Data, fallback: String) -> RE2Error {
+        let obj = RE2Codec.jsonObject(payload)
+        let code = obj["code"] as? String ?? ""
+        if code == "controller_busy" {
+            return .controllerBusy(peer: obj["peer"] as? String ?? "")
+        }
+        return RE2Error.fromRelayError(code: code, message: obj["message"] as? String ?? fallback)
     }
 
     private static func readSkippingPing(_ sig: RE2SignalingClient) async throws -> RE2Frame {
@@ -141,13 +162,13 @@ enum RE2AgentChatClient {
         throw RE2Error.signaling("frame timeout")
     }
 
-    private struct AgentChatPage {
+    fileprivate struct AgentChatPage {
         var rows: [RemoteAgentConversation]
         var nextOffset: Int
         var hasMore: Bool
     }
 
-    private static func parseList(_ body: Data) throws -> AgentChatPage {
+    fileprivate static func parseList(_ body: Data) throws -> AgentChatPage {
         let obj = RE2Codec.jsonObject(body)
         if let err = obj["error"] as? String, !err.isEmpty {
             throw RE2Error.signaling(err)
@@ -278,23 +299,39 @@ final class RE2DataTunnel: AgentPTYTransport {
     private var sig: RE2SignalingClient?
     private var sendCipher: NoiseCipherState?
     private var recvCipher: NoiseCipherState?
+    private var route: String
     private var readTask: Task<Void, Never>?
     private var keepaliveTask: Task<Void, Never>?
     /// Noise nonces must reach the Agent in encryption order.
     private var sendTail: Task<Void, Error>?
     private var routes: [String: Route] = [:]
+    /// `false` when an old relay/Agent put this tunnel in the desktop slot, so a
+    /// desktop connect replaces it.
+    private(set) var isSeparateChannel = false
+    /// Owned by `DesktopSessionHub` and shared by every user of this Agent:
+    /// `shutdown()` from a single user is ignored.
+    var isShared = false
+    private var chatWaiter: CheckedContinuation<Data, Error>?
+    private var chatTimeout: Task<Void, Never>?
+    private var chatTail: Task<Void, Never>?
 
     init(profile: PairedDesktop) {
         self.profile = profile
+        route = profile.deviceID
     }
+
+    var isOpen: Bool { sig != nil && sendCipher != nil }
+    var sessionTicket: String { profile.sessionTicket }
 
     var label: String { String(localized: "encrypted data channel") }
 
-    func connect() async throws {
-        let (sig, send, recv) = try await RE2AgentChatClient.handshake(profile: profile)
-        self.sig = sig
-        sendCipher = send
-        recvCipher = recv
+    func connect(force: Bool = false, channel: Bool = true) async throws {
+        let link = try await RE2AgentChatClient.handshake(profile: profile, force: force, channel: channel)
+        sig = link.sig
+        sendCipher = link.send
+        recvCipher = link.recv
+        route = link.route
+        isSeparateChannel = link.separate
         readTask = Task { [weak self] in await self?.readLoop() }
         keepaliveTask = Task { [weak self] in
             while !Task.isCancelled {
@@ -342,6 +379,12 @@ final class RE2DataTunnel: AgentPTYTransport {
     }
 
     func shutdown() {
+        guard !isShared else { return }
+        teardown()
+    }
+
+    /// Close the link for every user.
+    func teardown(reason: String? = nil) {
         readTask?.cancel()
         keepaliveTask?.cancel()
         readTask = nil
@@ -350,7 +393,75 @@ final class RE2DataTunnel: AgentPTYTransport {
         sig = nil
         sendCipher = nil
         recvCipher = nil
+        resumeChat(.failure(RE2Error.signaling(reason ?? String(localized: "Not connected to Agent"))))
+        let pending = routes
         routes.removeAll()
+        if let reason { pending.values.forEach { $0.onClose(reason) } }
+    }
+
+    /// All AI sessions, paged. Requests are serialized: the Agent answers in order
+    /// and pages carry no request id.
+    func listChats(projectPath: String? = nil, kind: AgentKind? = nil) async throws -> [RemoteAgentConversation] {
+        let previous = chatTail
+        let task = Task { @MainActor [weak self] () async throws -> [RemoteAgentConversation] in
+            _ = await previous?.value
+            guard let self else { throw RE2Error.cancelled }
+            return try await self.fetchChatPages(projectPath: projectPath, kind: kind)
+        }
+        chatTail = Task { _ = await task.result }
+        return try await task.value
+    }
+
+    private func fetchChatPages(projectPath: String?, kind: AgentKind?) async throws -> [RemoteAgentConversation] {
+        var offset = 0
+        var all: [RemoteAgentConversation] = []
+        var seen = Set<String>()
+        for _ in 0..<256 {
+            var req: [String: Any] = ["action": "list", "offset": offset]
+            if let projectPath, !projectPath.isEmpty { req["project_path"] = projectPath }
+            if let kind { req["kind"] = kind.rawValue }
+            let page = try RE2AgentChatClient.parseList(
+                try await chatRequest(RE2Codec.jsonData(req), timeout: 20)
+            )
+            for row in page.rows {
+                let key = "\(row.agentKind.rawValue)|\(row.chatId)"
+                if seen.insert(key).inserted { all.append(row) }
+            }
+            if !page.hasMore { return all.sorted { $0.updatedAt > $1.updatedAt } }
+            guard page.nextOffset > offset else {
+                throw RE2Error.signaling("AI session pagination did not advance")
+            }
+            offset = page.nextOffset
+        }
+        throw RE2Error.signaling("AI session list exceeded page limit")
+    }
+
+    private func chatRequest(_ body: Data, timeout: TimeInterval) async throws -> Data {
+        guard isOpen else { throw RE2Error.signaling(String(localized: "Not connected to Agent")) }
+        return try await withCheckedThrowingContinuation { cont in
+            // Waiter first: the reply may be read while the send is still suspended.
+            chatWaiter = cont
+            chatTimeout = Task { [weak self] in
+                try? await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
+                guard !Task.isCancelled else { return }
+                self?.resumeChat(.failure(RE2Error.signaling(String(localized: "Timed out waiting for AI session list"))))
+            }
+            Task { [weak self] in
+                do {
+                    try await self?.sendInner(RE2.Msg.agentChatList, body)
+                } catch {
+                    self?.resumeChat(.failure(error))
+                }
+            }
+        }
+    }
+
+    private func resumeChat(_ result: Result<Data, Error>) {
+        guard let waiter = chatWaiter else { return }
+        chatWaiter = nil
+        chatTimeout?.cancel()
+        chatTimeout = nil
+        waiter.resume(with: result)
     }
 
     private func sendInner(_ mt: UInt8, _ body: Data) async throws {
@@ -361,7 +472,7 @@ final class RE2DataTunnel: AgentPTYTransport {
                 throw RE2Error.signaling(String(localized: "Not connected to Agent"))
             }
             let ct = try cipher.encrypt(plaintext: RE2Codec.encodeInner(msgType: mt, body: body))
-            try await sig.writeFrame(RE2Frame(type: RE2.OuterType.tunnel, routeID: self.profile.deviceID, payload: ct))
+            try await sig.writeFrame(RE2Frame(type: RE2.OuterType.tunnel, routeID: self.route, payload: ct))
         }
         sendTail = task
         try await task.value
@@ -376,7 +487,7 @@ final class RE2DataTunnel: AgentPTYTransport {
             } catch {
                 if Task.isCancelled { return }
                 if case RE2Error.signaling(let m) = error, m == "frame timeout" { continue }
-                failAll(error.localizedDescription)
+                teardown(reason: error.localizedDescription)
                 return
             }
             switch frame.type {
@@ -386,8 +497,8 @@ final class RE2DataTunnel: AgentPTYTransport {
                       let (mt, body) = try? RE2Codec.decodeInner(plain) else { continue }
                 handleInner(mt, body)
             case RE2.OuterType.error:
-                let obj = RE2Codec.jsonObject(frame.payload)
-                failAll(obj["message"] as? String ?? obj["code"] as? String ?? "relay error")
+                let err = RE2AgentChatClient.relayError(frame.payload, fallback: "relay error")
+                teardown(reason: err.errorDescription ?? "relay error")
                 return
             default:
                 continue
@@ -410,10 +521,15 @@ final class RE2DataTunnel: AgentPTYTransport {
             let obj = RE2Codec.jsonObject(body)
             let sid = obj["session_id"] as? String ?? ""
             routes.removeValue(forKey: sid)?.onClose(obj["reason"] as? String)
+        case RE2.Msg.agentChatList:
+            resumeChat(.success(body))
         case RE2.Msg.appError:
             let obj = RE2Codec.jsonObject(body)
-            guard (obj["code"] as? String) == "session_open_failed" else { return }
             let message = obj["message"] as? String ?? "session open failed"
+            guard (obj["code"] as? String) == "session_open_failed" else {
+                resumeChat(.failure(RE2Error.signaling(message)))
+                return
+            }
             for (id, route) in routes where !route.ready {
                 routes.removeValue(forKey: id)
                 route.onClose(message)
@@ -421,12 +537,6 @@ final class RE2DataTunnel: AgentPTYTransport {
         default:
             break
         }
-    }
-
-    private func failAll(_ reason: String) {
-        let pending = routes
-        routes.removeAll()
-        pending.values.forEach { $0.onClose(reason) }
     }
 }
 

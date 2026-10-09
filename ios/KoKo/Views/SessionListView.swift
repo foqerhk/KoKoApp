@@ -44,6 +44,8 @@ struct SessionListView: View {
     @State private var selectedDesktopChat: DesktopAgentChat?
     @State private var pendingNewDesktopChat: DesktopAgentChat?
     @State private var newDesktopChatId: UUID?
+    @State private var takeoverDesk: PairedDesktop?
+    @State private var takeoverPeer = ""
 
     private var filteredSessions: [TerminalSession] {
         let all = store.sessions.sorted { ($0.lastConnectedAt ?? $0.createdAt) > ($1.lastConnectedAt ?? $1.createdAt) }
@@ -214,6 +216,25 @@ struct SessionListView: View {
                 Text(prompt.fingerprint)
             }
         }
+        .alert(
+            "Computer In Use",
+            isPresented: Binding(
+                get: { takeoverDesk != nil },
+                set: { if !$0 { takeoverDesk = nil } }
+            )
+        ) {
+            Button("Take Over") {
+                if let desk = takeoverDesk {
+                    Task { await takeOver(desk) }
+                }
+                takeoverDesk = nil
+            }
+            Button("Cancel", role: .cancel) {
+                takeoverDesk = nil
+            }
+        } message: {
+            Text(RE2Error.controllerBusy(peer: takeoverPeer).localizedDescription)
+        }
     }
 
     private var sessionDeleteMessage: String {
@@ -273,29 +294,16 @@ struct SessionListView: View {
             }
         }
 
-        // Paired Agents: use the live desktop tunnel when that host is streaming.
-        // A parallel WSS Noise (RE2AgentChatClient) used to reset Agent crypto and
-        // freeze the remote cursor / kill gestures.
+        // Paired Agents: over the relay's data channel, independent of any desktop session.
         for desk in desktops {
             do {
-                let conversations = try await desktopHub.listAgentChats(for: desk)
-                let rows = conversations.map { c in
-                    DesktopAgentChat(
-                        id: DesktopAgentChat.stableID(desktopId: desk.id, kind: c.agentKind, chatId: c.chatId),
-                        desktopId: desk.id,
-                        desktopName: desk.name,
-                        agentKind: c.agentKind,
-                        chatId: c.chatId,
-                        title: c.title,
-                        cwd: c.cwd,
-                        updatedAt: c.updatedAt,
-                        screenName: c.screenName,
-                        screenAlive: c.screenAlive,
-                        source: c.source,
-                        clientName: c.client
-                    )
+                try await syncDesktopChats(desk, force: false)
+            } catch RE2Error.controllerBusy(let peer) {
+                if takeoverDesk == nil {
+                    takeoverPeer = peer
+                    takeoverDesk = desk
                 }
-                store.replaceDesktopAgentChats(desktopId: desk.id, chats: rows)
+                errors.append("\(desk.name): \(RE2Error.controllerBusy(peer: peer).localizedDescription)")
             } catch {
                 errors.append("\(desk.name): \(error.localizedDescription)")
             }
@@ -303,6 +311,38 @@ struct SessionListView: View {
 
         if !errors.isEmpty {
             syncError = errors.joined(separator: "\n")
+        }
+    }
+
+    private func syncDesktopChats(_ desk: PairedDesktop, force: Bool) async throws {
+        let conversations = try await desktopHub.listAgentChats(for: desk, force: force)
+        let rows = conversations.map { c in
+            DesktopAgentChat(
+                id: DesktopAgentChat.stableID(desktopId: desk.id, kind: c.agentKind, chatId: c.chatId),
+                desktopId: desk.id,
+                desktopName: desk.name,
+                agentKind: c.agentKind,
+                chatId: c.chatId,
+                title: c.title,
+                cwd: c.cwd,
+                updatedAt: c.updatedAt,
+                screenName: c.screenName,
+                screenAlive: c.screenAlive,
+                source: c.source,
+                clientName: c.client
+            )
+        }
+        store.replaceDesktopAgentChats(desktopId: desk.id, chats: rows)
+    }
+
+    private func takeOver(_ desk: PairedDesktop) async {
+        isRefreshing = true
+        defer { isRefreshing = false }
+        do {
+            try await syncDesktopChats(desk, force: true)
+            syncError = nil
+        } catch {
+            syncError = "\(desk.name): \(error.localizedDescription)"
         }
     }
 

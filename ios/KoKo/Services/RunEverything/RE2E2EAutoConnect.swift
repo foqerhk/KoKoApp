@@ -94,6 +94,14 @@ enum RE2E2EAutoConnect {
         let testDispSwitch = args.contains("-RE2E2EDispSwitch")
             || env["KOKO_RE2_TEST_DISP_SWITCH"] == "1"
             || reqFlag(req, "testDispSwitch") || reqFlag(req, "dispSwitch")
+        // Data channel: AI session list while the desktop streams; desktop must keep painting.
+        let testChat = args.contains("-RE2E2EChat")
+            || env["KOKO_RE2_TEST_CHAT"] == "1"
+            || reqFlag(req, "testChat")
+        // Data channel only (stored desktop, no video); with -RE2E2EForce takes over.
+        let chatOnly = args.contains("-RE2E2EChatOnly")
+            || env["KOKO_RE2_CHAT_ONLY"] == "1"
+            || reqFlag(req, "chatOnly")
 
         // Consume request so relaunches without a new file do not re-run.
         clearRequestFile()
@@ -171,6 +179,19 @@ enum RE2E2EAutoConnect {
             result["lan"] = lanList
             result["udp"] = storedDesk?.udpHostPort ?? parsed?.udp ?? ""
             let expectLAN = !forceWSS && !forceUDP && !stripLAN && !lanList.isEmpty
+
+            if chatOnly {
+                guard let desk = storedDesk else {
+                    result["error"] = "chatOnly needs -RE2E2EStored"
+                    return
+                }
+                var chat = await probeDataChannel(desk, force: forceTakeover)
+                chat["force"] = forceTakeover
+                result["chat"] = chat
+                result["ok"] = chat["ok"] as? Bool == true
+                if let err = chat["error"] { result["error"] = err }
+                return
+            }
 
             // Use the shared hub so HostList can push DesktopViewer (UI chrome probe).
             let session = DesktopSessionHub.shared.session
@@ -261,6 +282,21 @@ enum RE2E2EAutoConnect {
                 return
             }
             write(result)
+
+            if testChat, let desk = session.currentPaired {
+                let framesBefore = session.frameEpoch
+                var chat = await probeDataChannel(desk, force: false)
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                let streaming = session.phase == .streaming
+                let advanced = session.frameEpoch > framesBefore
+                chat["desktopStillStreaming"] = streaming
+                chat["framesAdvanced"] = advanced
+                chat["path"] = session.pathLabel
+                let chatOK = chat["ok"] as? Bool == true && streaming && advanced
+                result["chat"] = chat
+                result["chatOK"] = chatOK
+                write(result)
+            }
 
             // UI chrome: title / More / cursor (needs DesktopViewer on screen).
             try? await Task.sleep(nanoseconds: 1_200_000_000)
@@ -1227,6 +1263,7 @@ enum RE2E2EAutoConnect {
             if test16K, result["sixteenKOK"] as? Bool != true { ok = false }
             if testLife, result["lifeBackground"] as? Bool != true { ok = false }
             if testDispSwitch, result["dispSwitchOK"] as? Bool != true { ok = false }
+            if testChat, result["chatOK"] as? Bool != true { ok = false }
             // Dedicated menu file xfer assertions.
             if testMenu, let menu = result["menu"] as? [String: Any],
                menu["filePull"] as? Bool == true {
@@ -1272,6 +1309,25 @@ enum RE2E2EAutoConnect {
             RE2DesktopSession.e2eForceUDP = false
             RE2DesktopSession.e2eStripLAN = false
         }
+    }
+
+    /// AI session list over the relay's data channel (not the desktop tunnel).
+    @MainActor
+    private static func probeDataChannel(_ desk: PairedDesktop, force: Bool) async -> [String: Any] {
+        var out: [String: Any] = [:]
+        var separate = false
+        let t0 = Date()
+        do {
+            let tunnel = try await DesktopSessionHub.shared.dataTunnel(for: desk, force: force)
+            separate = tunnel.isSeparateChannel
+            out["count"] = try await tunnel.listChats().count
+        } catch {
+            out["error"] = "data channel: \(error.localizedDescription)"
+        }
+        out["separate"] = separate
+        out["ms"] = Int(Date().timeIntervalSince(t0) * 1000)
+        out["ok"] = out["error"] == nil && separate
+        return out
     }
 
     private static func paintedFlag(_ result: [String: Any]) -> Bool {

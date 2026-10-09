@@ -4826,6 +4826,26 @@
         }
       }
     },
+    "Data channel reconnected" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "数据通道已重新连接"
+          }
+        }
+      }
+    },
+    "Update the RunEverything Agent to use the data channel." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请更新电脑上的 RunEverything Agent 以使用数据通道。"
+          }
+        }
+      }
+    },
     "Upload File…" : {
       "extractionState" : "stale",
       "localizations" : {

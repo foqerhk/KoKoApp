@@ -328,21 +328,35 @@ final class TerminalWorkspace: ObservableObject {
         mode: RemoteBootstrap.LaunchMode,
         generation: Int
     ) async throws {
-        let hubSession = DesktopSessionHub.shared.session
-        let transport: AgentPTYTransport
-        if try await DesktopSessionHub.shared.sharedTunnel(for: desk) {
-            transport = DesktopTunnelPTYTransport(session: hubSession)
-        } else {
+        let hub = DesktopSessionHub.shared
+        let hubSession = hub.session
+        var tunnel: RE2DataTunnel?
+        if hub.usesDataChannel(desk) {
             appendLocalStatus("Opening encrypted data channel (no desktop video)…", kind: .info)
-            let tunnel = RE2DataTunnel(profile: desk)
-            try await tunnel.connect()
+            do {
+                tunnel = try await hub.dataTunnel(for: desk)
+            } catch RE2Error.channelUnsupported {
+            }
+        }
+        if tunnel == nil, !(try await hub.sharedTunnel(for: desk)) {
+            let t = RE2DataTunnel(profile: desk)
+            try await t.connect(channel: false)
+            tunnel = t
+        }
+        let transport: AgentPTYTransport
+        if let tunnel {
             guard generation == connectGeneration, !intentionalClose else {
                 tunnel.shutdown()
                 throw CancellationError()
             }
-            dataTunnel = tunnel
             transport = tunnel
-            watchDesktopTakeover(deviceID: desk.deviceID, generation: generation)
+            if !tunnel.isShared {
+                // Pre-channel link of our own in the desktop slot: a desktop connect replaces it.
+                dataTunnel = tunnel
+                watchDesktopTakeover(deviceID: desk.deviceID, generation: generation)
+            }
+        } else {
+            transport = DesktopTunnelPTYTransport(session: hubSession)
         }
         appendLocalStatus("Agent reached via \(transport.label) — attaching \(chat.agentKind.displayName)…", kind: .success)
 

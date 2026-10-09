@@ -521,7 +521,7 @@ enum RE2ControllerIdentity {
     /// Set from the main actor (UIDevice) before the first BIND.
     nonisolated(unsafe) static var name = "iPhone"
 
-    static func bindPayload(deviceID: String, sessionTicket: String, force: Bool) -> Data {
+    static func bindPayload(deviceID: String, sessionTicket: String, force: Bool, channel: String? = nil) -> Data {
         var obj: [String: Any] = [
             "device_id": deviceID,
             "session_ticket": sessionTicket,
@@ -529,7 +529,18 @@ enum RE2ControllerIdentity {
             "client_name": name,
         ]
         if force { obj["force"] = true }
+        if let channel { obj["channel"] = channel }
         return RE2Codec.jsonData(obj)
+    }
+}
+
+/// Relay channels. The data channel (AI session list, PTY) has its own relay slot and
+/// Agent Noise session, so it never displaces or waits on the desktop session.
+enum RE2Channel {
+    static let data = "data"
+
+    static func route(deviceID: String, channel: String) -> String {
+        "\(deviceID)#\(channel)"
     }
 }
 
@@ -553,6 +564,8 @@ enum RE2Error: LocalizedError {
     case peerTaken
     /// BIND refused: another phone is controlling. `peer` is its display name.
     case controllerBusy(peer: String)
+    /// Relay or Agent predates separate data channels.
+    case channelUnsupported
     case expired
     case relayFull
     case agentOffline
@@ -582,6 +595,8 @@ enum RE2Error: LocalizedError {
             return peer.isEmpty
                 ? String(localized: "Another device is controlling this computer.")
                 : String(localized: "\(peer) is controlling this computer.")
+        case .channelUnsupported:
+            return String(localized: "Update the RunEverything Agent to use the data channel.")
         case .expired: return String(localized: "Pairing QR expired — scan again")
         case .relayFull: return String(localized: "Relay is full — try another node or later")
         case .agentOffline: return String(localized: "Agent is offline")
@@ -612,6 +627,8 @@ enum RE2Error: LocalizedError {
             return .peerTaken
         case "controller_busy":
             return .controllerBusy(peer: "")
+        case "channel_unsupported":
+            return .channelUnsupported
         default:
             if m.contains("kick") || m.contains("replaced") || m.contains("took over") || m.contains("superseded") {
                 return .peerTaken

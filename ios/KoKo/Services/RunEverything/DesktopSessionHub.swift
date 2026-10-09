@@ -2,8 +2,8 @@ import Combine
 import Foundation
 
 /// Shared remote-desktop session so Hosts viewer and Sessions tab hit the same
-/// live tunnel. A second WSS Noise from `RE2AgentChatClient` must not run while
-/// this session is streaming — that was tearing down PreferDirect / freezing input.
+/// live tunnel. Data RPCs use the relay's separate data channel; only relays or
+/// Agents without it fall back to riding this session.
 @MainActor
 final class DesktopSessionHub: ObservableObject {
     static let shared = DesktopSessionHub()
@@ -12,6 +12,13 @@ final class DesktopSessionHub: ObservableObject {
     private var sessionObserve: AnyCancellable?
     private var phaseObserve: AnyCancellable?
     private weak var store: AppStore?
+    /// Agents (device ids) reached through a relay or Agent without a data channel.
+    private var legacyDataChannel: Set<String> = []
+    /// One data-channel link per Agent, shared by the session list and every AI
+    /// terminal: the relay holds a single data slot per phone, so a second link
+    /// from this phone would replace the first.
+    private var dataTunnels: [String: RE2DataTunnel] = [:]
+    private var dataTunnelOpening: [String: Task<RE2DataTunnel, Error>] = [:]
 
     private init() {
         // HostList / SessionList observe *this* hub. Without forwarding,
@@ -42,21 +49,81 @@ final class DesktopSessionHub: ObservableObject {
         session.adoptStoredIdentity(stored)
     }
 
-    /// Prefer the live encrypted tunnel whenever this desktop session holds the
-    /// Agent's Noise peer. The Agent ignores a parallel WSS Noise while UDP is live,
-    /// and closing that refused socket makes the relay report peer_gone, which then
-    /// tears down the desktop too.
-    func listAgentChats(for desk: PairedDesktop) async throws -> [RemoteAgentConversation] {
+    /// Data channel first. Without one, prefer the live desktop tunnel whenever this
+    /// session holds the Agent's Noise peer: an old Agent ignores a parallel WSS Noise
+    /// while UDP is live, and an old relay lets that socket replace the desktop's.
+    /// `force` takes over from another phone.
+    func listAgentChats(for desk: PairedDesktop, force: Bool = false) async throws -> [RemoteAgentConversation] {
+        if usesDataChannel(desk) {
+            do {
+                let tunnel = try await dataTunnel(for: desk, force: force)
+                do {
+                    return try await tunnel.listChats()
+                } catch where !tunnel.isOpen && !force {
+                    // The shared link died under us (relay restart, network); one fresh try.
+                    return try await dataTunnel(for: desk).listChats()
+                }
+            } catch RE2Error.channelUnsupported {
+            }
+        }
         if try await sharedTunnel(for: desk) {
             return try await session.listAgentChats()
         }
-        return try await RE2AgentChatClient.listChats(profile: desk)
+        return try await RE2AgentChatClient.listChats(profile: desk, force: force, channel: false)
     }
 
-    /// `true` when data RPCs for `desk` must ride `session`; `false` when a separate
-    /// WSS data channel is safe because no desktop session holds the Agent peer.
+    /// The shared data-channel link to `desk`, opened on demand. `force` takes over
+    /// from another phone. Throws `channelUnsupported` for relays / Agents without
+    /// separate channels.
+    func dataTunnel(for desk: PairedDesktop, force: Bool = false) async throws -> RE2DataTunnel {
+        let id = desk.deviceID
+        if !force, let t = dataTunnels[id], t.isOpen, t.sessionTicket == desk.sessionTicket {
+            return t
+        }
+        if !force, let pending = dataTunnelOpening[id] {
+            return try await pending.value
+        }
+        let opening = Task { @MainActor () throws -> RE2DataTunnel in
+            let t = RE2DataTunnel(profile: desk)
+            try await t.connect(force: force)
+            return t
+        }
+        dataTunnelOpening[id] = opening
+        defer { if dataTunnelOpening[id] == opening { dataTunnelOpening[id] = nil } }
+        let tunnel: RE2DataTunnel
+        do {
+            tunnel = try await opening.value
+        } catch RE2Error.channelUnsupported {
+            markLegacyDataChannel(desk)
+            throw RE2Error.channelUnsupported
+        }
+        guard tunnel.isSeparateChannel else {
+            // An old relay bound it in the desktop slot; it would fight the desktop.
+            tunnel.teardown()
+            markLegacyDataChannel(desk)
+            throw RE2Error.channelUnsupported
+        }
+        tunnel.isShared = true
+        if let old = dataTunnels[id], old !== tunnel {
+            old.teardown(reason: String(localized: "Data channel reconnected"))
+        }
+        dataTunnels[id] = tunnel
+        return tunnel
+    }
+
+    func usesDataChannel(_ desk: PairedDesktop) -> Bool {
+        !legacyDataChannel.contains(desk.deviceID)
+    }
+
+    func markLegacyDataChannel(_ desk: PairedDesktop) {
+        legacyDataChannel.insert(desk.deviceID)
+    }
+
+    /// `true` when data RPCs for `desk` must ride `session`: no data channel, and the
+    /// desktop session holds the Agent peer.
     func sharedTunnel(for desk: PairedDesktop) async throws -> Bool {
-        guard session.currentPaired?.deviceID == desk.deviceID, session.holdsAgentPeer else { return false }
+        guard !usesDataChannel(desk),
+              session.currentPaired?.deviceID == desk.deviceID, session.holdsAgentPeer else { return false }
         let deadline = Date().addingTimeInterval(12)
         while !session.hasLiveTunnel, session.holdsAgentPeer, Date() < deadline {
             try await Task.sleep(nanoseconds: 200_000_000)
