@@ -21,9 +21,14 @@ final class TerminalWorkspace: ObservableObject {
     @Published private(set) var terminalFontSize: CGFloat
     /// Mode / model / changed files of a mirrored Cursor IDE chat.
     @Published private(set) var ideState: IDEChatState?
+    /// Structured conversation of a mirrored Cursor IDE chat, ordered by bubble index.
+    @Published private(set) var ideMessages: [IDEChatMessage] = []
+    /// Messages sent from the phone that Cursor has not stored yet.
+    @Published private(set) var idePendingSends: [String] = []
     private var backgroundDisconnectTask: Task<Void, Never>?
     private var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
     private var ideExtractor = IDEStateExtractor()
+    private var ideChatSynced = false
 
     let terminalView: TerminalView
     private let sessionId: UUID
@@ -283,7 +288,12 @@ final class TerminalWorkspace: ObservableObject {
         desktopProfile = desk
         desktopAutoReconnects = 0
         ideExtractor = IDEStateExtractor()
-        if ideState?.composerId != chat.chatId { ideState = nil }
+        ideChatSynced = false
+        if ideState?.composerId != chat.chatId {
+            ideState = nil
+            ideMessages = []
+            idePendingSends = []
+        }
         title = chat.displayTitle
         detectedLoginURL = nil
         detectedLoginCode = nil
@@ -377,11 +387,13 @@ final class TerminalWorkspace: ObservableObject {
                         self.appendLocalStatus("\(chat.agentKind.displayName) attached on \(desk.name)", kind: .success)
                         self.syncRemoteTerminalSize()
                         if !self.stdinPending.isEmpty { self.startStdinDrainIfNeeded() }
+                        if let state = self.ideState { self.applyIDEState(state) }
                     }
                 }
                 if chat.mirrorsIDEChat {
                     let split = self.ideExtractor.process(output)
                     output = split.output
+                    for frame in split.chats { self.applyIDEChat(frame) }
                     if let state = split.states.last { self.applyIDEState(state) }
                 }
                 guard !output.isEmpty else { return }
@@ -406,10 +418,53 @@ final class TerminalWorkspace: ObservableObject {
             if !state.name.isEmpty { chat.title = state.name }
             desktopChat = chat
         }
+        // A reattached mirror only sends rows that changed; ask for the full history once.
+        if state.supportsNativeChat, !ideChatSynced, agentPTY != nil {
+            ideChatSynced = true
+            sendIDEAction("resync")
+        }
+    }
+
+    private func applyIDEChat(_ frame: IDEChatFrame) {
+        let incoming = frame.messages ?? []
+        if frame.reset == true {
+            ideChatSynced = true
+            ideMessages = incoming.sorted { $0.idx < $1.idx }
+        } else if !incoming.isEmpty {
+            var byIdx = Dictionary(ideMessages.map { ($0.idx, $0) }, uniquingKeysWith: { _, new in new })
+            for message in incoming { byIdx[message.idx] = message }
+            ideMessages = byIdx.values.sorted { $0.idx < $1.idx }
+        }
+        let stored = Set(incoming.filter { $0.role == .user }.compactMap { $0.text.map(Self.squashed) })
+        if !stored.isEmpty {
+            idePendingSends.removeAll { pending in stored.contains { $0.contains(Self.squashed(pending)) } }
+        }
+    }
+
+    private static func squashed(_ text: String) -> String {
+        text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
     }
 
     func sendIDEAction(_ op: String, id: String? = nil) {
         sendBytes(IDEChatState.actionBytes(op: op, id: id))
+    }
+
+    /// Sends a chat message into the Cursor IDE chat on the desktop.
+    func sendIDEMessage(_ text: String) {
+        let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, agentPTY != nil else { return }
+        idePendingSends.append(text)
+        sendBytes(IDEChatState.actionBytes(["op": "send", "text": text]))
+    }
+
+    /// Answers a Cursor questionnaire; the desktop delivers it as the next chat message.
+    func answerIDEQuestion(_ toolCallId: String, answers: [IDEChatMessage.Answer]) {
+        let payload: [[String: Any]] = answers.map { answer in
+            var item: [String: Any] = ["questionId": answer.questionId, "selectedOptionIds": answer.selectedOptionIds]
+            if let text = answer.freeformText, !text.isEmpty { item["freeformText"] = text }
+            return item
+        }
+        sendBytes(IDEChatState.actionBytes(["op": "answer", "id": toolCallId, "answers": payload]))
     }
 
     /// Opening the remote desktop moves the Agent to a new Noise session, which

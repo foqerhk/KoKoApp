@@ -85,10 +85,9 @@ enum RE2AgentChatClient {
         try await sig.writeFrame(RE2Frame(
             type: RE2.OuterType.bind,
             routeID: deviceID,
-            payload: RE2Codec.jsonData([
-                "device_id": deviceID,
-                "session_ticket": profile.sessionTicket,
-            ])
+            payload: RE2ControllerIdentity.bindPayload(
+                deviceID: deviceID, sessionTicket: profile.sessionTicket, force: false
+            )
         ))
         let bindFrame = try await readSkippingPing(sig)
         if bindFrame.type == RE2.OuterType.error {
@@ -590,50 +589,138 @@ struct IDEChatState: Codable, Equatable {
     var linesRemoved: Int
     var files: [File]?
     var bridge: Bridge
+    /// Non-zero when the mirror also publishes structured messages (OSC 7790).
+    var chat: Int?
 
     var modeName: String { modes?.first(where: { $0.id == mode })?.name ?? mode }
     var modelName: String { models?.first(where: { $0.id == model })?.name ?? model }
+    var supportsNativeChat: Bool { (chat ?? 0) > 0 }
 
     static func actionBytes(op: String, id: String? = nil) -> Data {
-        var obj: [String: String] = ["op": op]
+        var obj: [String: Any] = ["op": op]
         if let id { obj["id"] = id }
+        return actionBytes(obj)
+    }
+
+    static func actionBytes(_ obj: [String: Any]) -> Data {
         let json = (try? JSONSerialization.data(withJSONObject: obj)) ?? Data()
         return Data(("\u{1b}]7789;" + json.base64EncodedString() + "\u{07}").utf8)
     }
 }
 
-/// Splits OSC 7788 state frames out of the PTY byte stream; frames may straddle chunks.
+/// One conversation row of a mirrored Cursor IDE chat, published as OSC 7790.
+struct IDEChatMessage: Codable, Equatable, Identifiable {
+    enum Role: String, Codable {
+        case user, assistant, tool, question
+    }
+    struct Tool: Codable, Equatable {
+        var name: String
+        var label: String
+        var summary: String?
+        var status: String?
+    }
+    struct Option: Codable, Equatable, Identifiable, Hashable {
+        var id: String
+        var label: String
+    }
+    struct QuestionItem: Codable, Equatable, Identifiable {
+        var id: String
+        var prompt: String
+        var allowMultiple: Bool?
+        var options: [Option]
+    }
+    struct Answer: Codable, Equatable {
+        var questionId: String
+        var selectedOptionIds: [String]
+        var freeformText: String?
+    }
+    struct Question: Codable, Equatable {
+        var toolCallId: String
+        var title: String?
+        /// pending | answered (from this phone) | submitted | cancelled
+        var status: String
+        var questions: [QuestionItem]
+        var answers: [Answer]?
+
+        var isOpen: Bool { status == "pending" }
+    }
+
+    var idx: Int
+    var bubbleId: String
+    var role: Role
+    var text: String?
+    var tool: Tool?
+    var question: Question?
+
+    var id: Int { idx }
+
+    private enum CodingKeys: String, CodingKey {
+        case idx, bubbleId = "id", role, text, tool, question
+    }
+}
+
+struct IDEChatFrame: Codable {
+    var reset: Bool?
+    var messages: [IDEChatMessage]?
+}
+
+/// Splits the mirror's OSC 7788 (state) and OSC 7790 (chat) frames out of the PTY byte
+/// stream; frames may straddle chunks.
 struct IDEStateExtractor {
-    private static let open = Data("\u{1b}]7788;".utf8)
+    private static let open = Data("\u{1b}]77".utf8)
+    private static let stateTag = Data("88;".utf8)
+    private static let chatTag = Data("90;".utf8)
     private static let bel: UInt8 = 0x07
     private var carry = Data()
 
-    mutating func process(_ chunk: Data) -> (output: Data, states: [IDEChatState]) {
-        var data = carry + chunk
-        carry = Data()
+    struct Result {
         var output = Data()
         var states: [IDEChatState] = []
-        while let start = data.range(of: Self.open) {
-            output.append(data[data.startIndex..<start.lowerBound])
-            guard let end = data[start.upperBound...].firstIndex(of: Self.bel) else {
+        var chats: [IDEChatFrame] = []
+    }
+
+    mutating func process(_ chunk: Data) -> Result {
+        var data = carry + chunk
+        carry = Data()
+        var result = Result()
+        var searchFrom = data.startIndex
+        while let start = data[searchFrom...].range(of: Self.open) {
+            let tagStart = start.upperBound
+            guard data.distance(from: tagStart, to: data.endIndex) >= Self.stateTag.count else {
+                result.output.append(data[data.startIndex..<start.lowerBound])
                 carry = Data(data[start.lowerBound...])
-                return (output, states)
+                return result
             }
-            if let raw = Data(base64Encoded: Data(data[start.upperBound..<end])),
-               let state = try? JSONDecoder().decode(IDEChatState.self, from: raw) {
-                states.append(state)
+            let tag = data[tagStart..<data.index(tagStart, offsetBy: Self.stateTag.count)]
+            guard tag == Self.stateTag || tag == Self.chatTag else {
+                searchFrom = tagStart
+                continue
+            }
+            result.output.append(data[data.startIndex..<start.lowerBound])
+            let bodyStart = data.index(tagStart, offsetBy: Self.stateTag.count)
+            guard let end = data[bodyStart...].firstIndex(of: Self.bel) else {
+                carry = Data(data[start.lowerBound...])
+                return result
+            }
+            if let raw = Data(base64Encoded: Data(data[bodyStart..<end])) {
+                if tag == Self.stateTag, let state = try? JSONDecoder().decode(IDEChatState.self, from: raw) {
+                    result.states.append(state)
+                } else if tag == Self.chatTag, let frame = try? JSONDecoder().decode(IDEChatFrame.self, from: raw) {
+                    result.chats.append(frame)
+                }
             }
             data = Data(data[data.index(after: end)...])
+            searchFrom = data.startIndex
         }
         // Hold back a tail that could be the beginning of a frame marker.
         var keep = 0
-        for n in stride(from: min(Self.open.count - 1, data.count), to: 0, by: -1)
+        for n in stride(from: min(Self.open.count, data.count), to: 0, by: -1)
         where data.suffix(n) == Self.open.prefix(n) {
             keep = n
             break
         }
-        output.append(data.prefix(data.count - keep))
+        result.output.append(data.prefix(data.count - keep))
         carry = Data(data.suffix(keep))
-        return (output, states)
+        return result
     }
 }

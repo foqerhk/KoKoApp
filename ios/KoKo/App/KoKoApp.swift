@@ -25,6 +25,7 @@ struct KoKoApp: App {
                     FloatingAccessoryWindowOverlay()
                 }
                 .onAppear {
+                    DesktopSessionHub.shared.attach(store: store)
                     // Production default: HW decode first. Drop persisted soft-only smoke flag
                     // unless this launch explicitly requests `-RE2SoftDecode`.
                     if !ProcessInfo.processInfo.arguments.contains("-RE2SoftDecode"),

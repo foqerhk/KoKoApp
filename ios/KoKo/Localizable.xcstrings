@@ -14,6 +14,26 @@
         }
       }
     },
+    "%@ is controlling this computer." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 正在控制这台电脑。"
+          }
+        }
+      }
+    },
+    "%@ is controlling this computer. Continue and disconnect it?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 正在控制这台电脑。继续连接会让它断开，确定继续吗？"
+          }
+        }
+      }
+    },
     "%@ is not signed in" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -115,6 +135,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "主机分辨率 %d%% · %dfps"
+          }
+        }
+      }
+    },
+    "%lld Files" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Files"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Files"
           }
         }
       }
@@ -410,12 +446,11 @@
       }
     },
     "Another client is using this Agent. Close it there, then tap Reconnect." : {
-      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "其他客户端正在使用此 Agent。请先关闭那边，再点重连。"
+            "value" : "如需在本机继续使用，点重连并确认接管。"
           }
         }
       }
@@ -427,6 +462,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "可能有其他客户端已连接。请先关闭那边，再点重连。"
+          }
+        }
+      }
+    },
+    "Another device is controlling this computer." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "另一台设备正在控制这台电脑。"
+          }
+        }
+      }
+    },
+    "Another device is controlling this computer. Continue and disconnect it?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有另一台设备正在控制这台电脑。继续连接会让它断开，确定继续吗？"
+          }
+        }
+      }
+    },
+    "Answered" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已回答"
           }
         }
       }
@@ -762,6 +827,16 @@
         }
       }
     },
+    "Choose any" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可多选"
+          }
+        }
+      }
+    },
     "Choose which SSH host should receive this public key." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -882,6 +957,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Codex 登录"
+          }
+        }
+      }
+    },
+    "Computer In Use" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "电脑正在被控制"
           }
         }
       }
@@ -1505,12 +1590,11 @@
       }
     },
     "Disconnected — another client took over this session." : {
-      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已断开 — 其他客户端接管了此会话。"
+            "value" : "已在另一台设备上连接，本机已断开。"
           }
         }
       }
@@ -2188,6 +2272,16 @@
         }
       }
     },
+    "Loading conversation…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在加载会话…"
+          }
+        }
+      }
+    },
     "Login link" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2205,6 +2299,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "最大化窗格"
+          }
+        }
+      }
+    },
+    "Message Cursor…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "给 Cursor 发消息…"
           }
         }
       }
@@ -2753,6 +2857,16 @@
         }
       }
     },
+    "Other…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "其他…"
+          }
+        }
+      }
+    },
     "P2P" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3179,6 +3293,16 @@
         }
       }
     },
+    "Questions" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提问"
+          }
+        }
+      }
+    },
     "Quick Setup on Server" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3439,6 +3563,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "远端命令失败（退出码 %lld）"
+          }
+        }
+      }
+    },
+    "Remote desktop is reconnecting — try again in a moment." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote desktop is reconnecting — try again in a moment."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "远程桌面正在重连，请稍后再试。"
           }
         }
       }
@@ -3736,6 +3876,16 @@
         }
       }
     },
+    "Send" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发送"
+          }
+        }
+      }
+    },
     "Send a magic packet via the Agent." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3754,6 +3904,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "将授权码发送到终端"
+          }
+        }
+      }
+    },
+    "Sending…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发送中…"
           }
         }
       }
@@ -4037,6 +4197,36 @@
         }
       }
     },
+    "Show Chat" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示对话"
+          }
+        }
+      }
+    },
+    "Show Terminal" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示终端"
+          }
+        }
+      }
+    },
+    "Skipped" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已跳过"
+          }
+        }
+      }
+    },
     "Smooth" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -4104,6 +4294,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在该项目目录启动新的 Agent 对话。已有对话刷新后会出现在列表中。"
+          }
+        }
+      }
+    },
+    "Stop" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止"
           }
         }
       }
@@ -4179,6 +4385,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "终止服务器上的 Agent 或 screen 会话。断开连接仅关闭本机 SSH。"
+          }
+        }
+      }
+    },
+    "Submit" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提交"
           }
         }
       }
@@ -4267,6 +4483,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "跟随系统"
+          }
+        }
+      }
+    },
+    "Take Over" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接管"
+          }
+        }
+      }
+    },
+    "Tap Reconnect and confirm to take over from the other device." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点重连并确认，即可从另一台设备接管。"
           }
         }
       }
@@ -4395,22 +4631,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "当前志愿者中继已满。请让 Agent 换一个节点，或稍后再试。"
-          }
-        }
-      }
-    },
-    "Remote desktop is reconnecting — try again in a moment." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remote desktop is reconnecting — try again in a moment."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "远程桌面正在重连，请稍后再试。"
           }
         }
       }
@@ -4712,6 +4932,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在出画…"
+          }
+        }
+      }
+    },
+    "Waiting for your answer" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待你的回答"
           }
         }
       }

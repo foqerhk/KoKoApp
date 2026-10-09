@@ -37,6 +37,7 @@
 		5BBEED60F94EF165F679A1B8 /* LargeScreenLayoutState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BD21598BB37C06E9A70CD2D /* LargeScreenLayoutState.swift */; };
 		5E1CF52F21B2E00F1E27A097 /* HostListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 516A263E7AFA7116E5B720AA /* HostListView.swift */; };
 		616192F74DC6C670869930F9 /* RE2DesktopSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3010C0DF768FDC4B01A9AD67 /* RE2DesktopSession.swift */; };
+		616B671CF11B382E47E4223A /* IDEChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8A059AD4775A65D2E99F03D /* IDEChatView.swift */; };
 		62BF341B5680002F24369E01 /* TerminalScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 508CCA531677092BA05FFF8D /* TerminalScreenView.swift */; };
 		62ED438B67967FB527A8BAC7 /* Citadel in Frameworks */ = {isa = PBXBuildFile; productRef = EC4CE81F0EAD42B3A629B419 /* Citadel */; };
 		63A37DA781642DC6FE1E51EA /* ScrollbackStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D34656F0E7DCBAEC9471001B /* ScrollbackStore.swift */; };
@@ -156,6 +157,7 @@
 		E4CC5CAD6B534757A51C8B30 /* NoiseXXPSK3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoiseXXPSK3.swift; sourceTree = "<group>"; };
 		E77E3DEEDF36B93CA7D877A0 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		E859719E95BEDFAC9843D452 /* RE2VideoMedia.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RE2VideoMedia.swift; sourceTree = "<group>"; };
+		E8A059AD4775A65D2E99F03D /* IDEChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IDEChatView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -181,6 +183,7 @@
 				B9BB431F8CBC035787DA5B18 /* DuoRootView.swift */,
 				6A869E30885CCAE81461BA34 /* HostEditorView.swift */,
 				516A263E7AFA7116E5B720AA /* HostListView.swift */,
+				E8A059AD4775A65D2E99F03D /* IDEChatView.swift */,
 				03DEECE075D529B6103D68CC /* KeyListView.swift */,
 				48F326302C22707B96576C74 /* LargeScreenShellView.swift */,
 				95B7AEEF66E0DF84633783E6 /* MultiSessionGridView.swift */,
@@ -453,6 +456,7 @@
 				487865535B6FDB402AC30CFF /* HostEditorView.swift in Sources */,
 				BC6F764D76C5D42E9BE28004 /* HostKeyService.swift in Sources */,
 				5E1CF52F21B2E00F1E27A097 /* HostListView.swift in Sources */,
+				616B671CF11B382E47E4223A /* IDEChatView.swift in Sources */,
 				F4F1DA0C8BD8D218AEEE0CD9 /* KeyListView.swift in Sources */,
 				74039FF15E487903D2E3333A /* KeychainService.swift in Sources */,
 				367AAB5A2926BEBED3E75B34 /* KoKoApp.swift in Sources */,

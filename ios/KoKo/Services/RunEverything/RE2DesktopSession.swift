@@ -115,6 +115,8 @@ final class RE2DesktopSession: ObservableObject {
     private var keepaliveTask: Task<Void, Never>?
     private var paired: PairedDesktop?
     private var autoReconnect = true
+    /// Next BIND displaces another phone (user confirmed). Cleared once a BIND succeeds.
+    private var forceTakeover = false
     private var reconnectAttempts = 0
     /// Consecutive BIND/ASSOC ticket rejections (relay in-memory tickets).
     private var ticketAuthFailures = 0
@@ -206,6 +208,18 @@ final class RE2DesktopSession: ObservableObject {
     private var recentUDPNoiseFailures = 0
 
     var currentPaired: PairedDesktop? { paired }
+
+    /// The store dedupes desktops by deviceID and keeps the first-seen UUID; a fresh
+    /// QR scan mints a new one. Adopt the stored id so later taps reattach to this
+    /// live session instead of reconnecting under a second identity.
+    func adoptStoredIdentity(_ stored: PairedDesktop) {
+        guard var p = paired, p.deviceID == stored.deviceID, p.id != stored.id else { return }
+        if let pw = RE2DesktopSecrets.loadPassword(desktopID: p.id), !pw.isEmpty {
+            RE2DesktopSecrets.savePassword(pw, desktopID: stored.id)
+        }
+        p.id = stored.id
+        paired = p
+    }
     /// UI / chat-tunnel busy flag — only true once DESKTOP_READY arrived.
     /// Keepalive separately allows `.openingDesktop` so quality reopen does not idle out.
     var isStreaming: Bool { phase == .streaming }
@@ -1409,7 +1423,7 @@ final class RE2DesktopSession: ObservableObject {
         abrStepCooldownUntil = Date().addingTimeInterval(45)
     }
 
-    func connect(payload: RE2PairingPayload, accessPassword: String? = nil) async throws -> PairedDesktop {
+    func connect(payload: RE2PairingPayload, accessPassword: String? = nil, force: Bool = false) async throws -> PairedDesktop {
         if payload.isExpired { throw RE2Error.expired }
         // Keep e2eForceWSS / e2eForceUDP across connect — E2E sets them before
         // connect() and path selection reads them inside dataPlane. Cleared on
@@ -1419,6 +1433,7 @@ final class RE2DesktopSession: ObservableObject {
         ticketAuthFailures = 0
         hadActiveDesktop = false
         disconnect(userInitiated: false)
+        forceTakeover = force
         lastError = nil
         recoveryHint = nil
         skipUDPNoiseUntil = nil
@@ -1548,7 +1563,7 @@ final class RE2DesktopSession: ObservableObject {
         return paired!
     }
 
-    func reconnect(profile: PairedDesktop, accessPassword: String? = nil) async throws {
+    func reconnect(profile: PairedDesktop, accessPassword: String? = nil, force: Bool = false) async throws {
         // After PairRedeem, reconnect is BIND → ASSOC(ticket) → Noise(PSK) → OPEN_DESKTOP.
         // Never re-Redeem the QR token; QR expires_at must not block this path.
         guard profile.canReconnect else {
@@ -1573,6 +1588,7 @@ final class RE2DesktopSession: ObservableObject {
         // disconnect() clears sockets; keep post-background WSS preference across it.
         let keepForceWSS = forceWSSNextConnect
         disconnect(userInitiated: false)
+        forceTakeover = force
         forceWSSNextConnect = keepForceWSS
         Self.e2eForceWSS = keepE2EWSS
         Self.e2eForceUDP = keepE2EUDP
@@ -1625,6 +1641,8 @@ final class RE2DesktopSession: ObservableObject {
             } catch {
                 lastErr = error
                 RE2Log.error("reconnect try[\(idx)] failed: \(error)")
+                // A backup relay knows nothing about the active controller.
+                if case .controllerBusy = error as? RE2Error { break }
             }
         }
         throw lastErr
@@ -2919,13 +2937,13 @@ final class RE2DesktopSession: ObservableObject {
         signaling = sig
         try await sig.connect(relay: profile.relayURL)
 
+        RE2ControllerIdentity.name = UIDevice.current.name
         try await sig.writeFrame(RE2Frame(
             type: RE2.OuterType.bind,
             routeID: profile.deviceID,
-            payload: RE2Codec.jsonData([
-                "device_id": profile.deviceID,
-                "session_ticket": profile.sessionTicket
-            ])
+            payload: RE2ControllerIdentity.bindPayload(
+                deviceID: profile.deviceID, sessionTicket: profile.sessionTicket, force: forceTakeover
+            )
         ))
         let bindFrame = try await readSignalingSkippingPing(sig)
         if bindFrame.type == RE2.OuterType.error {
@@ -2935,6 +2953,7 @@ final class RE2DesktopSession: ObservableObject {
             throw annotated(escalateTicketFailure(RE2Error.ticketRejected))
         }
         ticketAuthFailures = 0
+        forceTakeover = false
         let bok = RE2Codec.jsonObject(bindFrame.payload)
         var updated = profile
         if let u = bok["udp"] as? String, !u.isEmpty {
@@ -3605,9 +3624,11 @@ final class RE2DesktopSession: ObservableObject {
                     group.addTask {
                         for _ in 0..<30 {
                             try Task.checkCancellation()
-                            // Noise XX msg2 is ~96 bytes. Reject large stale VIDEO/tunnel
-                            // leftovers from a previous session (relay may still deliver them).
-                            if let b = try? await ep.recv(timeout: 0.4), b.count >= 48, b.count <= 256 {
+                            // Agent msg2 is e(32) + enc s(48) + empty payload tag(16) = 96 bytes.
+                            // The Agent keeps streaming the previous session until XX completes,
+                            // and readMessage2 cannot be retried after a wrong packet, so any
+                            // other size (small video tail / NACK / cursor) must be skipped.
+                            if let b = try? await ep.recv(timeout: 0.4), b.count == 96 {
                                 return b
                             }
                         }
@@ -3863,7 +3884,7 @@ final class RE2DesktopSession: ObservableObject {
                 return .relayRestarted
             }
             return .ticketRejected
-        case .peerTaken, .needsRescan, .pinMismatch, .expired:
+        case .peerTaken, .controllerBusy, .needsRescan, .pinMismatch, .expired:
             if error.stopsAutoReconnect { autoReconnect = false }
             return error
         default:
@@ -3913,7 +3934,12 @@ final class RE2DesktopSession: ObservableObject {
                 if f.type == RE2.OuterType.ping {
                     try? await signaling.writeFrame(RE2Frame(type: RE2.OuterType.pong, routeID: f.routeID, payload: f.payload))
                 }
-                // Ignore tunnel/error on signaling while UDP owns the media plane.
+                if f.type == RE2.OuterType.error, case .peerTaken = Self.mapErrorPayload(f.payload) {
+                    RE2Log.info("relay: another device took over — stop UDP session")
+                    await handleDisconnect(annotated(RE2Error.peerTaken))
+                    return
+                }
+                // Ignore other tunnel/error frames on signaling while UDP owns the media plane.
             } catch {
                 if Task.isCancelled || useWSSTunnel { return }
                 let msg = (error as? RE2Error)?.localizedDescription.lowercased() ?? error.localizedDescription.lowercased()
@@ -4199,11 +4225,20 @@ final class RE2DesktopSession: ObservableObject {
     }
 
     private func keepaliveLoop() async {
+        var idleTicks = 0
         while !Task.isCancelled {
             try? await Task.sleep(nanoseconds: 1_000_000_000)
             // Keep pings alive through quality/privacy reopen (openingDesktop) —
             // dropping them mid-switch let WSS go idle / peer_gone before READY.
-            guard phase == .streaming || phase == .openingDesktop else { continue }
+            guard phase == .streaming || phase == .openingDesktop else {
+                // The Agent releases a peer that stays silent for minutes; a live
+                // tunnel without a desktop (chat / PTY only) must still check in.
+                idleTicks += 1
+                if hasLiveTunnel, idleTicks % 10 == 0 {
+                    try? await sendInner(RE2.Msg.ping, Data(), reliable: true)
+                }
+                continue
+            }
             // Inner ping for RTT
             stats.notePingSent()
             try? await sendInner(RE2.Msg.ping, RE2Codec.jsonData(["session_id": sessionID, "t": Date().timeIntervalSince1970]), reliable: true)
@@ -5192,6 +5227,9 @@ final class RE2DesktopSession: ObservableObject {
 
     private static func mapErrorPayload(_ data: Data) -> RE2Error {
         let obj = RE2Codec.jsonObject(data)
+        if (obj["code"] as? String) == "controller_busy" {
+            return .controllerBusy(peer: obj["peer"] as? String ?? "")
+        }
         return RE2Error.fromRelayError(
             code: obj["code"] as? String ?? "",
             message: obj["message"] as? String ?? String(data: data, encoding: .utf8) ?? "error"

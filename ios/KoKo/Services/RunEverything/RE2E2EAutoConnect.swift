@@ -79,6 +79,13 @@ enum RE2E2EAutoConnect {
             || reqFlag(req, "test16K") || reqFlag(req, "virtual16K")
         // RD-LIFE-03: the host script really foregrounds another app and then KoKo.
         let testExternalLife = reqFlag(req, "externalLife")
+        let useStored = args.contains("-RE2E2EStored")
+            || env["KOKO_RE2_STORED"] == "1"
+            || reqFlag(req, "stored")
+        // Kick test: displace another phone already controlling this Agent.
+        let forceTakeover = args.contains("-RE2E2EForce")
+            || env["KOKO_RE2_FORCE"] == "1"
+            || reqFlag(req, "force")
         // RD-LIFE-02: soft background/foreground via session enterBackground/enterForeground.
         let testLife = testExternalLife || args.contains("-RE2E2ELife")
             || env["KOKO_RE2_TEST_LIFE"] == "1"
@@ -134,27 +141,35 @@ enum RE2E2EAutoConnect {
             ]
             defer { write(result) }
 
-            guard var raw = loadPairJSON() else {
-                result["error"] = "missing KOKO_RE2_PAIR_JSON / Documents/re2-pair.json"
+            // Stored mode reconnects the saved desktop exactly like a list tap (no QR).
+            let storedDesk = useStored ? store.desktops.first(where: { $0.canReconnect }) : nil
+            if useStored, storedDesk == nil {
+                result["error"] = "no stored desktop to reconnect"
                 return
             }
-            if stripLAN {
-                raw = Self.stripLANFromPairJSON(raw) ?? raw
+            var parsed: RE2PairingPayload?
+            if storedDesk == nil {
+                guard var raw = loadPairJSON() else {
+                    result["error"] = "missing KOKO_RE2_PAIR_JSON / Documents/re2-pair.json"
+                    return
+                }
+                if stripLAN {
+                    raw = Self.stripLANFromPairJSON(raw) ?? raw
+                }
+                result["pairBytes"] = raw.utf8.count
+                do {
+                    parsed = try RE2PairingPayload.parse(raw)
+                } catch {
+                    result["error"] = "bad pairing: \(error.localizedDescription)"
+                    return
+                }
             }
-            result["pairBytes"] = raw.utf8.count
-
-            let payload: RE2PairingPayload
-            do {
-                payload = try RE2PairingPayload.parse(raw)
-            } catch {
-                result["error"] = "bad pairing: \(error.localizedDescription)"
-                return
-            }
-            result["deviceIdPrefix"] = String(payload.deviceID.prefix(12))
-            result["relay"] = payload.relay
-            let lanList = payload.lan ?? []
+            result["stored"] = storedDesk != nil
+            result["deviceIdPrefix"] = String((storedDesk?.deviceID ?? parsed?.deviceID ?? "").prefix(12))
+            result["relay"] = storedDesk?.relayURL ?? parsed?.relay ?? ""
+            let lanList = storedDesk?.lanCandidates ?? parsed?.lan ?? []
             result["lan"] = lanList
-            result["udp"] = payload.udp ?? ""
+            result["udp"] = storedDesk?.udpHostPort ?? parsed?.udp ?? ""
             let expectLAN = !forceWSS && !forceUDP && !stripLAN && !lanList.isEmpty
 
             // Use the shared hub so HostList can push DesktopViewer (UI chrome probe).
@@ -203,7 +218,15 @@ enum RE2E2EAutoConnect {
             }()
             result["accessPasswordSet"] = !(accessPassword ?? "").isEmpty
             do {
-                let profile = try await session.connect(payload: payload, accessPassword: accessPassword)
+                let profile: PairedDesktop
+                if let storedDesk {
+                    try await session.reconnect(profile: storedDesk, accessPassword: accessPassword, force: forceTakeover)
+                    profile = session.currentPaired ?? storedDesk
+                } else if let parsed {
+                    profile = try await session.connect(payload: parsed, accessPassword: accessPassword, force: forceTakeover)
+                } else {
+                    return
+                }
                 // Do not persist stripLAN / no-LAN probe hosts — they overwrite real
                 // lanCandidates and the user's next tap stays on WSS·Relay forever.
                 if !stripLAN {

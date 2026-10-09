@@ -661,21 +661,35 @@ private struct DesktopAgentChatTerminalView: View {
     @State private var showInfo = false
     @State private var didInitialConnect = false
     @State private var showLoginSheet = false
+    @State private var showTerminal = false
 
     private var desk: PairedDesktop? {
         store.desktops.first(where: { $0.id == chat.desktopId })
+    }
+
+    private var showsNativeChat: Bool {
+        chat.mirrorsIDEChat && !showTerminal && workspace.ideState?.supportsNativeChat == true
+    }
+
+    private var projectPath: String {
+        if let cwd = workspace.ideState?.cwd, !cwd.isEmpty { return cwd }
+        return chat.cwd ?? ""
     }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 if chat.mirrorsIDEChat {
-                    IDEChatBar(state: workspace.ideState, cwd: chat.cwd) { op, id in
+                    IDEChatBar(state: workspace.ideState) { op, id in
                         workspace.sendIDEAction(op, id: id)
                     }
                     Divider()
                 }
-                TerminalContainerView(workspace: workspace)
+                if showsNativeChat {
+                    IDEChatView(workspace: workspace)
+                } else {
+                    TerminalContainerView(workspace: workspace)
+                }
             }
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -686,18 +700,38 @@ private struct DesktopAgentChatTerminalView: View {
                         }
                     }
                     ToolbarItem(placement: .principal) {
-                        HStack(spacing: 6) {
-                            connectionBadge
-                            Text(workspace.ideState.map { $0.name.isEmpty ? chat.displayTitle : $0.name } ?? chat.displayTitle)
-                                .font(.headline)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.75)
+                        VStack(spacing: 0) {
+                            HStack(spacing: 6) {
+                                connectionBadge
+                                Text(workspace.ideState.map { $0.name.isEmpty ? chat.displayTitle : $0.name } ?? chat.displayTitle)
+                                    .font(.headline)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.75)
+                            }
+                            if !projectPath.isEmpty {
+                                Text(verbatim: DesktopPath.abbreviate(projectPath))
+                                    .font(.caption2.monospaced())
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                                    .truncationMode(.head)
+                            }
                         }
                         .accessibilityElement(children: .combine)
                     }
                     ToolbarItem(placement: .topBarTrailing) {
                         Menu {
                             Button("Reconnect") { connect(mode: .preferExisting) }
+                            if chat.mirrorsIDEChat, workspace.ideState?.supportsNativeChat == true {
+                                Button {
+                                    showTerminal.toggle()
+                                } label: {
+                                    if showTerminal {
+                                        Label(String(localized: "Show Chat"), systemImage: "bubble.left.and.text.bubble.right")
+                                    } else {
+                                        Label(String(localized: "Show Terminal"), systemImage: "terminal")
+                                    }
+                                }
+                            }
                             if chat.mirrorsIDEChat {
                                 Button(String(localized: "New CLI Session in This Project")) { showForceNewConfirm = true }
                             } else {
@@ -820,7 +854,6 @@ enum DesktopPath {
 /// Cursor IDE controls above the mirrored chat: project, mode, model, changed files, review.
 private struct IDEChatBar: View {
     let state: IDEChatState?
-    let cwd: String?
     let onAction: (String, String?) -> Void
     @State private var showFiles = false
     @State private var confirmUndo = false
@@ -828,12 +861,9 @@ private struct IDEChatBar: View {
     private var files: [IDEChatState.File] { state?.files ?? [] }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Label(DesktopPath.abbreviate(state?.cwd ?? cwd ?? ""), systemImage: "folder")
-                .font(.caption.monospaced())
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .truncationMode(.head)
+        // One swipeable row: every control keeps its natural width instead of being
+        // squeezed into the screen and truncated.
+        ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 Menu {
                     ForEach(state?.modes ?? []) { mode in
@@ -854,28 +884,27 @@ private struct IDEChatBar: View {
                     chip(state?.modelName ?? String(localized: "Model"), systemImage: "cpu")
                 }
                 Button { showFiles = true } label: {
-                    chip("\(files.count)", systemImage: "doc.on.doc")
+                    chip(String(localized: "\(files.count) Files"), systemImage: "doc.on.doc")
                 }
                 .disabled(files.isEmpty)
-                Spacer(minLength: 0)
+                Button { onAction("cancel", nil) } label: {
+                    chip(String(localized: "Stop"), systemImage: "stop.fill")
+                }
                 if !files.isEmpty {
                     Button(String(localized: "Undo All")) { confirmUndo = true }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
+                        .fixedSize()
                     Button(String(localized: "Keep All")) { onAction("keepAll", nil) }
                         .buttonStyle(.borderedProminent)
                         .controlSize(.small)
+                        .fixedSize()
                 }
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
             .disabled(state == nil)
-            if state?.bridge.needsReload == true {
-                Text(String(localized: "Run Reload Window in Cursor on the computer to enable mode, model and Keep / Undo."))
-                    .font(.caption2)
-                    .foregroundStyle(.orange)
-            }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
         .background(.bar)
         .sheet(isPresented: $showFiles) {
             IDEChangedFilesView(state: state)
@@ -893,6 +922,7 @@ private struct IDEChatBar: View {
         Label(text, systemImage: systemImage)
             .font(.caption)
             .lineLimit(1)
+            .fixedSize()
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(.quaternary)

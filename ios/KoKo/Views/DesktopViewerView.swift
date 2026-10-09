@@ -10,6 +10,8 @@ struct DesktopViewerView: View {
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var keyboardFocused = false
+    @State private var askTakeover = false
+    @State private var takeoverPeer = ""
     @State private var showFiles = false
     @State private var showDisplays = false
     @State private var showMoreMenu = false
@@ -98,7 +100,24 @@ struct DesktopViewerView: View {
                         }
                         if session.phase == .failed, let paired = session.currentPaired, paired.canReconnect {
                             Button(String(localized: "Reconnect")) {
-                                Task { try? await session.reconnect(profile: paired) }
+                                Task {
+                                    do {
+                                        try await session.reconnect(profile: paired)
+                                    } catch RE2Error.controllerBusy(let peer) {
+                                        takeoverPeer = peer
+                                        askTakeover = true
+                                    } catch {}
+                                }
+                            }
+                            .alert(String(localized: "Computer In Use"), isPresented: $askTakeover) {
+                                Button(String(localized: "Cancel"), role: .cancel) {}
+                                Button(String(localized: "Take Over"), role: .destructive) {
+                                    Task { try? await session.reconnect(profile: paired, force: true) }
+                                }
+                            } message: {
+                                Text(takeoverPeer.isEmpty
+                                     ? String(localized: "Another device is controlling this computer. Continue and disconnect it?")
+                                     : String(localized: "\(takeoverPeer) is controlling this computer. Continue and disconnect it?"))
                             }
                             .buttonStyle(.borderedProminent)
                         } else if session.phase == .failed {

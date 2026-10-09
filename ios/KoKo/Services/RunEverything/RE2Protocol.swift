@@ -503,6 +503,36 @@ enum RE2Codec {
     }
 }
 
+/// Stable per-install controller identity sent with BIND so the relay can tell
+/// "same phone reconnecting" from "another phone taking over".
+enum RE2ControllerIdentity {
+    static let id: String = {
+        let account = KeychainAccount.re2ControllerID.rawValue
+        let key = UUID(uuid: (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+        if let d = try? KeychainService.shared.load(account: account, keyId: key),
+           let s = String(data: d, encoding: .utf8), !s.isEmpty {
+            return s
+        }
+        let s = UUID().uuidString.lowercased()
+        try? KeychainService.shared.save(data: Data(s.utf8), account: account, keyId: key)
+        return s
+    }()
+
+    /// Set from the main actor (UIDevice) before the first BIND.
+    nonisolated(unsafe) static var name = "iPhone"
+
+    static func bindPayload(deviceID: String, sessionTicket: String, force: Bool) -> Data {
+        var obj: [String: Any] = [
+            "device_id": deviceID,
+            "session_ticket": sessionTicket,
+            "client_id": id,
+            "client_name": name,
+        ]
+        if force { obj["force"] = true }
+        return RE2Codec.jsonData(obj)
+    }
+}
+
 enum RE2Error: LocalizedError {
     case badPairing(String)
     case badFrame
@@ -521,6 +551,8 @@ enum RE2Error: LocalizedError {
     case relayRestarted
     /// Another client took the session (kick / replaced).
     case peerTaken
+    /// BIND refused: another phone is controlling. `peer` is its display name.
+    case controllerBusy(peer: String)
     case expired
     case relayFull
     case agentOffline
@@ -546,6 +578,10 @@ enum RE2Error: LocalizedError {
             return String(localized: "Relay restarted — session ticket is gone. Scan a fresh Agent QR.")
         case .peerTaken:
             return String(localized: "Disconnected — another client took over this session.")
+        case .controllerBusy(let peer):
+            return peer.isEmpty
+                ? String(localized: "Another device is controlling this computer.")
+                : String(localized: "\(peer) is controlling this computer.")
         case .expired: return String(localized: "Pairing QR expired — scan again")
         case .relayFull: return String(localized: "Relay is full — try another node or later")
         case .agentOffline: return String(localized: "Agent is offline")
@@ -574,6 +610,8 @@ enum RE2Error: LocalizedError {
             return .ticketRejected
         case "kicked", "superseded", "replaced":
             return .peerTaken
+        case "controller_busy":
+            return .controllerBusy(peer: "")
         default:
             if m.contains("kick") || m.contains("replaced") || m.contains("took over") || m.contains("superseded") {
                 return .peerTaken
@@ -601,6 +639,8 @@ enum RE2Error: LocalizedError {
             return String(localized: "Relay memory was cleared. Pair again with a fresh Agent QR.")
         case .peerTaken:
             return String(localized: "Another client is using this Agent. Close it there, then tap Reconnect.")
+        case .controllerBusy:
+            return String(localized: "Tap Reconnect and confirm to take over from the other device.")
         case .desktopOpenTimeout:
             return String(localized: "If the host shows a permission / privacy dialog, accept it, then tap Reconnect.")
         case .noise:
@@ -617,7 +657,7 @@ enum RE2Error: LocalizedError {
     /// Failures that must stop auto-reconnect (manual rescan / reconnect only).
     var stopsAutoReconnect: Bool {
         switch self {
-        case .pinMismatch, .needsRescan, .relayRestarted, .peerTaken, .expired:
+        case .pinMismatch, .needsRescan, .relayRestarted, .peerTaken, .controllerBusy, .expired:
             return true
         default:
             return false

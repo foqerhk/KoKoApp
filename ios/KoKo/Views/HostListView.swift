@@ -23,6 +23,9 @@ struct HostListView: View {
     @State private var askPassword = false
     @State private var pendingPayload: RE2PairingPayload?
     @State private var pendingReconnect: PairedDesktop?
+    @State private var takeoverDesk: PairedDesktop?
+    @State private var takeoverPeer = ""
+    @State private var takeoverPassword: String?
     /// Ignores brief `activeDesktop == nil` flashes when Hashable item fields change mid-connect.
     @State private var leaveDesktopEpoch = 0
 
@@ -62,9 +65,10 @@ struct HostListView: View {
                     Section {
                         ForEach(store.desktops) { desk in
                             Button {
-                                if desktopSession.currentPaired?.id == desk.id,
-                                   desktopSession.isStreaming || desktopSession.phase == .openingDesktop
-                                    || desktopSession.phase == .reconnecting {
+                                // Reattach to the session kept alive after Back; a second
+                                // connect would race the Agent's still-live UDP stream.
+                                if desktopSession.currentPaired?.deviceID == desk.deviceID,
+                                   desktopSession.holdsAgentPeer {
                                     activeDesktop = desk
                                     return
                                 }
@@ -82,7 +86,7 @@ struct HostListView: View {
                                             .lineLimit(1)
                                         if let lan = Self.lanSubtitle(
                                             desk: desk,
-                                            live: desktopSession.currentPaired?.id == desk.id
+                                            live: desktopSession.currentPaired?.deviceID == desk.deviceID
                                                 ? desktopSession.lanEndpointsDisplay
                                                 : nil
                                         ) {
@@ -93,7 +97,7 @@ struct HostListView: View {
                                         }
                                     }
                                     Spacer()
-                                    if desktopSession.currentPaired?.id == desk.id, desktopSession.isStreaming {
+                                    if desktopSession.currentPaired?.deviceID == desk.deviceID, desktopSession.isStreaming {
                                         Text(desktopSession.pathLabel.isEmpty
                                              ? String(localized: "Connected")
                                              : desktopSession.pathLabel)
@@ -272,6 +276,22 @@ struct HostListView: View {
         } message: {
             Text(connectError ?? "")
         }
+        .alert(String(localized: "Computer In Use"), isPresented: Binding(
+            get: { takeoverDesk != nil },
+            set: { if !$0 { takeoverDesk = nil } }
+        )) {
+            Button(String(localized: "Cancel"), role: .cancel) {}
+            Button(String(localized: "Take Over"), role: .destructive) {
+                if let d = takeoverDesk {
+                    let pw = takeoverPassword
+                    Task { await reconnectDesktop(d, password: pw, force: true) }
+                }
+            }
+        } message: {
+            Text(takeoverPeer.isEmpty
+                 ? String(localized: "Another device is controlling this computer. Continue and disconnect it?")
+                 : String(localized: "\(takeoverPeer) is controlling this computer. Continue and disconnect it?"))
+        }
         .alert(String(localized: "Session Password"), isPresented: $askPassword) {
             SecureField(String(localized: "Password"), text: $password)
             Button(String(localized: "Cancel"), role: .cancel) {
@@ -361,10 +381,17 @@ struct HostListView: View {
         showPaste = false
         do {
             let profile = try await desktopSession.connect(payload: payload, accessPassword: password)
-            activeDesktop = store.upsertDesktop(profile)
+            let stored = store.upsertDesktop(profile)
+            desktopSession.adoptStoredIdentity(stored)
+            activeDesktop = stored
         } catch let err as RE2Error {
             if case .cancelled = err {
                 // superseded
+            } else if case .controllerBusy(let peer) = err, let redeemed = desktopSession.currentPaired {
+                // The QR token is already redeemed; keep the pair and take over via reconnect.
+                let stored = store.upsertDesktop(redeemed)
+                desktopSession.adoptStoredIdentity(stored)
+                askTakeover(stored, peer: peer, password: password)
             } else if case .signaling(let m) = err, m.lowercased().contains("password") {
                 askPassword = true
             } else {
@@ -381,13 +408,19 @@ struct HostListView: View {
         connecting = false
     }
 
-    private func reconnectDesktop(_ desk: PairedDesktop, password: String? = nil) async {
+    private func askTakeover(_ desk: PairedDesktop, peer: String, password: String?) {
+        takeoverPeer = peer
+        takeoverPassword = password
+        takeoverDesk = desk
+    }
+
+    private func reconnectDesktop(_ desk: PairedDesktop, password: String? = nil, force: Bool = false) async {
         connecting = true
         connectError = nil
         // Show viewer immediately so Encrypting… / pathLabel are visible while reconnecting.
         activeDesktop = desk
         do {
-            try await desktopSession.reconnect(profile: desk, accessPassword: password)
+            try await desktopSession.reconnect(profile: desk, accessPassword: password, force: force)
             if let updated = desktopSession.currentPaired {
                 store.upsertDesktop(updated)
                 if activeDesktop?.id != updated.id {
@@ -396,6 +429,12 @@ struct HostListView: View {
             }
         } catch let err as RE2Error {
             if case .cancelled = err { connecting = false; return }
+            if case .controllerBusy(let peer) = err {
+                activeDesktop = nil
+                connecting = false
+                askTakeover(desk, peer: peer, password: password)
+                return
+            }
             connectError = [err.localizedDescription, err.recoveryHint]
                 .compactMap { $0 }
                 .filter { !$0.isEmpty }

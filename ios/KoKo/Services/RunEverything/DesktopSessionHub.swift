@@ -10,6 +10,8 @@ final class DesktopSessionHub: ObservableObject {
 
     let session = RE2DesktopSession()
     private var sessionObserve: AnyCancellable?
+    private var phaseObserve: AnyCancellable?
+    private weak var store: AppStore?
 
     private init() {
         // HostList / SessionList observe *this* hub. Without forwarding,
@@ -18,6 +20,26 @@ final class DesktopSessionHub: ObservableObject {
         sessionObserve = session.objectWillChange.sink { [weak self] _ in
             self?.objectWillChange.send()
         }
+    }
+
+    /// Persist the profile that actually reached the desktop. UI paths only saved it
+    /// when `connect` returned cleanly, so a pairing that streamed after an internal
+    /// retry kept the previous QR's token on disk and every later reconnect failed
+    /// Noise msg3 until the user scanned again.
+    func attach(store: AppStore) {
+        self.store = store
+        phaseObserve = session.$phase
+            .removeDuplicates()
+            .filter { $0 == .streaming }
+            .sink { [weak self] _ in
+                Task { @MainActor in self?.persistLiveProfile() }
+            }
+    }
+
+    private func persistLiveProfile() {
+        guard let store, let live = session.currentPaired, live.canReconnect else { return }
+        let stored = store.upsertDesktop(live)
+        session.adoptStoredIdentity(stored)
     }
 
     /// Prefer the live encrypted tunnel whenever this desktop session holds the
