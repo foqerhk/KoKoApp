@@ -15,7 +15,12 @@ final class RE2SignalingClient: NSObject, URLSessionWebSocketDelegate {
 
     /// Serial outbound WebSocket sends (tunnel + ping/pong + BIND).
     private let writeQueue = DispatchQueue(label: "com.foqerhk.koko.re2.ws.write")
-    private let maxPendingFrames = 96
+    // The URLSession receive callback can outrun MainActor consumption during a
+    // large HEVC IDR. A 4K keyframe is routinely 300–450 encrypted fragments;
+    // the old 96-frame cap dropped the beginning before the assembler saw it,
+    // making WSS 8K/16K recovery permanently stay at 1/N parts. Keep a bounded
+    // multi-frame window (roughly a few MiB at RE2's ~1.2 KiB fragment size).
+    private let maxPendingFrames = 4096
 
     override init() {
         super.init()

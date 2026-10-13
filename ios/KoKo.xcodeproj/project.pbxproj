@@ -34,6 +34,7 @@
 		487865535B6FDB402AC30CFF /* HostEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A869E30885CCAE81461BA34 /* HostEditorView.swift */; };
 		4D53FA731ACD0E31C34ABADD /* RE2Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0ADE55200DEA26009DB4BD4 /* RE2Models.swift */; };
 		58A9FEC9A8D3C6AD26681D9F /* RE2DesktopInputSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F402A75AA7AF765F0E4B8E /* RE2DesktopInputSupport.swift */; };
+		58AB81B63974AAA021E9CAE0 /* SecurityAndLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3BDE98B72289CB99839879F /* SecurityAndLifecycleTests.swift */; };
 		5BBEED60F94EF165F679A1B8 /* LargeScreenLayoutState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BD21598BB37C06E9A70CD2D /* LargeScreenLayoutState.swift */; };
 		5E1CF52F21B2E00F1E27A097 /* HostListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 516A263E7AFA7116E5B720AA /* HostListView.swift */; };
 		616192F74DC6C670869930F9 /* RE2DesktopSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3010C0DF768FDC4B01A9AD67 /* RE2DesktopSession.swift */; };
@@ -47,9 +48,11 @@
 		6F2AB1141D25667D640B3361 /* DuoHingeMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 933BB1065CAA8A123FF03857 /* DuoHingeMonitor.swift */; };
 		6FA2A569FFF708C431899331 /* TerminalMagnifierHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10528D9CBA8DEB6DE649C856 /* TerminalMagnifierHost.swift */; };
 		74039FF15E487903D2E3333A /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E77E3DEEDF36B93CA7D877A0 /* KeychainService.swift */; };
+		7C943ADCF5687991D5066481 /* AppLifecycleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 214799C3E2A3BBC3490029A2 /* AppLifecycleUITests.swift */; };
 		811702F0A4AC4985C67992DD /* DesktopViewerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30189032F6BF5CCD32AA890 /* DesktopViewerView.swift */; };
 		8597FF01FD32BCBC13B1B88C /* TabletRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DBCFDF1DF79481105EF3706 /* TabletRootView.swift */; };
 		85A5C4FFCC4B1D38A1A60122 /* SidebarSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73FE480A97A7633BDC1A5279 /* SidebarSection.swift */; };
+		8711A5BB051D5CCBBEA3E086 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F844DE2CDBA3CE830944BD1A /* PrivacyInfo.xcprivacy */; };
 		87CAC03702D0244A4D5F4020 /* SessionWindowRoot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CCDD8E8787B964DF1FA42D8 /* SessionWindowRoot.swift */; };
 		898A73263A3EA59F026971AB /* AppLanguageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB242065F4942DA31C38F075 /* AppLanguageStore.swift */; };
 		918E52EF528B69931D152B1D /* AgentSessionDelete.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6BC0DD5C560A38B9BFFAE6 /* AgentSessionDelete.swift */; };
@@ -82,6 +85,23 @@
 		F80674920BA2441753D83341 /* SessionChromeBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEAA289D6AFF7A89F53DB7AC /* SessionChromeBar.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		795FF369BBA6297A443AC67E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 351B2BAC053B46E383079623 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 600EDB281B2CA7453793D09E;
+			remoteInfo = KoKo;
+		};
+		DDA42FE18F91388F00E54469 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 351B2BAC053B46E383079623 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 600EDB281B2CA7453793D09E;
+			remoteInfo = KoKo;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		007881D166918640B031EF08 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		0256B8B4B79297A8FA079718 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -94,11 +114,13 @@
 		1798BB649ED3A7A32A88D676 /* E2EAutoConnect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E2EAutoConnect.swift; sourceTree = "<group>"; };
 		1886D1D2BC29663B8B5FC1A7 /* SwiftTerm */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SwiftTerm; path = Packages/SwiftTerm; sourceTree = SOURCE_ROOT; };
 		1BD21598BB37C06E9A70CD2D /* LargeScreenLayoutState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeScreenLayoutState.swift; sourceTree = "<group>"; };
+		214799C3E2A3BBC3490029A2 /* AppLifecycleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLifecycleUITests.swift; sourceTree = "<group>"; };
 		25B43E5F20896F83F35E0C9F /* SessionListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionListView.swift; sourceTree = "<group>"; };
 		3010C0DF768FDC4B01A9AD67 /* RE2DesktopSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RE2DesktopSession.swift; sourceTree = "<group>"; };
 		31EA191B091F11508E5956B1 /* SessionDeleteViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDeleteViews.swift; sourceTree = "<group>"; };
 		3B37A0919C72EFE0875A64BB /* WideDisplaySafeArea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WideDisplaySafeArea.swift; sourceTree = "<group>"; };
 		3E4BE9EE8A61790470E7966C /* RE2E2EAutoConnect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RE2E2EAutoConnect.swift; sourceTree = "<group>"; };
+		3FB04C15122F954E3C73A7B2 /* KoKoUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KoKoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		42177C524DD2EB394A8559C3 /* SlotDragReorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotDragReorder.swift; sourceTree = "<group>"; };
 		48F326302C22707B96576C74 /* LargeScreenShellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeScreenShellView.swift; sourceTree = "<group>"; };
 		4B94BE63C3C3127A719313CE /* RE2Protocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RE2Protocol.swift; sourceTree = "<group>"; };
@@ -154,10 +176,13 @@
 		D936A6FFFD6ED30DBD08E359 /* DesktopSessionHub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopSessionHub.swift; sourceTree = "<group>"; };
 		E2B747A9A2E4C4AF82377C96 /* SSHKeyGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHKeyGenerator.swift; sourceTree = "<group>"; };
 		E30189032F6BF5CCD32AA890 /* DesktopViewerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopViewerView.swift; sourceTree = "<group>"; };
+		E3BDE98B72289CB99839879F /* SecurityAndLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityAndLifecycleTests.swift; sourceTree = "<group>"; };
 		E4CC5CAD6B534757A51C8B30 /* NoiseXXPSK3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoiseXXPSK3.swift; sourceTree = "<group>"; };
 		E77E3DEEDF36B93CA7D877A0 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		E859719E95BEDFAC9843D452 /* RE2VideoMedia.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RE2VideoMedia.swift; sourceTree = "<group>"; };
 		E8A059AD4775A65D2E99F03D /* IDEChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IDEChatView.swift; sourceTree = "<group>"; };
+		ED40B3B0CDE56B9424E03B2B /* KoKoTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KoKoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F844DE2CDBA3CE830944BD1A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -220,6 +245,7 @@
 				0256B8B4B79297A8FA079718 /* Assets.xcassets */,
 				007881D166918640B031EF08 /* Info.plist */,
 				4FB378A32ABB7BCF9145F716 /* Localizable.xcstrings */,
+				F844DE2CDBA3CE830944BD1A /* PrivacyInfo.xcprivacy */,
 				50005CF2FA45655C4D5A70D6 /* App */,
 				53917900D4695082CEE00705 /* Generated */,
 				58A95E3AA9EA1B5A4E74474A /* Models */,
@@ -312,6 +338,22 @@
 			path = Services;
 			sourceTree = "<group>";
 		};
+		99332BC5CCE51E381FDBA283 /* KoKoTests */ = {
+			isa = PBXGroup;
+			children = (
+				E3BDE98B72289CB99839879F /* SecurityAndLifecycleTests.swift */,
+			);
+			path = KoKoTests;
+			sourceTree = "<group>";
+		};
+		9EA5BA9838EC55A378E3C0D6 /* KoKoUITests */ = {
+			isa = PBXGroup;
+			children = (
+				214799C3E2A3BBC3490029A2 /* AppLifecycleUITests.swift */,
+			);
+			path = KoKoUITests;
+			sourceTree = "<group>";
+		};
 		B28E74BD9844DB32F7C7AD66 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
@@ -338,6 +380,8 @@
 			isa = PBXGroup;
 			children = (
 				BF99CDA481136CE68BE9D006 /* KoKo.app */,
+				ED40B3B0CDE56B9424E03B2B /* KoKoTests.xctest */,
+				3FB04C15122F954E3C73A7B2 /* KoKoUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -346,6 +390,8 @@
 			isa = PBXGroup;
 			children = (
 				3AE67B10459C9848921CB793 /* KoKo */,
+				99332BC5CCE51E381FDBA283 /* KoKoTests */,
+				9EA5BA9838EC55A378E3C0D6 /* KoKoUITests */,
 				B28E74BD9844DB32F7C7AD66 /* Packages */,
 				D3472A8A0E9C632D2575C06C /* Products */,
 			);
@@ -354,6 +400,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		4F3C36E661D9B90AD89DCF79 /* KoKoTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 610DD0C6063CCEBB18C51BFE /* Build configuration list for PBXNativeTarget "KoKoTests" */;
+			buildPhases = (
+				C721A0E5AC12046DD51C55FE /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				56EA3969726B6602AD129FAD /* PBXTargetDependency */,
+			);
+			name = KoKoTests;
+			packageProductDependencies = (
+			);
+			productName = KoKoTests;
+			productReference = ED40B3B0CDE56B9424E03B2B /* KoKoTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		600EDB281B2CA7453793D09E /* KoKo */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 292E871CBBF8BA802AE9FAA3 /* Build configuration list for PBXNativeTarget "KoKo" */;
@@ -376,6 +440,24 @@
 			productReference = BF99CDA481136CE68BE9D006 /* KoKo.app */;
 			productType = "com.apple.product-type.application";
 		};
+		D68674B926514DD9CDC7E5ED /* KoKoUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9D62A36D1C2034EDF6ABAC58 /* Build configuration list for PBXNativeTarget "KoKoUITests" */;
+			buildPhases = (
+				811AC3970CAFDF3FFD3F84D9 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				85D9DD5D5D8186784947BA39 /* PBXTargetDependency */,
+			);
+			name = KoKoUITests;
+			packageProductDependencies = (
+			);
+			productName = KoKoUITests;
+			productReference = 3FB04C15122F954E3C73A7B2 /* KoKoUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -388,6 +470,9 @@
 					600EDB281B2CA7453793D09E = {
 						DevelopmentTeam = U5SLTWD6AH;
 						ProvisioningStyle = Automatic;
+					};
+					D68674B926514DD9CDC7E5ED = {
+						TestTargetID = 600EDB281B2CA7453793D09E;
 					};
 				};
 			};
@@ -412,6 +497,8 @@
 			projectRoot = "";
 			targets = (
 				600EDB281B2CA7453793D09E /* KoKo */,
+				4F3C36E661D9B90AD89DCF79 /* KoKoTests */,
+				D68674B926514DD9CDC7E5ED /* KoKoUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -423,12 +510,21 @@
 			files = (
 				EFBE2ED8A9C2F4BDB90188F7 /* Assets.xcassets in Resources */,
 				0D328DEB4AAD6E3B58A739B7 /* Localizable.xcstrings in Resources */,
+				8711A5BB051D5CCBBEA3E086 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		811AC3970CAFDF3FFD3F84D9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7C943ADCF5687991D5066481 /* AppLifecycleUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8799E8A7F315757FD8EB3942 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -504,9 +600,48 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C721A0E5AC12046DD51C55FE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				58AB81B63974AAA021E9CAE0 /* SecurityAndLifecycleTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		56EA3969726B6602AD129FAD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 600EDB281B2CA7453793D09E /* KoKo */;
+			targetProxy = 795FF369BBA6297A443AC67E /* PBXContainerItemProxy */;
+		};
+		85D9DD5D5D8186784947BA39 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 600EDB281B2CA7453793D09E /* KoKo */;
+			targetProxy = DDA42FE18F91388F00E54469 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		12013CADCB0A2E6909BED5C3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.foqerhk.KoKoUITests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = KoKo;
+			};
+			name = Debug;
+		};
 		6F49915A0385B58AD6B6C6CB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -626,6 +761,24 @@
 			};
 			name = Debug;
 		};
+		986C194460D7F1EE43163B26 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.foqerhk.KoKoTests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KoKo.app/KoKo";
+			};
+			name = Debug;
+		};
 		9FC69390DFA29DF205F92B52 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -646,6 +799,42 @@
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		C0A7167DDB3A42105064B911 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.foqerhk.KoKoUITests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = KoKo;
+			};
+			name = Release;
+		};
+		C2EE55422C4312B61195763C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.foqerhk.KoKoTests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KoKo.app/KoKo";
 			};
 			name = Release;
 		};
@@ -689,6 +878,24 @@
 			buildConfigurations = (
 				820F8424863FE847027BC9F7 /* Debug */,
 				6F49915A0385B58AD6B6C6CB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		610DD0C6063CCEBB18C51BFE /* Build configuration list for PBXNativeTarget "KoKoTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				986C194460D7F1EE43163B26 /* Debug */,
+				C2EE55422C4312B61195763C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		9D62A36D1C2034EDF6ABAC58 /* Build configuration list for PBXNativeTarget "KoKoUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				12013CADCB0A2E6909BED5C3 /* Debug */,
+				C0A7167DDB3A42105064B911 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

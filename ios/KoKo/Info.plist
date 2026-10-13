@@ -18,14 +18,6 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
-	<key>CFBundleVersion</key>
-	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>KoKo connects to your servers over SSH and Relay so you can run AI agents and remote desktops.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>KoKo uses the camera to scan Agent pairing QR codes and to use this phone as a webcam on the remote desktop.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -37,6 +29,14 @@
 			</array>
 		</dict>
 	</array>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>KoKo uses the camera to scan Agent pairing QR codes and to use this phone as a webcam on the remote desktop.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>KoKo connects to your servers over SSH and Relay so you can run AI agents and remote desktops.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

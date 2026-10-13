@@ -17,7 +17,16 @@ final class ScrollbackStore {
         let base = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         let dir = base.appendingPathComponent(directoryName, isDirectory: true)
         if !fileManager.fileExists(atPath: dir.path) {
-            try? fileManager.createDirectory(at: dir, withIntermediateDirectories: true)
+            try? fileManager.createDirectory(
+                at: dir,
+                withIntermediateDirectories: true,
+                attributes: [.protectionKey: FileProtectionType.completeUnlessOpen]
+            )
+        } else {
+            try? fileManager.setAttributes(
+                [.protectionKey: FileProtectionType.completeUnlessOpen],
+                ofItemAtPath: dir.path
+            )
         }
         return dir
     }
@@ -41,7 +50,16 @@ final class ScrollbackStore {
             return
         }
         if !fileManager.fileExists(atPath: url.path) {
-            fileManager.createFile(atPath: url.path, contents: nil)
+            fileManager.createFile(
+                atPath: url.path,
+                contents: nil,
+                attributes: [.protectionKey: FileProtectionType.completeUnlessOpen]
+            )
+        } else {
+            try? fileManager.setAttributes(
+                [.protectionKey: FileProtectionType.completeUnlessOpen],
+                ofItemAtPath: url.path
+            )
         }
         guard let handle = try? FileHandle(forWritingTo: url) else {
             try? data.write(to: url, options: .atomic)

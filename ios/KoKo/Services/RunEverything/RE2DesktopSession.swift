@@ -12,8 +12,12 @@ final class RE2DesktopSession: ObservableObject {
     @Published var statusText: String = ""
     @Published var lastError: String?
     @Published var recoveryHint: String?
+    /// Non-nil → UI should present a one-shot “you were kicked” alert (cleared on dismiss).
+    @Published var kickAlertMessage: String?
     @Published var desktopWidth: Int = 0
     @Published var desktopHeight: Int = 0
+    /// Negotiated encode codec from the latest DESKTOP_READY (`HEVC` / `H.264`).
+    @Published private(set) var desktopCodecLabel: String = ""
     @Published var cursorX: Double = 0.5
     @Published var cursorY: Double = 0.5
     @Published var cursorVisible: Bool = true
@@ -24,6 +28,8 @@ final class RE2DesktopSession: ObservableObject {
     private(set) var debugVideoPartsRX: Int = 0
     private(set) var debugFramesAssembled: Int = 0
     private(set) var debugFramesDecoded: Int = 0
+    private(set) var debugVideoKeyFrames: Int = 0
+    private(set) var debugVideoDeltaFrames: Int = 0
     private(set) var debugAssemblerPeak: String = "-"
     var decoderLastError: String { decoder.lastError }
     var decoderBackend: String { decoder.lastSessionBackend }
@@ -32,6 +38,8 @@ final class RE2DesktopSession: ObservableObject {
         debugVideoPartsRX = 0
         debugFramesAssembled = 0
         debugFramesDecoded = 0
+        debugVideoKeyFrames = 0
+        debugVideoDeltaFrames = 0
         debugAssemblerPeak = "-"
     }
     /// Bumped on every decoded frame so SwiftUI cannot coalesce identical-looking images.
@@ -232,6 +240,7 @@ final class RE2DesktopSession: ObservableObject {
     func disconnect(userInitiated: Bool = true) {
         if userInitiated {
             autoReconnect = false
+            kickAlertMessage = nil
             Self.e2eForceWSS = false
             Self.e2eForceUDP = false
             Self.e2eStripLAN = false
@@ -285,6 +294,9 @@ final class RE2DesktopSession: ObservableObject {
         suppressDisconnectHandling = false
         lanPeerAcked = false
         lanUpgradeAttempted = false
+        pendingQualityRestore = false
+        qualityChangeAwaitingPaint = false
+        qualityChangeStartedAt = nil
         didApplyNativeQuality = false
         needsNativeGeometryReopen = false
         confirmedDisplayID = nil
@@ -311,6 +323,7 @@ final class RE2DesktopSession: ObservableObject {
         cursorVisible = true
         desktopWidth = 0
         desktopHeight = 0
+        desktopCodecLabel = ""
         videoAssembler = VideoFrameAssembler()
         decoder.reset()
         pathLabel = ""
@@ -340,15 +353,53 @@ final class RE2DesktopSession: ObservableObject {
     var audioControlsEnabled: Bool { hostMicAuthorized != false }
     var cameraControlsEnabled: Bool { hostCameraAuthorized != false }
 
-    /// Compact status under the desktop title: path · quality · kb/s.
+    /// Compact status under the desktop title: path · quality · codec · size · kb/s.
     /// Weak-net copy stays on the orange overlay — not here (title row is too short).
     var navStatusLine: String {
         var parts: [String] = []
         if !pathLabel.isEmpty { parts.append(pathLabel) }
         parts.append(videoQuality.title)
+        if pendingQualityRestore {
+            parts.append(String(localized: "Recovering quality…"))
+        }
+        if let tech = videoStreamTechSummary {
+            parts.append(tech)
+        }
         // Always show kb/s (including 0) so the title row keeps a stable shape.
         parts.append("\(statsKbPerSec) kb/s")
         return parts.joined(separator: " · ")
+    }
+
+    /// Codec + negotiated / painted resolution for nav and More → Quality.
+    var videoStreamTechSummary: String? {
+        guard desktopWidth > 0, desktopHeight > 0 else {
+            if !desktopCodecLabel.isEmpty { return desktopCodecLabel }
+            return nil
+        }
+        var chunks: [String] = []
+        if !desktopCodecLabel.isEmpty { chunks.append(desktopCodecLabel) }
+        chunks.append("\(desktopWidth)×\(desktopHeight)")
+        if let picW = frameImage?.width, let picH = frameImage?.height, picW > 1, picH > 1 {
+            let slackW = max(48, desktopWidth / 10)
+            let slackH = max(48, desktopHeight / 10)
+            if abs(picW - desktopWidth) > slackW || abs(picH - desktopHeight) > slackH {
+                chunks.append(
+                    String(
+                        format: String(localized: "desktop.stream.paint"),
+                        "\(picW)×\(picH)"
+                    )
+                )
+            }
+        }
+        return chunks.joined(separator: " ")
+    }
+
+    private static func shortVideoCodecLabel(_ codec: String) -> String {
+        let c = codec.lowercased()
+        if c.contains("265") || c.contains("hevc") { return "HEVC" }
+        if c.contains("264") || c.contains("avc") { return "H.264" }
+        if c.isEmpty { return "" }
+        return codec.uppercased()
     }
 
     /// Encode size for a quality tier from known host display geometry.
@@ -367,17 +418,22 @@ final class RE2DesktopSession: ObservableObject {
     func qualityResolutionLabel(for quality: DesktopVideoQuality) -> String? {
         guard let set = encodeSize(for: quality) else { return nil }
         let setText = "\(set.width)×\(set.height)"
-        if quality == videoQuality,
-           let picW = frameImage?.width, let picH = frameImage?.height,
-           picW > 1, picH > 1 {
-            if picW == set.width, picH == set.height {
-                return setText
+        if quality == videoQuality {
+            var line = setText
+            if !desktopCodecLabel.isEmpty {
+                line += " · \(desktopCodecLabel)"
             }
-            return String(
-                format: String(localized: "desktop.quality.res.mismatch"),
-                "\(picW)×\(picH)",
-                setText
-            )
+            if let picW = frameImage?.width, let picH = frameImage?.height,
+               picW > 1, picH > 1 {
+                if picW != set.width || picH != set.height {
+                    line = String(
+                        format: String(localized: "desktop.quality.res.mismatch"),
+                        "\(picW)×\(picH)",
+                        line
+                    )
+                }
+            }
+            return line
         }
         return setText
     }
@@ -994,9 +1050,9 @@ final class RE2DesktopSession: ObservableObject {
         }
     }
 
-    /// After a UDP shrink OPEN paints, climb back toward `videoQuality` (otherwise we
-    /// stay stuck at 320×180 forever — Ultra 5K IDRs commonly trigger this).
-    private var pendingUDPQualityRamp = false
+    /// A recovery OPEN may paint a deliberately small frame first. Restore the selected
+    /// rung after that frame arrives instead of leaving “Ultra” on a tiny stream.
+    private var pendingQualityRestore = false
     /// One fat-IDR conservative shrink per OPEN generation (app-switch 8K hang).
     private var didFatUDPConservative = false
     /// Ignore "no frame" conservative shrink while a user quality change is in flight.
@@ -1005,6 +1061,7 @@ final class RE2DesktopSession: ObservableObject {
     /// Cooldown between weak-net tier steps (avoid OPEN thrash).
     private var abrStepCooldownUntil: Date?
     private var abrWeakStreak = 0
+    private var abrGoodStreak = 0
     private var weakHintBadStreak = 0
     private var weakHintGoodStreak = 0
     private var abrLastStepAt: Date?
@@ -1040,28 +1097,41 @@ final class RE2DesktopSession: ObservableObject {
             "max_height": mh,
             "fps": fps,
             "bitrate_kbps": br,
-            "codec": "h264",
             "hide_cursor": true,
             "privacy_blank": privacyBlank
         ]
         open["display_id"] = desiredDisplayID
         if let pw = accessPassword, !pw.isEmpty { open["password"] = pw }
+        let native = hostNativeSize()
+        let useHEVC = native.map {
+            DesktopVideoQuality.preferHEVC(nativeWidth: $0.width, nativeHeight: $0.height)
+        } ?? true
+        open["codec"] = useHEVC ? "h265" : "h264"
         phase = .openingDesktop
-        pendingUDPQualityRamp = true
-        RE2Log.info("openDesktop quality=conservative via=udp encode=\(mw)x\(mh)@\(fps) \(br)kbps (will ramp→\(videoQuality.rawValue))")
+        pendingQualityRestore = true
+        RE2Log.info("openDesktop quality=conservative via=udp encode=\(mw)x\(mh)@\(fps) \(br)kbps codec=\(open["codec"] ?? "?") (will ramp→\(videoQuality.rawValue))")
         try? await sendInner(RE2.Msg.openDesktop, RE2Codec.jsonData(open), reliable: true)
         requestKeyframe()
         // Do not block the keyframe-retry loop for long — DESKTOP_READY is async.
         _ = await waitUntilStreaming(timeout: 3)
     }
 
-    /// After UDP shrink recovery: jump straight back to the selected scale (no ladder).
-    private func scheduleRampToSelectedQuality() {
+    /// After a small recovery frame: jump straight back to the selected scale.
+    private func scheduleRestoreSelectedQuality() {
         let target = videoQuality
-        Task { @MainActor in
-            guard phase == .streaming || phase == .openingDesktop else { return }
-            await applyQualityOpen(target, clearFrame: false)
-            videoQuality = target
+        // Recovery, native-geometry and menu OPENs all replace the same Agent
+        // desktop. Serialize them through one generation/task; otherwise a queued
+        // recovery OPEN can race a privacy/menu OPEN, replace sessionID twice and
+        // make the first READY look stale before the Agent disconnects the peer.
+        qualityOpenGen &+= 1
+        let gen = qualityOpenGen
+        qualityOpenTask?.cancel()
+        qualityOpenTask = Task { @MainActor [weak self] in
+            guard let self, !Task.isCancelled, gen == self.qualityOpenGen else { return }
+            guard self.phase == .streaming || self.phase == .openingDesktop else { return }
+            await self.applyQualityOpen(target, clearFrame: false, openGen: gen)
+            guard !Task.isCancelled, gen == self.qualityOpenGen else { return }
+            self.videoQuality = target
             target.persist()
             RE2Log.info("quality restore → \(target.rawValue) (no climb)")
         }
@@ -1220,8 +1290,13 @@ final class RE2DesktopSession: ObservableObject {
         needsNativeGeometryReopen = false
         didApplyNativeQuality = true
         RE2Log.info("display geometry known — OPEN \(videoQuality.rawValue) at native scale (no climb)")
-        Task { @MainActor in
-            await applyQualityOpen(videoQuality, clearFrame: false)
+        let target = videoQuality
+        qualityOpenGen &+= 1
+        let gen = qualityOpenGen
+        qualityOpenTask?.cancel()
+        qualityOpenTask = Task { @MainActor [weak self] in
+            guard let self, !Task.isCancelled, gen == self.qualityOpenGen else { return }
+            await self.applyQualityOpen(target, clearFrame: false, openGen: gen)
         }
     }
 
@@ -1262,7 +1337,6 @@ final class RE2DesktopSession: ObservableObject {
             RE2Log.info("quality OPEN \(quality.rawValue) \(open["max_width"] ?? 0)x\(open["max_height"] ?? 0) plane=\(open["video_plane"] ?? 0) sidReuse=\(useWSSTunnel ? 0 : 1)")
             // Soft Agent reopen keeps capture/video_plane alive. Clear assembler so
             // the post-READY IDR can rebuild; keep last CGImage until new paint.
-            frameEpoch &+= 1
             lastDecodedAt = nil
             videoAssembler = VideoFrameAssembler()
             if clearFrame {
@@ -1270,12 +1344,10 @@ final class RE2DesktopSession: ObservableObject {
             }
             requestKeyframe(force: true)
             scheduleKeyframeRetry()
-            // Quality reopen keeps the last frame — leave streaming so UI / E2E /
-            // keepalive aren't stuck on openingDesktop when DESKTOP_READY is delayed.
-            if !clearFrame, frameImage != nil {
-                phase = .streaming
-                statusText = String(localized: "Connected")
-            }
+            // Keep the old CGImage visible, but remain openingDesktop until the
+            // matching READY arrives. Advertising streaming here allowed the next
+            // privacy/quality action to send another WSS OPEN against an in-flight
+            // replacement and strand the session in openingDesktop.
         } catch {
             RE2Log.error("quality OPEN failed: \(error)")
             phase = .streaming
@@ -1312,17 +1384,11 @@ final class RE2DesktopSession: ObservableObject {
             if sizeOK {
                 let fresh = lastDecodedAt.map { Date().timeIntervalSince($0) < 2.5 } ?? false
                 didApplyNativeQuality = true
-                pendingUDPQualityRamp = false
+                pendingQualityRestore = false
                 qualityChangeAwaitingPaint = false
                 abrStepCooldownUntil = Date().addingTimeInterval(15)
                 desktopWidth = img.width
                 desktopHeight = img.height
-                frameEpoch &+= 1
-                // Mark paint time so E2E same-rung checks (smooth expect==pic) pass
-                // when skip-reopen only asks for a soft keyframe on a quiet relay.
-                if lastDecodedAt == nil || Date().timeIntervalSince(lastDecodedAt!) >= 2.5 {
-                    lastDecodedAt = Date()
-                }
                 requestKeyframe(force: true)
                 RE2Log.info("quality \(quality.rawValue) already painting \(img.width)x\(img.height) fresh=\(fresh ? 1 : 0) — skip reopen")
                 return
@@ -1330,7 +1396,7 @@ final class RE2DesktopSession: ObservableObject {
         }
         // Quality menu must use the full ladder, not the 320p first-paint caps.
         didApplyNativeQuality = true
-        pendingUDPQualityRamp = false
+        pendingQualityRestore = false
         qualityChangeAwaitingPaint = true
         qualityChangeStartedAt = Date()
         // Keep the last frame on screen. Clearing it made keyframe-retry think there
@@ -1345,6 +1411,19 @@ final class RE2DesktopSession: ObservableObject {
             // Debounce rapid menu taps — overlapping close/open left WSS assembler wedged.
             try? await Task.sleep(nanoseconds: 220_000_000)
             guard let self, !Task.isCancelled, gen == self.qualityOpenGen else { return }
+            // Privacy/display recovery may already have sent an OPEN. Do not send the
+            // next replacement until its matching READY has moved us out of
+            // openingDesktop; two WSS OPENs in flight make Agent tear down the first
+            // capture, then disconnect while the client rejects its READY as stale.
+            let readyDeadline = Date().addingTimeInterval(8)
+            while self.phase == .openingDesktop, Date() < readyDeadline {
+                try? await Task.sleep(nanoseconds: 100_000_000)
+                guard !Task.isCancelled, gen == self.qualityOpenGen else { return }
+            }
+            guard self.phase == .streaming else {
+                RE2Log.info("quality OPEN \(quality.rawValue) deferred: prior OPEN did not become ready")
+                return
+            }
             await self.applyQualityOpen(quality, clearFrame: false, openGen: gen)
             guard gen == self.qualityOpenGen else { return }
             self.qualityChangeAwaitingPaint = true
@@ -1352,13 +1431,11 @@ final class RE2DesktopSession: ObservableObject {
         }
     }
 
-    /// Align published quality (title · kb/s) to the painted encode size's rung.
-    /// Does not re-OPEN — Agent already encodes at this size via discrete ABR.
+    /// Record the painted size without overwriting the selected quality.
+    /// WSS can deliver a small provisional/first frame; treating it as the user's
+    /// selection poisoned Auto into Smooth for every later reconnect.
     private func syncQualityLabelFromPaint(width: Int, height: Int) {
         guard !qualityChangeAwaitingPaint else { return }
-        // Menu / ABR step just re-OPEN'd — don't yank the title back to the
-        // previous paint rung before the new encode lands.
-        if let until = abrStepCooldownUntil, Date() < until { return }
         guard width > 1, height > 1 else { return }
         guard let native = hostNativeSize() else { return }
         let nearest = DesktopVideoQuality.nearestTier(
@@ -1373,14 +1450,9 @@ final class RE2DesktopSession: ObservableObject {
         let distCur = abs(curSize.width - width) + abs(curSize.height - height)
         let distNear = abs(nearSize.width - width) + abs(nearSize.height - height)
         guard distNear + 24 < distCur else { return }
-        RE2Log.info("quality label sync paint=\(width)x\(height) \(videoQuality.rawValue)→\(nearest.rawValue)")
-        videoQuality = nearest
-        // Agent ABR may encode below OPEN max without a new DESKTOP_READY — keep
-        // published desk size aligned with paint so UI / behind checks stay honest.
-        if width > 1, height > 1 {
-            desktopWidth = width
-            desktopHeight = height
-        }
+        RE2Log.info("quality paint differs selected=\(videoQuality.rawValue) actual≈\(nearest.rawValue) \(width)x\(height)")
+        desktopWidth = width
+        desktopHeight = height
     }
 
     /// Resolution is the last adaptation lever. RTT affects input latency but does not
@@ -1395,11 +1467,11 @@ final class RE2DesktopSession: ObservableObject {
         if Self.e2eSuppressABR { return }
         guard phase == .streaming else { return }
         guard !qualityChangeAwaitingPaint else { return }
-        if let until = abrStepCooldownUntil, Date() < until { return }
         // A manual quality selection is a user constraint. Keep its resolution and
         // let encoder bitrate/FPS adapt; only Auto may step down after proven failure.
         guard DesktopVideoQuality.stored == .auto else {
             abrWeakStreak = 0
+            abrGoodStreak = 0
             return
         }
         let sustainedLoss = loss >= 18 && paintFPS < 5
@@ -1407,8 +1479,23 @@ final class RE2DesktopSession: ObservableObject {
         let bad = sustainedLoss || deliveryStarved
         if !bad {
             abrWeakStreak = max(0, abrWeakStreak - 2)
+            // Auto may have stepped down earlier. Recover one rung only after a
+            // sustained healthy window; manual selections never enter this path.
+            let healthy = !stalled && loss < 2
+            abrGoodStreak = healthy ? abrGoodStreak + 1 : 0
+            guard videoQuality != .auto, abrGoodStreak >= 12 else { return }
+            if let until = abrStepCooldownUntil, Date() < until { return }
+            let next = videoQuality.nextHigherTier()
+            let target: DesktopVideoQuality = next == .ultra ? .auto : (next ?? .auto)
+            abrGoodStreak = 0
+            RE2Log.info("healthy-net step \(videoQuality.rawValue)→\(target.rawValue)")
+            setVideoQuality(target, forceReopen: true, persist: false)
+            abrLastStepAt = Date()
+            abrStepCooldownUntil = Date().addingTimeInterval(20)
             return
         }
+        abrGoodStreak = 0
+        if let until = abrStepCooldownUntil, Date() < until { return }
         abrWeakStreak += 1
         // Ten one-second windows avoid degrading on a keyframe loss, radio handover,
         // or a momentary relay queue. Bitrate/FPS ABR remains responsive meanwhile.
@@ -1423,8 +1510,18 @@ final class RE2DesktopSession: ObservableObject {
         abrStepCooldownUntil = Date().addingTimeInterval(45)
     }
 
-    func connect(payload: RE2PairingPayload, accessPassword: String? = nil, force: Bool = false) async throws -> PairedDesktop {
+    func connect(
+        payload: RE2PairingPayload,
+        accessPassword: String? = nil,
+        force: Bool = false,
+        openDesktop: Bool = true
+    ) async throws -> PairedDesktop {
         if payload.isExpired { throw RE2Error.expired }
+        // A prior Auto session may have stepped down transiently. Every fresh
+        // connection starts from the persisted user choice, not that effective rung.
+        videoQuality = .stored
+        abrWeakStreak = 0
+        abrGoodStreak = 0
         // Keep e2eForceWSS / e2eForceUDP across connect — E2E sets them before
         // connect() and path selection reads them inside dataPlane. Cleared on
         // user disconnect / E2E teardown so interactive taps are not stuck.
@@ -1559,7 +1656,13 @@ final class RE2DesktopSession: ObservableObject {
         if let pw = accessPassword, !pw.isEmpty {
             RE2DesktopSecrets.savePassword(pw, desktopID: profile.id)
         }
-        try await bindAndOpen(profile: profile, accessPassword: accessPassword)
+        if openDesktop {
+            try await bindAndOpen(profile: profile, accessPassword: accessPassword)
+        } else {
+            // Pairing adds a durable host. It must not seize the Agent's controller
+            // slot or start screen capture until the user explicitly opens Desktop.
+            disconnect(userInitiated: true)
+        }
         return paired!
     }
 
@@ -1569,6 +1672,9 @@ final class RE2DesktopSession: ObservableObject {
         guard profile.canReconnect else {
             throw annotated(RE2Error.needsRescan)
         }
+        videoQuality = .stored
+        abrWeakStreak = 0
+        abrGoodStreak = 0
         // Preserve Simulator E2E force-path flags across reconnect (background
         // soft-teardown used to wipe them and leave probes stuck on wrong path).
         let keepE2EWSS = Self.e2eForceWSS
@@ -1645,6 +1751,12 @@ final class RE2DesktopSession: ObservableObject {
                 if case .controllerBusy = error as? RE2Error { break }
             }
         }
+        // Leave a clear failed state — otherwise HostList keeps the viewer open on
+        // "Binding…" forever after a timed-out / unreachable primary relay.
+        phase = .failed
+        statusText = (lastErr as? LocalizedError)?.errorDescription
+            ?? lastErr.localizedDescription
+        lastError = statusText
         throw lastErr
     }
 
@@ -2434,12 +2546,21 @@ final class RE2DesktopSession: ObservableObject {
     func setInputMode(game: Bool) {
         // gameMouseMode == true → absolute finger pointing; false → trackpad (relative).
         gameMouseMode = game
-        Task {
-            try? await sendInner(RE2.Msg.inputMode, RE2Codec.jsonData([
-                "session_id": sessionID,
-                "relative_mouse": !game,
-                "game_mode": game
-            ]), reliable: true)
+        let payload = RE2Codec.jsonData([
+            "session_id": sessionID,
+            "relative_mouse": !game,
+            "game_mode": game
+        ])
+        // Keep mode changes ordered with the clicks/moves that follow them.
+        // A standalone Task could lose this race on cellular UDP: the Agent saw
+        // the absolute click first and interpreted it using the previous relative
+        // mode, sending the cursor to an edge.
+        enqueueOutbound(kind: .input) { [weak self] in
+            do {
+                try await self?.performSend(RE2.Msg.inputMode, payload, reliable: true)
+            } catch {
+                RE2Log.error("input mode send failed: \(error)")
+            }
         }
     }
 
@@ -2478,6 +2599,7 @@ final class RE2DesktopSession: ObservableObject {
         // monitor's 720p/1080p size as the new display.
         desktopWidth = 0
         desktopHeight = 0
+        desktopCodecLabel = ""
         frameEpoch &+= 1
         lastDecodedAt = nil
         phase = .openingDesktop
@@ -2538,7 +2660,6 @@ final class RE2DesktopSession: ObservableObject {
         frameImage = nil
         frameEpoch &+= 1
         lastDecodedAt = nil
-        phase = .openingDesktop
         statusText = on
             ? String(localized: "Privacy blank on…")
             : String(localized: "Privacy blank off…")
@@ -2553,6 +2674,18 @@ final class RE2DesktopSession: ObservableObject {
         qualityOpenTask = Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: 120_000_000)
             guard let self, !Task.isCancelled, gen == self.qualityOpenGen else { return }
+            // A fast privacy on→off toggle can arrive after the first OPEN was
+            // written but before its READY. Wait for that boundary before replacing
+            // the desktop again; overlapping WSS OPENs disconnect the Agent peer.
+            let readyDeadline = Date().addingTimeInterval(8)
+            while self.phase == .openingDesktop, Date() < readyDeadline {
+                try? await Task.sleep(nanoseconds: 100_000_000)
+                guard !Task.isCancelled, gen == self.qualityOpenGen else { return }
+            }
+            guard self.phase == .streaming else {
+                RE2Log.info("privacy OPEN deferred: prior OPEN did not become ready")
+                return
+            }
             self.didApplyNativeQuality = true
             // Same as quality OPEN: skip desktopClose — Agent openDesktop tears down.
             guard gen == self.qualityOpenGen else { return }
@@ -2893,7 +3026,7 @@ final class RE2DesktopSession: ObservableObject {
 
     private func bindAndOpen(profile: PairedDesktop, accessPassword: String?) async throws {
         phase = phase == .reconnecting ? .reconnecting : .binding
-        statusText = String(localized: "Binding…")
+        statusText = String(localized: "Connecting to relay…")
         didFatUDPConservative = false
         RE2Log.info("bind start device=\(profile.deviceID.prefix(16))… ticketLen=\(profile.sessionTicket.count)")
 
@@ -2929,15 +3062,18 @@ final class RE2DesktopSession: ObservableObject {
 
     /// Fresh WS + BIND only (no desktop open). Hard-timeout friendly.
     private func performBind(profile: PairedDesktop) async throws -> PairedDesktop {
+        let started = Date()
         // Always use a fresh signaling socket for BIND — reusing a half-dead WS
         // after background/network teardown was a common "Binding…" hang.
         signaling?.close()
         signaling = nil
         let sig = RE2SignalingClient()
         signaling = sig
+        statusText = String(localized: "Connecting to relay…")
         try await sig.connect(relay: profile.relayURL)
 
-        RE2ControllerIdentity.name = UIDevice.current.name
+        statusText = String(localized: "Binding computer…")
+        RE2ControllerIdentity.stampDisplayName(DeviceMarketingName.controllerLabel)
         try await sig.writeFrame(RE2Frame(
             type: RE2.OuterType.bind,
             routeID: profile.deviceID,
@@ -2961,14 +3097,39 @@ final class RE2DesktopSession: ObservableObject {
         } else if updated.udpHostPort.isEmpty {
             updated.udpHostPort = RE2.udpHostPort(from: profile.relayURL, bindUDP: nil, qrUDP: nil) ?? ""
         }
+        // Agent REGISTER carries current LAN; replace stale QR peers after Wi‑Fi moves.
+        // A no-LAN probe must remain relay-only after BIND_OK as well as QR parsing.
+        let freshLAN = Self.parseBindLAN(bok["lan"])
+        if !Self.e2eStripLAN, !freshLAN.isEmpty {
+            RE2Log.info("bindOK lan refresh \(updated.lanCandidates.joined(separator: ",")) → \(freshLAN.joined(separator: ","))")
+            updated.lanCandidates = freshLAN
+        } else if Self.e2eStripLAN, !freshLAN.isEmpty {
+            RE2Log.info("bindOK lan ignored — E2E stripLAN")
+        }
         guard !updated.udpHostPort.isEmpty else { throw RE2Error.udp(String(localized: "No UDP endpoint")) }
-        RE2Log.info("bindOK udp=\(updated.udpHostPort)")
+        RE2Log.info("bindOK elapsed=\(String(format: "%.2f", Date().timeIntervalSince(started)))s udp=\(updated.udpHostPort) lan=\(updated.lanCandidates.joined(separator: ","))")
         return updated
+    }
+
+    private static func parseBindLAN(_ raw: Any?) -> [String] {
+        let list: [Any]
+        if let arr = raw as? [Any] {
+            list = arr
+        } else if let s = raw as? String, !s.isEmpty {
+            list = s.split(separator: ",").map { String($0) }
+        } else {
+            return []
+        }
+        return list.compactMap { item in
+            let s = (item as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard !s.isEmpty, !s.hasSuffix(":0") else { return nil }
+            return s
+        }
     }
 
     private func establishDataPlane(profile: PairedDesktop, accessPassword: String?) async throws {
         phase = .associating
-        statusText = String(localized: "Connecting UDP…")
+        statusText = String(localized: "Checking connection paths…")
         useWSSTunnel = false
         lanUpgradeAttempted = false
         let lan = profile.lanCandidates.filter { !$0.isEmpty && !$0.hasSuffix(":0") }
@@ -2991,16 +3152,21 @@ final class RE2DesktopSession: ObservableObject {
             || pathNow?.usesInterfaceType(.wiredEthernet) == true
         let cellularOnly = pathNow?.usesInterfaceType(.cellular) == true && !wifiUp
         let sameSubnet = !lan.isEmpty && Self.sharesSubnet24(withAgentLAN: lan)
-        let localsDump = Self.enumerateLocalIPv4()
-            .filter { !Self.isVirtualIF($0.name) }
-            .map { "\($0.name)=\($0.ip)" }
-            .joined(separator: ",")
-        RE2Log.info("LAN gate sameSubnet=\(sameSubnet) wifi=\(wifiUp) cellOnly=\(cellularOnly) locals=[\(localsDump)] agentLan=\(lan.joined(separator: ","))")
+        let locals = Self.enumerateLocalIPv4().filter { !Self.isVirtualIF($0.name) }
+        let localsDump = locals.map { "\($0.name)=\($0.ip)" }.joined(separator: ",")
+        // Phone already knows its Wi‑Fi IP and it is a different /24 than every
+        // stored Agent LAN (company → home): probing those IPs can never succeed.
+        let foreignSubnet = !lan.isEmpty && !sameSubnet && !locals.isEmpty
+        RE2Log.info("LAN gate sameSubnet=\(sameSubnet) foreignSubnet=\(foreignSubnet) wifi=\(wifiUp) cellOnly=\(cellularOnly) locals=[\(localsDump)] agentLan=\(lan.joined(separator: ","))")
 
         if !lan.isEmpty, cellularOnly, !sameSubnet {
             RE2Log.info("skip LAN PreferDirect — cellular-only, not same /24 (public UDP·Relay still first)")
+        } else if foreignSubnet {
+            // Do not PreferDirect company-subnet peers after a home Wi‑Fi move;
+            // BIND_OK lan (below) replaces them once the Agent re-registers.
+            RE2Log.info("skip LAN PreferDirect — phone /24 ≠ stored Agent LAN (UDP·Relay / WSS first)")
         } else if !lan.isEmpty, sameSubnet || wifiUp {
-            statusText = String(localized: "Trying LAN…")
+            statusText = String(localized: "Probing LAN UDP…")
             // Real devices: Wi-Fi / Local Network permission can make the first
             // probe flaky — retry before giving up on LAN.
             for round in 0..<3 {
@@ -3060,7 +3226,7 @@ final class RE2DesktopSession: ObservableObject {
             } else if udpCooldown {
                 RE2Log.info("UDP Noise cool-down active — WSS first (skip LAN thrash)")
             }
-            statusText = String(localized: "Encrypting via relay…")
+            statusText = String(localized: "Establishing WSS secure channel…")
             do {
                 try await runNoiseHandshakeWithDeadline(profile: profile, overUDP: false, seconds: 12)
                 useWSSTunnel = true
@@ -3077,6 +3243,9 @@ final class RE2DesktopSession: ObservableObject {
             do {
                 // Only REHP1-proven same-/24 peers get PreferDirect. Empty → relay UDP.
                 let peers = reachableLAN
+                statusText = peers.isEmpty
+                    ? String(localized: "Probing relay UDP…")
+                    : String(localized: "Connecting LAN UDP…")
                 try await bringUpUDPNoise(profile: profile, lan: peers)
                 // Session id for hole-punch / OPEN — assign before LAN reinforce.
                 sessionID = String(UUID().uuidString.replacingOccurrences(of: "-", with: "").suffix(16))
@@ -3113,11 +3282,12 @@ final class RE2DesktopSession: ObservableObject {
                 // while we still try WSS / open the desktop.
                 lastError = nil
                 recoveryHint = nil
-                statusText = String(localized: "Encrypting via relay…")
+                statusText = String(localized: "UDP unavailable · switching to WSS…")
                 do {
                     // UDP/LAN bring-up can take 10–20s; relay often idle-closes WSS.
                     // Re-BIND on a fresh socket before WSS Noise or we get "WebSocket closed".
                     try await ensureSignalingForWSS(profile: profile)
+                    statusText = String(localized: "Establishing WSS secure channel…")
                     try await runNoiseHandshakeWithDeadline(profile: profile, overUDP: false, seconds: 12)
                     useWSSTunnel = true
                     sessionID = String(UUID().uuidString.replacingOccurrences(of: "-", with: "").suffix(16))
@@ -3232,6 +3402,7 @@ final class RE2DesktopSession: ObservableObject {
                 }
                 defer { keepAlive.cancel() }
 
+                self.statusText = String(localized: "Opening UDP socket…")
                 let ep = try REUDPEndpoint(hostPort: profile.udpHostPort)
                 self.endpoint = ep
                 try await withThrowingTaskGroup(of: Void.self) { startGroup in
@@ -3250,10 +3421,11 @@ final class RE2DesktopSession: ObservableObject {
                     }
                 }
                 RE2Log.info("udp socket started → ASSOC")
+                self.statusText = String(localized: "Authenticating UDP relay…")
                 try await ep.assocClient(deviceID: profile.deviceID, sessionTicket: profile.sessionTicket)
                 self.ticketAuthFailures = 0
                 if !lan.isEmpty {
-                    self.statusText = String(localized: "Connecting LAN…")
+                    self.statusText = String(localized: "Connecting LAN UDP…")
                     let ok = await self.preferDirectToLAN(lan)
                     // Only PreferDirect after REHP1 pong. Optimistic latch to a stale QR
                     // lan:port (Agent UDP moved) black-holes Noise on a dead socket and
@@ -3264,6 +3436,7 @@ final class RE2DesktopSession: ObservableObject {
                     RE2Log.info("pre-Noise LAN latch ok=\(ep.usingDirect) direct=\(self.directPeerHostPort) → Noise")
                 } else {
                     RE2Log.info("udp ASSOC ok (no LAN) → Noise via relay")
+                    self.statusText = String(localized: "UDP relay ready · waiting for computer…")
                 }
                 // Never fan-out Noise msg1 to relay+LAN: Agent sees two XX msg1s,
                 // completes one handshake then MAC-fails the duplicate → App falls
@@ -3601,10 +3774,15 @@ final class RE2DesktopSession: ObservableObject {
 
     /// Noise_XXpsk3 over REUDP or WSS signaling frames.
     private func runNoiseHandshake(profile: PairedDesktop, overUDP: Bool) async throws {
+        let started = Date()
         phase = .handshaking
-        statusText = overUDP
-            ? String(localized: "Encrypting…")
-            : String(localized: "Encrypting via relay…")
+        if overUDP {
+            statusText = endpoint?.usingDirect == true
+                ? String(localized: "LAN UDP connected · secure handshake…")
+                : String(localized: "UDP relay ready · waiting for computer…")
+        } else {
+            statusText = String(localized: "WSS connected · waiting for computer…")
+        }
         do {
             let psk = RE2.derivePSK(pairingToken: profile.pairingToken)
             let hs = try NoiseXXPSK3(psk: psk)
@@ -3688,6 +3866,7 @@ final class RE2DesktopSession: ObservableObject {
                 }
             }
             guard let msg2 else { throw RE2Error.noise("no handshake reply") }
+            statusText = String(localized: "Computer answered · confirming secure channel…")
             try hs.readMessage2(msg2)
             let (msg3, send, recv) = try hs.writeMessage3()
             RE2Log.info("Noise msg3 len=\(msg3.count) via=\(overUDP ? "udp" : "wss")")
@@ -3736,6 +3915,7 @@ final class RE2DesktopSession: ObservableObject {
                 }
             } else {
                 // Drop in-flight tunnels still encrypted under the previous CipherState.
+                statusText = String(localized: "Secure channel ready · syncing…")
                 await drainStaleWSSTunnels(seconds: 1.0)
             }
 
@@ -3743,7 +3923,7 @@ final class RE2DesktopSession: ObservableObject {
                 autoReconnect = false
                 throw annotated(RE2Error.pinMismatch)
             }
-            RE2Log.info("Noise handshake OK via=\(overUDP ? "udp" : "wss") videoMedia=\(videoMedia != nil)")
+            RE2Log.info("Noise handshake OK elapsed=\(String(format: "%.2f", Date().timeIntervalSince(started)))s via=\(overUDP ? "udp" : "wss") videoMedia=\(videoMedia != nil)")
         } catch {
             RE2Log.error("Noise handshake FAIL via=\(overUDP ? "udp" : "wss"): \(error)")
             if let e = error as? RE2Error, case .pinMismatch = e {
@@ -3892,9 +4072,9 @@ final class RE2DesktopSession: ObservableObject {
             if case .ticketRejected = mapped {
                 return escalateTicketFailure(.ticketRejected)
             }
-            if case .peerTaken = mapped {
+            if case .peerTaken(let peer) = mapped {
                 autoReconnect = false
-                return .peerTaken
+                return .peerTaken(peer: peer)
             }
             return error
         }
@@ -3934,10 +4114,13 @@ final class RE2DesktopSession: ObservableObject {
                 if f.type == RE2.OuterType.ping {
                     try? await signaling.writeFrame(RE2Frame(type: RE2.OuterType.pong, routeID: f.routeID, payload: f.payload))
                 }
-                if f.type == RE2.OuterType.error, case .peerTaken = Self.mapErrorPayload(f.payload) {
-                    RE2Log.info("relay: another device took over — stop UDP session")
-                    await handleDisconnect(annotated(RE2Error.peerTaken))
-                    return
+                if f.type == RE2.OuterType.error {
+                    let mapped = Self.mapErrorPayload(f.payload)
+                    if case .peerTaken = mapped {
+                        RE2Log.info("relay: another device took over — stop UDP session")
+                        await handleDisconnect(annotated(mapped))
+                        return
+                    }
                 }
                 // Ignore other tunnel/error frames on signaling while UDP owns the media plane.
             } catch {
@@ -4148,13 +4331,15 @@ final class RE2DesktopSession: ObservableObject {
         open["display_id"] = desiredDisplayID
         if let pw = accessPassword, !pw.isEmpty { open["password"] = pw }
         phase = .openingDesktop
+        pendingQualityRestore = true
         try? await sendInner(RE2.Msg.openDesktop, RE2Codec.jsonData(open), reliable: true)
         requestKeyframe()
         scheduleKeyframeRetry()
     }
 
     /// WSS decrypt dead / Agent session_idle_timeout: re-handshake Noise on the same
-    /// signaling socket, drain stale tunnels, then tiny OPEN. Keeps last CGImage.
+    /// signaling socket, drain stale tunnels, then restore the selected quality.
+    /// Keeps the last CGImage until the selected rung paints.
     private func recoverWSSNoiseSession() async {
         guard useWSSTunnel, !isRecoveringWSS else { return }
         // Quality / privacy reopen already re-OPENs; a concurrent Noise recover
@@ -4199,25 +4384,22 @@ final class RE2DesktopSession: ObservableObject {
                 "session_id": oldSID, "reason": "wss_noise_recover"
             ]), reliable: true)
             sessionID = String(UUID().uuidString.replacingOccurrences(of: "-", with: "").suffix(16))
-            var open: [String: Any] = [
-                "session_id": sessionID,
-                "max_width": 640,
-                "max_height": 360,
-                "fps": 10,
-                "bitrate_kbps": 600,
-                "codec": "h264",
-                "hide_cursor": true,
-                "privacy_blank": privacyBlank
-            ]
-            open["display_id"] = desiredDisplayID
+            var open = openDesktopParams(sessionID: sessionID, privacyBlank: privacyBlank)
             if let pw = accessPassword, !pw.isEmpty { open["password"] = pw }
             phase = .openingDesktop
+            qualityChangeAwaitingPaint = true
+            qualityChangeStartedAt = Date()
             try await sendInner(RE2.Msg.openDesktop, RE2Codec.jsonData(open), reliable: true)
             lastDecodedAt = nil
             requestKeyframe(force: true)
             scheduleKeyframeRetry()
-            RE2Log.info("WSS Noise recover OPEN sent session=\(sessionID)")
+            RE2Log.info(
+                "WSS Noise recover OPEN sent session=\(sessionID) quality=\(videoQuality.rawValue) "
+                + "\(open["max_width"] ?? 0)x\(open["max_height"] ?? 0)"
+            )
         } catch {
+            qualityChangeAwaitingPaint = false
+            qualityChangeStartedAt = nil
             RE2Log.error("WSS Noise recover failed: \(error)")
             lastError = error.localizedDescription
             statusText = String(localized: "Connected — video stalled")
@@ -4285,8 +4467,14 @@ final class RE2DesktopSession: ObservableObject {
                 RE2Log.info("video repair pending without request \(videoAssembler.progressLabel)")
             }
             let snap = stats.snapshot(sessionID: sessionID, stalled: stalled)
+            let kbpsNow = snap["recv_kbps"] as? Int ?? 0
+            let streamFPS = snap["stream_fps"] as? Double ?? 0
+            let paintFPS = snap["decode_fps"] as? Double ?? 0
             // Until the first paint, keep telling the agent we need IDRs (and report loss so ABR shrinks).
             var statsBody = snap
+            if frameImage != nil && !stalled && kbpsNow < 200 && paintFPS < 5 {
+                statsBody["video_quiescent"] = true
+            }
             // Only pull IDRs when we have no picture or the picture is frozen —
             // constant want_keyframe on WSS thrashs the encoder and tears multi-part frames.
             // Stall concealment: keep last frameImage (never nil it here).
@@ -4306,9 +4494,6 @@ final class RE2DesktopSession: ObservableObject {
             // shaping made the client resolution loop and Agent bitrate ABR fight:
             // healthy UDP was forced "good" while smooth/WSS was forced "bad".
             try? await sendInner(RE2.Msg.stats, RE2Codec.jsonData(statsBody), reliable: true)
-            let kbpsNow = snap["recv_kbps"] as? Int ?? 0
-            let streamFPS = snap["stream_fps"] as? Double ?? 0
-            let paintFPS = snap["decode_fps"] as? Double ?? 0
             if stalled {
                 // kbps=0 + aged ⇒ CipherState/Agent session dead. Soft keyframe is useless
                 // (Agent audit shows session_idle_timeout; input also fails). Re-handshake.
@@ -4420,14 +4605,16 @@ final class RE2DesktopSession: ObservableObject {
             refreshPathLabel()
             let path = pathLabel.isEmpty ? "—" : pathLabel
             // Keep a verbose line for debug overlays / E2E; nav uses navStatusLine.
+            let tech = videoStreamTechSummary ?? "—"
             statsLine = String(
-                format: String(localized: "%@ · %lld ms · %.1f%% · %lld kb/s · %.0ffps · %@"),
+                format: String(localized: "%@ · %lld ms · %.1f%% · %lld kb/s · %.0ffps · %@ · %@"),
                 path,
                 Int64(rtt),
                 loss,
                 Int64(kbPerSec),
                 streamFPS,
-                videoQuality.title
+                videoQuality.title,
+                tech
             )
             // WSS keepalive
             try? await signaling?.writeFrame(RE2Frame(type: RE2.OuterType.ping, routeID: deviceID, payload: Data()))
@@ -4464,6 +4651,9 @@ final class RE2DesktopSession: ObservableObject {
         if let e = error as? RE2Error, e.stopsAutoReconnect {
             autoReconnect = false
             recoveryHint = e.recoveryHint
+            if case .peerTaken(let peer) = e {
+                presentKickAlert(peer: peer)
+            }
             return
         }
 
@@ -4517,6 +4707,7 @@ final class RE2DesktopSession: ObservableObject {
             desktopHeight = intVal(obj["height"]) ?? desktopHeight
             let readyCodec = (obj["codec"] as? String ?? "h264").lowercased()
             let readyHEVC = readyCodec.contains("265") || readyCodec.contains("hevc")
+            desktopCodecLabel = Self.shortVideoCodecLabel(readyCodec)
             decoder.setCodec(readyHEVC ? .hevc : .h264)
             // Soft quality reopen: Agent READY size changed. Reset assembler +
             // decoder so the next IDR (sent after deferred READY) rebuilds SPS.
@@ -4605,6 +4796,7 @@ final class RE2DesktopSession: ObservableObject {
                 part: parts.part, parts: parts.parts, nal: parts.nal
             ) {
                 let isKey = parts.flags & RE2.videoFlagKeyFrame != 0
+                if isKey { debugVideoKeyFrames += 1 } else { debugVideoDeltaFrames += 1 }
                 // Soft reopen: drop P-frames until a post-READY IDR paints the new
                 // rung. Old-SPS leftovers after VT reset left pic stuck (1056 vs 672).
                 if qualityChangeAwaitingPaint, !isKey,
@@ -4654,10 +4846,10 @@ final class RE2DesktopSession: ObservableObject {
                             }
                         }
                         self.syncQualityLabelFromPaint(width: image.width, height: image.height)
-                        if self.pendingUDPQualityRamp {
-                            self.pendingUDPQualityRamp = false
-                            RE2Log.info("UDP shrink painted \(image.width)x\(image.height) — ramp to \(self.videoQuality.rawValue)")
-                            self.scheduleRampToSelectedQuality()
+                        if self.pendingQualityRestore {
+                            self.pendingQualityRestore = false
+                            RE2Log.info("recovery frame painted \(image.width)x\(image.height) — restore \(self.videoQuality.rawValue)")
+                            self.scheduleRestoreSelectedQuality()
                         } else if first {
                             self.maybeReopenForNativeQuality()
                         } else if self.pictureBehindNego, self.targetingFatEncode {
@@ -4977,23 +5169,28 @@ final class RE2DesktopSession: ObservableObject {
         case RE2.Msg.desktopClose:
             let obj = RE2Codec.jsonObject(body)
             let reason = obj["reason"] as? String ?? ""
+            let peer = RE2ControllerIdentity.peerLabel(
+                peer: obj["peer"] as? String ?? "",
+                since: (obj["since"] as? Int64) ?? Int64(obj["since"] as? Int ?? 0)
+            )
             let lower = reason.lowercased()
             let taken = lower.contains("kick")
                 || lower.contains("replaced")
                 || lower.contains("superseded")
                 || lower.contains("took over")
             if taken {
-                let err = annotated(RE2Error.peerTaken)
+                let err = annotated(RE2Error.peerTaken(peer: peer))
                 lastError = err.localizedDescription
                 recoveryHint = err.recoveryHint
                 autoReconnect = false
+                presentKickAlert(peer: peer)
             } else {
                 lastError = reason.isEmpty ? String(localized: "Desktop closed") : reason
                 recoveryHint = String(localized: "Reconnect from Hosts, or scan a new QR if the Agent restarted pairing.")
             }
             phase = .failed
             statusText = String(localized: "Desktop closed")
-            RE2Log.info("DESKTOP_CLOSE reason=\(reason.isEmpty ? "(none)" : reason) taken=\(taken)")
+            RE2Log.info("DESKTOP_CLOSE reason=\(reason.isEmpty ? "(none)" : reason) taken=\(taken) peer=\(peer)")
 
         case RE2.Msg.appError:
             let obj = RE2Codec.jsonObject(body)
@@ -5227,13 +5424,34 @@ final class RE2DesktopSession: ObservableObject {
 
     private static func mapErrorPayload(_ data: Data) -> RE2Error {
         let obj = RE2Codec.jsonObject(data)
-        if (obj["code"] as? String) == "controller_busy" {
-            return .controllerBusy(peer: obj["peer"] as? String ?? "")
+        let code = (obj["code"] as? String ?? "").lowercased()
+        let peer = RE2ControllerIdentity.peerLabel(
+            peer: obj["peer"] as? String ?? "",
+            since: (obj["since"] as? Int64) ?? Int64(obj["since"] as? Int ?? 0)
+        )
+        if code == "controller_busy" {
+            return .controllerBusy(peer: peer)
         }
-        return RE2Error.fromRelayError(
+        if code == "kicked" || code == "superseded" || code == "replaced" {
+            return .peerTaken(peer: peer)
+        }
+        var mapped = RE2Error.fromRelayError(
             code: obj["code"] as? String ?? "",
             message: obj["message"] as? String ?? String(data: data, encoding: .utf8) ?? "error"
         )
+        if case .peerTaken = mapped, !peer.isEmpty {
+            mapped = .peerTaken(peer: peer)
+        }
+        if case .controllerBusy = mapped, !peer.isEmpty {
+            mapped = .controllerBusy(peer: peer)
+        }
+        return mapped
+    }
+
+    private func presentKickAlert(peer: String) {
+        kickAlertMessage = peer.isEmpty
+            ? String(localized: "You were disconnected. Someone else is now controlling this computer.")
+            : String(format: String(localized: "You were disconnected. Someone else (%@) is now controlling this computer."), peer)
     }
 
     private static func b64url(_ s: String) -> Data? {

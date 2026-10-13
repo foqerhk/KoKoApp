@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import UserNotifications
 
 @MainActor
 final class AppStore: ObservableObject {
@@ -9,27 +10,41 @@ final class AppStore: ObservableObject {
     @Published var desktops: [PairedDesktop] = []
     /// AI chats from paired RunEverything Agents (Cursor/Claude/Codex/Gemini).
     @Published var desktopAgentChats: [DesktopAgentChat] = []
+    @Published var desktopHostHealth: [DesktopHostHealth] = []
+    @Published var hostPowerEvents: [HostPowerEvent] = []
     @Published var hostKeyPrompt: HostKeyPrompt?
     @Published var cursorLoginPrompt: CursorLoginPrompt?
     /// Simulator E2E: when set, RootView opens this session's terminal screen.
     @Published var e2eOpenSessionId: UUID?
+    /// Hosts list consumes this to push the remote-desktop viewer (wake / unlock).
+    @Published var pendingOpenDesktopId: UUID?
 
     private let serversKey = "koko.servers"
     private let keysKey = "koko.keys"
     private let sessionsKey = "koko.sessions"
     private let desktopsKey = "koko.desktops"
     private let desktopChatsKey = "koko.desktopAgentChats"
+    private let desktopHealthKey = "koko.desktopHostHealth"
+    private let powerEventsKey = "koko.hostPowerEvents"
+    private var canPersistDesktopMetadata = true
 
     init() {
         load()
+#if DEBUG
         if ProcessInfo.processInfo.arguments.contains("-ScreenshotDemo") ||
             ProcessInfo.processInfo.environment["KOKO_SCREENSHOT_DEMO"] == "1" {
             ensureLabHostIfNeeded()
         }
+#endif
     }
 
+#if DEBUG
     /// Lab / screenshot host only — never wipes sessions or auto-opens a terminal.
     private func ensureLabHostIfNeeded() {
+        guard let password = ProcessInfo.processInfo.environment["KOKO_LAB_SSH_PASSWORD"],
+              !password.isEmpty else {
+            return
+        }
         let host = "8.137.32.163"
         if servers.contains(where: { $0.host == host && $0.username == "root" }) {
             return
@@ -46,21 +61,41 @@ final class AppStore: ObservableObject {
         )
         upsertServer(server)
         try? KeychainService.shared.save(
-            data: Data("Koko@2026".utf8),
+            data: Data(password.utf8),
             account: KeychainAccount.password.rawValue,
             keyId: server.id
         )
     }
+#endif
 
     func load() {
         let decoded = Self.decode([ServerProfile].self, key: serversKey) ?? []
         servers = decoded.filter(\.isSSHConfigured)
         keyPairs = Self.decode([SSHKeyPair].self, key: keysKey) ?? []
         sessions = Self.decode([TerminalSession].self, key: sessionsKey) ?? []
-        desktops = Self.decode([PairedDesktop].self, key: desktopsKey) ?? []
+        let savedDesktops = Self.decode([PairedDesktop].self, key: desktopsKey) ?? []
+        var migratedLegacySecrets = false
+        desktops = savedDesktops.map { saved in
+            var desktop = saved
+            if !saved.sessionTicket.isEmpty || !saved.pairingToken.isEmpty {
+                do {
+                    try saveDesktopSecrets(saved)
+                    migratedLegacySecrets = true
+                } catch {
+                    // Never overwrite the only copy with redacted metadata.
+                    canPersistDesktopMetadata = false
+                    return desktop
+                }
+            }
+            desktop.sessionTicket = loadDesktopSecret(.re2SessionTicket, desktopId: saved.id)
+            desktop.pairingToken = loadDesktopSecret(.re2PairingToken, desktopId: saved.id)
+            return desktop
+        }
         let savedDesktopChats = Self.decode([DesktopAgentChat].self, key: desktopChatsKey) ?? []
         desktopAgentChats = normalizedDesktopAgentChats(savedDesktopChats)
-        if desktopAgentChats != savedDesktopChats {
+        desktopHostHealth = Self.decode([DesktopHostHealth].self, key: desktopHealthKey) ?? []
+        hostPowerEvents = Self.decode([HostPowerEvent].self, key: powerEventsKey) ?? []
+        if migratedLegacySecrets || desktopAgentChats != savedDesktopChats {
             persist()
         }
     }
@@ -69,8 +104,18 @@ final class AppStore: ObservableObject {
         Self.encode(servers, key: serversKey)
         Self.encode(keyPairs, key: keysKey)
         Self.encode(sessions, key: sessionsKey)
-        Self.encode(desktops, key: desktopsKey)
+        if canPersistDesktopMetadata {
+            let metadata = desktops.map { desktop -> PairedDesktop in
+                var redacted = desktop
+                redacted.sessionTicket = ""
+                redacted.pairingToken = ""
+                return redacted
+            }
+            Self.encode(metadata, key: desktopsKey)
+        }
         Self.encode(desktopAgentChats, key: desktopChatsKey)
+        Self.encode(desktopHostHealth, key: desktopHealthKey)
+        Self.encode(hostPowerEvents, key: powerEventsKey)
     }
 
     @discardableResult
@@ -84,10 +129,20 @@ final class AppStore: ObservableObject {
             if updated.lanCandidates.isEmpty, !existing.lanCandidates.isEmpty {
                 updated.lanCandidates = existing.lanCandidates
             }
+            do {
+                try saveDesktopSecrets(updated)
+            } catch {
+                canPersistDesktopMetadata = false
+            }
             desktops[index] = updated
             persist()
             return updated
         } else {
+            do {
+                try saveDesktopSecrets(desktop)
+            } catch {
+                canPersistDesktopMetadata = false
+            }
             desktops.append(desktop)
             persist()
             return desktop
@@ -95,13 +150,122 @@ final class AppStore: ObservableObject {
     }
 
     func deleteDesktop(_ desktop: PairedDesktop) {
+        let chatIds = desktopAgentChats
+            .filter { $0.desktopId == desktop.id }
+            .map(\.id)
+        for id in chatIds {
+            WorkspaceRegistry.shared.prepareForDeletion(sessionId: id)
+            WorkspaceRegistry.shared.remove(sessionId: id)
+        }
         desktops.removeAll { $0.id == desktop.id || $0.deviceID == desktop.deviceID }
         desktopAgentChats.removeAll { $0.desktopId == desktop.id }
+        desktopHostHealth.removeAll { $0.desktopId == desktop.id }
+        hostPowerEvents.removeAll { $0.desktopId == desktop.id }
         try? KeychainService.shared.delete(
             account: KeychainAccount.desktopAccessPassword.rawValue,
             keyId: desktop.id
         )
+        try? KeychainService.shared.delete(
+            account: KeychainAccount.re2SessionTicket.rawValue,
+            keyId: desktop.id
+        )
+        try? KeychainService.shared.delete(
+            account: KeychainAccount.re2PairingToken.rawValue,
+            keyId: desktop.id
+        )
         persist()
+    }
+
+    private func saveDesktopSecrets(_ desktop: PairedDesktop) throws {
+        try KeychainService.shared.save(
+            data: Data(desktop.sessionTicket.utf8),
+            account: KeychainAccount.re2SessionTicket.rawValue,
+            keyId: desktop.id
+        )
+        try KeychainService.shared.save(
+            data: Data(desktop.pairingToken.utf8),
+            account: KeychainAccount.re2PairingToken.rawValue,
+            keyId: desktop.id
+        )
+    }
+
+    private func loadDesktopSecret(_ account: KeychainAccount, desktopId: UUID) -> String {
+        guard let data = try? KeychainService.shared.load(account: account.rawValue, keyId: desktopId) else {
+            return ""
+        }
+        return String(data: data, encoding: .utf8) ?? ""
+    }
+
+    func hostHealth(for desktopId: UUID) -> DesktopHostHealth? {
+        desktopHostHealth.first { $0.desktopId == desktopId }
+    }
+
+    func updateDesktopName(desktopId: UUID, computerName: String?) {
+        guard let computerName = computerName?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !computerName.isEmpty,
+              let index = desktops.firstIndex(where: { $0.id == desktopId }),
+              desktops[index].name != computerName else { return }
+        let currentName = desktops[index].name
+        // Older Agents could report a shortened network fallback such as
+        // "Mac" in host-health responses. Do not let that downgrade the
+        // descriptive identity obtained from the pairing QR code.
+        if Self.isGenericDesktopName(computerName),
+           !Self.isGenericDesktopName(currentName) {
+            return
+        }
+        desktops[index].name = computerName
+        for chatIndex in desktopAgentChats.indices where desktopAgentChats[chatIndex].desktopId == desktopId {
+            desktopAgentChats[chatIndex].desktopName = computerName
+        }
+        persist()
+    }
+
+    private static func isGenericDesktopName(_ name: String) -> Bool {
+        let normalized = name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return normalized == "mac"
+            || normalized == "mac.lan"
+            || normalized == "mac.local"
+            || normalized == "localhost"
+            || normalized == "runeverything"
+    }
+
+    func updateHostHealth(
+        desktopId: UUID,
+        snapshot: HostHealthSnapshot?,
+        reachability: HostHealthReachability,
+        reason: String? = nil
+    ) {
+        let value = DesktopHostHealth(
+            desktopId: desktopId, snapshot: snapshot, fetchedAt: .now,
+            reachability: reachability, offlineReason: reason
+        )
+        if let index = desktopHostHealth.firstIndex(where: { $0.desktopId == desktopId }) {
+            desktopHostHealth[index] = value
+        } else {
+            desktopHostHealth.append(value)
+        }
+        desktopHostHealth = Array(desktopHostHealth)
+        persist()
+    }
+
+    func recordPowerEvent(_ event: HostPowerEvent, hostName: String) {
+        hostPowerEvents.append(event)
+        if hostPowerEvents.count > 100 {
+            hostPowerEvents.removeFirst(hostPowerEvents.count - 100)
+        }
+        persist()
+        guard event.critical == true || event.event == "power.ac_lost" || event.event == "power.ac_restored" else {
+            return
+        }
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.alert, .sound]) { granted, _ in
+            guard granted else { return }
+            let content = UNMutableNotificationContent()
+            content.title = hostName
+            content.body = event.detail ?? event.event
+            if event.critical == true { content.sound = .default }
+            center.add(UNNotificationRequest(identifier: event.id.uuidString, content: content, trigger: nil))
+        }
     }
 
     func replaceDesktopAgentChats(desktopId: UUID, chats: [DesktopAgentChat]) {
@@ -146,7 +310,13 @@ final class AppStore: ObservableObject {
             )
             let key = "\(chat.desktopId.uuidString)|\(chat.agentKind.rawValue)|\(chat.chatId)"
             if let existing = best[key] {
-                if chat.screenAlive && !existing.screenAlive || chat.updatedAt > existing.updatedAt {
+                // Same Cursor id can be listed as both CLI and IDE. Keep the
+                // client row so the list stays 客户端 and open goes through IDE.
+                if chat.isClientSession && !existing.isClientSession {
+                    best[key] = chat
+                } else if existing.isClientSession && !chat.isClientSession {
+                    continue
+                } else if chat.screenAlive && !existing.screenAlive || chat.updatedAt > existing.updatedAt {
                     best[key] = chat
                 }
             } else {

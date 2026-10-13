@@ -24,7 +24,7 @@ enum RemoteBootstrap {
         switch session.agentKind {
         case .cursor:
             return cursorShellCommand(projectPath: projectPath, session: session, mode: mode)
-        case .claude, .codex, .gemini:
+        case .claude, .codex, .gemini, .trae, .qoder, .codebuddy:
             return screenShellCommand(projectPath: projectPath, session: session, mode: mode)
         }
     }
@@ -93,6 +93,21 @@ enum RemoteBootstrap {
                 return cd + "gemini --resume \(shellQuote(id))"
             }
             return cd + "gemini"
+        case .trae:
+            if mode == .preferExisting, let id = session.agentChatId, !id.isEmpty {
+                return cd + "traex resume \(shellQuote(id))"
+            }
+            return cd + "traex"
+        case .qoder:
+            if mode == .preferExisting, let id = session.agentChatId, !id.isEmpty {
+                return cd + "qoder -r \(shellQuote(id))"
+            }
+            return cd + "qoder"
+        case .codebuddy:
+            if mode == .preferExisting, let id = session.agentChatId, !id.isEmpty {
+                return cd + "codebuddy --resume \(shellQuote(id))"
+            }
+            return cd + "codebuddy"
         }
     }
 
@@ -131,13 +146,34 @@ enum RemoteBootstrap {
             """
         case .gemini:
             body = "npm install -g @google/gemini-cli"
+        case .trae:
+            body = """
+            if command -v traex >/dev/null || command -v traecli >/dev/null; then :; \
+            elif command -v npm >/dev/null; then npm install -g @byted/trae-cli || npm install -g trae-cli; \
+            else echo 'Install TRAE CLI (traex) from https://docs.trae.cn/cli' >&2; exit 1; fi
+            """
+        case .qoder:
+            body = """
+            if command -v qoder >/dev/null; then :; \
+            elif command -v npm >/dev/null; then npm install -g @qoder-ai/qoder-cli; \
+            else echo 'Install Qoder CLI from https://docs.qoder.com/cli' >&2; exit 1; fi
+            """
+        case .codebuddy:
+            body = "npm install -g @tencent-ai/codebuddy-code"
+        }
+        let installedCheck: String
+        switch kind {
+        case .trae:
+            installedCheck = "command -v traex >/dev/null || command -v traecli >/dev/null"
+        default:
+            installedCheck = "command -v \(binary) >/dev/null"
         }
         return """
         \(pathPrefix); \
         install_log=$(mktemp 2>/dev/null || echo /tmp/koko-install-$$); \
         ( \(body) ) >"$install_log" 2>&1; \
         cat "$install_log"; rm -f "$install_log"; \
-        if command -v \(binary) >/dev/null; then echo \(token); else echo \(token)_FAIL; fi
+        if \(installedCheck); then echo \(token); else echo \(token)_FAIL; fi
         """
     }
 
@@ -200,7 +236,7 @@ enum RemoteBootstrap {
             \(check) https://registry.npmjs.org/ 2>/dev/null && NPM=1; \
             if [ "$CX" = "1" ] || [ "$NPM" = "1" ]; then echo NET_OK; else echo NET_OUTBOUND_BLOCKED; fi
             """
-        case .gemini:
+        case .gemini, .trae, .qoder, .codebuddy:
             return """
             \(pathPrefix); \
             if \(check) https://registry.npmjs.org/ 2>/dev/null; then echo NET_OK; \
@@ -224,6 +260,21 @@ enum RemoteBootstrap {
             \(pathPrefix) && command -v \(binary) >/dev/null && \
             if [ -f "$HOME/.gemini/oauth_creds.json" ] || [ -n "${GEMINI_API_KEY:-}" ]; then echo \(token); fi
             """
+        case .trae:
+            return """
+            \(pathPrefix) && (command -v traex >/dev/null || command -v traecli >/dev/null) && \
+            if [ -d "$HOME/.trae" ]; then echo \(token); fi
+            """
+        case .qoder:
+            return """
+            \(pathPrefix) && command -v \(binary) >/dev/null && \
+            if [ -d "$HOME/.qoder" ]; then echo \(token); fi
+            """
+        case .codebuddy:
+            return """
+            \(pathPrefix) && command -v \(binary) >/dev/null && \
+            if [ -d "$HOME/.codebuddy" ]; then echo \(token); fi
+            """
         }
     }
 
@@ -238,6 +289,12 @@ enum RemoteBootstrap {
             return "\(pathPrefix) && cd \(escapedPath) && exec codex login --device-auth\n"
         case .gemini:
             return "\(pathPrefix) && cd \(escapedPath) && NO_BROWSER=true exec gemini\n"
+        case .trae:
+            return "\(pathPrefix) && cd \(escapedPath) && exec traex\n"
+        case .qoder:
+            return "\(pathPrefix) && cd \(escapedPath) && exec qoder\n"
+        case .codebuddy:
+            return "\(pathPrefix) && cd \(escapedPath) && exec codebuddy\n"
         }
     }
 
@@ -250,7 +307,7 @@ enum RemoteBootstrap {
         switch session.agentKind {
         case .cursor:
             return "\(pathPrefix) && (agent persist stop 2>/dev/null || true); exit\n"
-        case .claude, .codex, .gemini:
+        case .claude, .codex, .gemini, .trae, .qoder, .codebuddy:
             let name = shellEscape(session.remoteSessionName)
             return "\(pathPrefix) && (screen -S \(name) -X quit 2>/dev/null || true); exit\n"
         }
@@ -360,12 +417,25 @@ enum LoginURLParser {
             return isCodexLoginURL(raw)
         case .gemini:
             return isGeminiLoginURL(raw)
+        case .trae, .qoder, .codebuddy:
+            return isDomesticAgentLoginURL(raw)
         case nil:
             return isCursorLoginURL(raw)
                 || isClaudeLoginURL(raw)
                 || isCodexLoginURL(raw)
                 || isGeminiLoginURL(raw)
+                || isDomesticAgentLoginURL(raw)
         }
+    }
+
+    private static func isDomesticAgentLoginURL(_ raw: String) -> Bool {
+        guard let url = URL(string: raw), let host = url.host?.lowercased() else { return false }
+        let suffixes = [
+            "trae.ai", "trae.cn", "trae.com",
+            "qoder.com", "qoder.ai",
+            "codebuddy.ai", "tencentcloud.com", "cloud.tencent.com",
+        ]
+        return suffixes.contains { host == $0 || host.hasSuffix(".\($0)") }
     }
 
     static func isCursorLoginURL(_ raw: String) -> Bool {

@@ -29,7 +29,7 @@ struct PhoneRootView: View {
             .tag(0)
 
             NavigationStack(path: $sessionPath) {
-                SessionListView()
+                SessionListView(sessionPath: $sessionPath)
                     .navigationDestination(for: UUID.self) { sessionId in
                         if let session = store.sessions.first(where: { $0.id == sessionId }) {
                             TerminalScreenView(session: session)
@@ -71,11 +71,18 @@ struct PhoneRootView: View {
             sessionPath.append(sessionId)
             store.e2eOpenSessionId = nil
         }
+        .onChange(of: store.pendingOpenDesktopId) { _, desktopId in
+            guard desktopId != nil else { return }
+            selectedTab = 0
+        }
         .onAppear {
             if let sessionId = store.e2eOpenSessionId {
                 selectedTab = 1
                 sessionPath.append(sessionId)
                 store.e2eOpenSessionId = nil
+            }
+            if store.pendingOpenDesktopId != nil {
+                selectedTab = 0
             }
         }
     }

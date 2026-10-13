@@ -61,3 +61,23 @@ targets:
       - package: Citadel
       - package: Opus
         product: Opus
+  KoKoTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: KoKoTests
+    dependencies:
+      - target: KoKo
+    settings:
+      SWIFT_VERSION: "5.0"
+      GENERATE_INFOPLIST_FILE: YES
+  KoKoUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: KoKoUITests
+    dependencies:
+      - target: KoKo
+    settings:
+      SWIFT_VERSION: "5.0"
+      GENERATE_INFOPLIST_FILE: YES

@@ -359,8 +359,8 @@ struct PairedDesktop: Identifiable, Codable, Hashable {
         deviceID = try c.decode(String.self, forKey: .deviceID)
         relayURL = try c.decode(String.self, forKey: .relayURL)
         udpHostPort = try c.decode(String.self, forKey: .udpHostPort)
-        sessionTicket = try c.decode(String.self, forKey: .sessionTicket)
-        pairingToken = try c.decode(String.self, forKey: .pairingToken)
+        sessionTicket = try c.decodeIfPresent(String.self, forKey: .sessionTicket) ?? ""
+        pairingToken = try c.decodeIfPresent(String.self, forKey: .pairingToken) ?? ""
         noisePub = try c.decodeIfPresent(String.self, forKey: .noisePub)
         expiresAt = try c.decode(Int64.self, forKey: .expiresAt)
         createdAt = try c.decode(Date.self, forKey: .createdAt)
@@ -384,6 +384,191 @@ struct PairedDesktop: Identifiable, Codable, Hashable {
         try c.encodeIfPresent(lastMediaPath, forKey: .lastMediaPath)
         try c.encode(lanCandidates, forKey: .lanCandidates)
         try c.encode(alternateRelays, forKey: .alternateRelays)
+    }
+}
+
+struct HostPowerHealth: Codable, Equatable {
+    var available: Bool
+    var mode: String?
+    var onAc: Bool
+    var batteryPercent: Int
+    var lowBattery: Bool
+    var desiredAwake: Bool
+    var sleepDisabled: Bool
+    var overrides: Int?
+    var lastError: String?
+}
+
+struct HostDiskHealth: Codable, Equatable {
+    var path: String
+    var freeBytes: UInt64
+    var totalBytes: UInt64
+}
+
+struct HostUPSHealth: Codable, Equatable {
+    var configured: Bool
+    var reachable: Bool
+    var status: String?
+    var charge: Int?
+    var runtimeSeconds: Int?
+    var error: String?
+}
+
+struct HostHealthSnapshot: Codable, Equatable {
+    var healthV: Int
+    var action: String
+    var reportedAt: Int64?
+    var agentVersion: String?
+    var computerName: String?
+    var phase: String?
+    var relayConnected: Bool
+    var processUptimeSeconds: Int64?
+    var consoleUser: String?
+    var screenRecording: Bool?
+    var accessibility: Bool?
+    var power: HostPowerHealth?
+    var thermal: String?
+    var disk: HostDiskHealth?
+    var ups: HostUPSHealth?
+    var error: String?
+    /// Present on Agents that report graphics session state. Nil = older Agent, do not gate.
+    var screenLocked: Bool?
+    var displayAsleep: Bool?
+    var lidClosed: Bool?
+    var activeDisplays: Int?
+
+    static func decode(_ data: Data) throws -> HostHealthSnapshot {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return try decoder.decode(Self.self, from: data)
+    }
+}
+
+struct HostLifecycleStatus: Codable, Equatable {
+    var deviceId: String
+    var reportedAt: Int64
+    var phase: String
+    var consoleUser: String?
+    var power: HostPowerHealth?
+
+    static func decode(_ data: Data) throws -> HostLifecycleStatus {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return try decoder.decode(Self.self, from: data)
+    }
+
+    var healthSnapshot: HostHealthSnapshot {
+        HostHealthSnapshot(
+            healthV: 1, action: "report", reportedAt: reportedAt,
+            agentVersion: nil, computerName: nil, phase: phase, relayConnected: false,
+            processUptimeSeconds: nil, consoleUser: consoleUser,
+            screenRecording: nil, accessibility: nil, power: power,
+            thermal: nil, disk: nil, ups: nil, error: nil,
+            screenLocked: nil, displayAsleep: nil, lidClosed: nil, activeDisplays: nil
+        )
+    }
+}
+
+/// Why a Cursor/client chat cannot attach until the Mac has a lit, unlocked session.
+enum HostGUIBlocker: Equatable {
+    case notLoggedIn
+    case screenLocked
+    case displayOff
+
+    var title: String {
+        switch self {
+        case .notLoggedIn: return String(localized: "Mac is not logged in")
+        case .screenLocked: return String(localized: "Mac is locked")
+        case .displayOff: return String(localized: "Mac display is off")
+        }
+    }
+
+    var message: String {
+        switch self {
+        case .notLoggedIn:
+            return String(localized: "This client chat needs the Mac signed in. Open Remote Desktop, log in, then come back.")
+        case .screenLocked:
+            return String(localized: "This client chat needs the desktop unlocked. Open Remote Desktop, unlock it, then come back.")
+        case .displayOff:
+            return String(localized: "This client chat needs the screen on. Open Remote Desktop to wake it, then come back.")
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .notLoggedIn: return "person.crop.circle.badge.exclamationmark"
+        case .screenLocked: return "lock.fill"
+        case .displayOff: return "sun.max.trianglebadge.exclamationmark"
+        }
+    }
+
+    /// Old Agents omit graphics fields — never block those. Empty `console_user` only
+    /// counts once the Agent also reports lock/display/lid.
+    static func detect(from snapshot: HostHealthSnapshot?) -> HostGUIBlocker? {
+        guard let snapshot else { return nil }
+        let graphicsKnown = snapshot.screenLocked != nil
+            || snapshot.displayAsleep != nil
+            || snapshot.lidClosed != nil
+            || snapshot.activeDisplays != nil
+        guard graphicsKnown else { return nil }
+
+        let user = snapshot.consoleUser?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if user.isEmpty {
+            return .notLoggedIn
+        }
+        if snapshot.screenLocked == true {
+            return .screenLocked
+        }
+        if snapshot.displayAsleep == true || (snapshot.activeDisplays ?? 1) == 0 {
+            return .displayOff
+        }
+        return nil
+    }
+}
+
+enum HostHealthReachability: String, Codable {
+    case online
+    case offline
+    case stale
+    case unsupported
+}
+
+struct DesktopHostHealth: Identifiable, Codable, Equatable {
+    var id: UUID { desktopId }
+    var desktopId: UUID
+    var snapshot: HostHealthSnapshot?
+    var fetchedAt: Date
+    var reachability: HostHealthReachability
+    var offlineReason: String?
+}
+
+struct HostPowerEvent: Identifiable, Codable, Equatable {
+    var id: UUID
+    var desktopId: UUID
+    var event: String
+    var timeUnix: Int64
+    var batteryPercent: Int?
+    var onAc: Bool
+    var critical: Bool?
+    var detail: String?
+
+    static func decode(_ data: Data, desktopId: UUID) throws -> HostPowerEvent {
+        struct Wire: Codable {
+            var event: String
+            var t: Int64
+            var batteryPercent: Int?
+            var onAc: Bool
+            var critical: Bool?
+            var detail: String?
+        }
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let wire = try decoder.decode(Wire.self, from: data)
+        return HostPowerEvent(
+            id: UUID(), desktopId: desktopId, event: wire.event, timeUnix: wire.t,
+            batteryPercent: wire.batteryPercent, onAc: wire.onAc,
+            critical: wire.critical, detail: wire.detail
+        )
     }
 }
 

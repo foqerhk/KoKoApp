@@ -5,6 +5,30 @@ import UIKit
 /// without separate channels (`DesktopSessionHub` otherwise uses a shared `RE2DataTunnel`).
 /// Does **not** open desktop, video, mouse, or PTY — data only.
 enum RE2AgentChatClient {
+    static func lifecycleStatus(profile: PairedDesktop) async throws -> HostLifecycleStatus {
+        let sig = RE2SignalingClient()
+        try await sig.connect(relay: profile.relayURL)
+        defer { sig.close() }
+        await MainActor.run { RE2ControllerIdentity.stampDisplayName(DeviceMarketingName.controllerLabel) }
+        try await sig.writeFrame(RE2Frame(
+            type: RE2.OuterType.lifecycleQuery,
+            routeID: profile.deviceID,
+            payload: RE2Codec.jsonData([
+                "device_id": profile.deviceID,
+                "session_ticket": profile.sessionTicket,
+                "client_id": RE2ControllerIdentity.id,
+            ])
+        ))
+        let frame = try await readSkippingPing(sig)
+        if frame.type == RE2.OuterType.error {
+            throw relayError(frame.payload, fallback: "lifecycle query failed")
+        }
+        guard frame.type == RE2.OuterType.lifecycleStatus else {
+            throw RE2Error.signaling("unexpected lifecycle reply")
+        }
+        return try HostLifecycleStatus.decode(frame.payload)
+    }
+
     /// Fetch Cursor / Claude / Codex / Gemini chats from a paired Agent.
     static func listChats(
         profile: PairedDesktop,
@@ -95,7 +119,7 @@ enum RE2AgentChatClient {
         channel: Bool
     ) async throws -> DataLink {
         let deviceID = profile.deviceID
-        await MainActor.run { RE2ControllerIdentity.name = UIDevice.current.name }
+        await MainActor.run { RE2ControllerIdentity.stampDisplayName(DeviceMarketingName.controllerLabel) }
         try await sig.writeFrame(RE2Frame(
             type: RE2.OuterType.bind,
             routeID: deviceID,
@@ -139,14 +163,25 @@ enum RE2AgentChatClient {
         return DataLink(sig: sig, send: send, recv: recv, route: route, separate: separate)
     }
 
-    /// Relay error frame → RE2Error, keeping the busy controller's name.
+    /// Relay error frame → RE2Error, keeping the busy / takeover controller's name.
     static func relayError(_ payload: Data, fallback: String) -> RE2Error {
         let obj = RE2Codec.jsonObject(payload)
-        let code = obj["code"] as? String ?? ""
+        let code = (obj["code"] as? String ?? "").lowercased()
+        let peer = RE2ControllerIdentity.peerLabel(
+            peer: obj["peer"] as? String ?? "",
+            since: (obj["since"] as? Int64) ?? Int64(obj["since"] as? Int ?? 0)
+        )
         if code == "controller_busy" {
-            return .controllerBusy(peer: obj["peer"] as? String ?? "")
+            return .controllerBusy(peer: peer)
         }
-        return RE2Error.fromRelayError(code: code, message: obj["message"] as? String ?? fallback)
+        if code == "kicked" || code == "superseded" || code == "replaced" {
+            return .peerTaken(peer: peer)
+        }
+        var mapped = RE2Error.fromRelayError(code: obj["code"] as? String ?? "", message: obj["message"] as? String ?? fallback)
+        if case .peerTaken = mapped, !peer.isEmpty {
+            mapped = .peerTaken(peer: peer)
+        }
+        return mapped
     }
 
     private static func readSkippingPing(_ sig: RE2SignalingClient) async throws -> RE2Frame {
@@ -249,42 +284,6 @@ protocol AgentPTYTransport: AnyObject {
     func shutdown()
 }
 
-/// Shares the streaming remote-desktop tunnel (Agent allows one Noise peer).
-@MainActor
-final class DesktopTunnelPTYTransport: AgentPTYTransport {
-    private let session: RE2DesktopSession
-
-    init(session: RE2DesktopSession) {
-        self.session = session
-    }
-
-    var label: String { String(localized: "remote desktop tunnel") }
-
-    func open(
-        id: String,
-        request: AgentPTYOpenRequest,
-        onReady: @escaping () -> Void,
-        onData: @escaping (Data) -> Void,
-        onClose: @escaping (String?) -> Void
-    ) async throws {
-        try await session.openAgentPTY(id: id, request: request, onReady: onReady, onData: onData, onClose: onClose)
-    }
-
-    func write(id: String, data: Data) async throws {
-        try await session.writeAgentPTY(id: id, data: data)
-    }
-
-    func resize(id: String, cols: Int, rows: Int) async {
-        await session.resizeAgentPTY(id: id, cols: cols, rows: rows)
-    }
-
-    func close(id: String) async {
-        await session.closeAgentPTY(id: id)
-    }
-
-    func shutdown() {}
-}
-
 /// Long-lived data-only WSS tunnel: PTY bytes without desktop video.
 @MainActor
 final class RE2DataTunnel: AgentPTYTransport {
@@ -314,13 +313,23 @@ final class RE2DataTunnel: AgentPTYTransport {
     private var chatWaiter: CheckedContinuation<Data, Error>?
     private var chatTimeout: Task<Void, Never>?
     private var chatTail: Task<Void, Never>?
+    private var healthWaiter: CheckedContinuation<Data, Error>?
+    private var healthTimeout: Task<Void, Never>?
+    private var healthTail: Task<Void, Never>?
+    var onPowerEvent: ((Data) -> Void)?
+    /// Hub clears its cache when this shared tunnel dies (half-open WSS, relay drop).
+    var onDead: (() -> Void)?
+    private var consecutiveReadTimeouts = 0
 
     init(profile: PairedDesktop) {
         self.profile = profile
         route = profile.deviceID
     }
 
-    var isOpen: Bool { sig != nil && sendCipher != nil }
+    /// Requires a live WebSocket task — `sig != nil` alone stays true on half-open sockets
+    /// and made session reconnect reuse a dead data channel while desktop still worked.
+    var isOpen: Bool { sig?.isOpen == true && sendCipher != nil }
+    var hasSessions: Bool { !routes.isEmpty }
     var sessionTicket: String { profile.sessionTicket }
 
     var label: String { String(localized: "encrypted data channel") }
@@ -389,14 +398,19 @@ final class RE2DataTunnel: AgentPTYTransport {
         keepaliveTask?.cancel()
         readTask = nil
         keepaliveTask = nil
+        consecutiveReadTimeouts = 0
         sig?.close()
         sig = nil
         sendCipher = nil
         recvCipher = nil
         resumeChat(.failure(RE2Error.signaling(reason ?? String(localized: "Not connected to Agent"))))
+        resumeHealth(.failure(RE2Error.signaling(reason ?? String(localized: "Not connected to Agent"))))
         let pending = routes
         routes.removeAll()
         if let reason { pending.values.forEach { $0.onClose(reason) } }
+        let dead = onDead
+        onDead = nil
+        dead?()
     }
 
     /// All AI sessions, paged. Requests are serialized: the Agent answers in order
@@ -410,6 +424,37 @@ final class RE2DataTunnel: AgentPTYTransport {
         }
         chatTail = Task { _ = await task.result }
         return try await task.value
+    }
+
+    func fetchHostHealth() async throws -> HostHealthSnapshot {
+        let previous = healthTail
+        let task = Task { @MainActor [weak self] () async throws -> HostHealthSnapshot in
+            _ = await previous?.value
+            guard let self else { throw RE2Error.cancelled }
+            return try await self.performHostHealthRequest()
+        }
+        healthTail = Task { _ = await task.result }
+        return try await task.value
+    }
+
+    private func performHostHealthRequest() async throws -> HostHealthSnapshot {
+        guard isOpen else { throw RE2Error.signaling(String(localized: "Not connected to Agent")) }
+        let data: Data = try await withCheckedThrowingContinuation { cont in
+            healthWaiter = cont
+            healthTimeout = Task { [weak self] in
+                try? await Task.sleep(nanoseconds: 12_000_000_000)
+                guard !Task.isCancelled else { return }
+                self?.resumeHealth(.failure(RE2Error.signaling(String(localized: "Timed out waiting for host health"))))
+            }
+            Task { [weak self] in
+                do {
+                    try await self?.sendInner(RE2.Msg.hostHealth, RE2Codec.jsonData(["action": "get", "health_v": 1]))
+                } catch {
+                    self?.resumeHealth(.failure(error))
+                }
+            }
+        }
+        return try HostHealthSnapshot.decode(data)
     }
 
     private func fetchChatPages(projectPath: String?, kind: AgentKind?) async throws -> [RemoteAgentConversation] {
@@ -464,6 +509,14 @@ final class RE2DataTunnel: AgentPTYTransport {
         waiter.resume(with: result)
     }
 
+    private func resumeHealth(_ result: Result<Data, Error>) {
+        guard let waiter = healthWaiter else { return }
+        healthWaiter = nil
+        healthTimeout?.cancel()
+        healthTimeout = nil
+        waiter.resume(with: result)
+    }
+
     private func sendInner(_ mt: UInt8, _ body: Data) async throws {
         let previous = sendTail
         let task = Task { @MainActor [weak self] in
@@ -475,7 +528,14 @@ final class RE2DataTunnel: AgentPTYTransport {
             try await sig.writeFrame(RE2Frame(type: RE2.OuterType.tunnel, routeID: self.route, payload: ct))
         }
         sendTail = task
-        try await task.value
+        do {
+            try await task.value
+        } catch {
+            // Half-open send failure must invalidate the shared tunnel so the next
+            // session open rebinds instead of spinning on "Opening encrypted data channel…".
+            teardown(reason: error.localizedDescription)
+            throw error
+        }
     }
 
     private func readLoop() async {
@@ -486,10 +546,19 @@ final class RE2DataTunnel: AgentPTYTransport {
                 frame = try await sig.readFrame(timeout: 30)
             } catch {
                 if Task.isCancelled { return }
-                if case RE2Error.signaling(let m) = error, m == "frame timeout" { continue }
+                if case RE2Error.signaling(let m) = error, m == "frame timeout" {
+                    consecutiveReadTimeouts += 1
+                    // ~2 min of silence on a half-open WS: drop so Hub will BIND again.
+                    if consecutiveReadTimeouts >= 4 {
+                        teardown(reason: String(localized: "Data channel timed out"))
+                        return
+                    }
+                    continue
+                }
                 teardown(reason: error.localizedDescription)
                 return
             }
+            consecutiveReadTimeouts = 0
             switch frame.type {
             case RE2.OuterType.tunnel:
                 guard let cipher = recvCipher,
@@ -523,6 +592,10 @@ final class RE2DataTunnel: AgentPTYTransport {
             routes.removeValue(forKey: sid)?.onClose(obj["reason"] as? String)
         case RE2.Msg.agentChatList:
             resumeChat(.success(body))
+        case RE2.Msg.hostHealth:
+            resumeHealth(.success(body))
+        case RE2.Msg.powerEvent:
+            onPowerEvent?(body)
         case RE2.Msg.appError:
             let obj = RE2Codec.jsonObject(body)
             let message = obj["message"] as? String ?? "session open failed"
@@ -573,18 +646,86 @@ enum DesktopAgentLaunch {
 
     private static func attachScript(chat: DesktopAgentChat, mode: RemoteBootstrap.LaunchMode) -> String {
         if chat.mirrorsIDEChat && mode == .preferExisting {
-            return ideMirrorScript(chat: chat)
+            return chat.agentKind == .cursor ? ideMirrorScript(chat: chat) : clientMirrorScript(chat: chat)
         }
         let name = q(chat.screenName)
         let cwd = q(chat.cwd ?? "")
         let quit = mode == .forceNew ? "screen -S \(name) -X quit >/dev/null 2>&1\n" : ""
+        let wake = ensureClientAppScript(chat)
         return """
         export LANG="${LANG:-en_US.UTF-8}" TERM=xterm-256color
         LOGIN_PATH="$("${SHELL:-/bin/zsh}" -lic 'printf "__KOKO_PATH__%s\\n" "$PATH"' 2>/dev/null | sed -n 's/^__KOKO_PATH__//p' | tail -n 1)"
         export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:/opt/homebrew/bin:/usr/local/bin:${LOGIN_PATH:+$LOGIN_PATH:}$PATH"
-        \(quit)if screen -ls 2>/dev/null | awk '{print $1}' | sed 's/^[0-9]*[.]//' | grep -Fxq \(name); then exec screen -x \(name); fi
+        \(wake)\(quit)if screen -ls 2>/dev/null | awk '{print $1}' | sed 's/^[0-9]*[.]//' | grep -Fxq \(name); then exec screen -x \(name); fi
         cd \(cwd) 2>/dev/null || cd "$HOME"
         exec screen -S \(name) -h 10000 /bin/bash -c \(q(innerScript(chat: chat, mode: mode)))
+        """
+    }
+
+    /// Claude / Codex / Gemini client chats: if the desktop app is not running,
+    /// start it first (same cold-start as Cursor), then resume in the terminal.
+    /// IDE-extension sessions wake Cursor; standalone apps wake themselves.
+    private static func ensureClientAppScript(_ chat: DesktopAgentChat) -> String {
+        guard chat.isClientSession, !chat.mirrorsIDEChat else { return "" }
+        let apps = clientAppsToLaunch(chat)
+        guard !apps.isEmpty else { return "" }
+        let quoted = apps.map { q($0) }.joined(separator: " ")
+        return """
+        for app in \(quoted); do
+          if [ -d "/Applications/${app}.app" ] || [ -d "$HOME/Applications/${app}.app" ]; then
+            if pgrep -f "/${app}.app/Contents/MacOS/" >/dev/null 2>&1; then
+              break
+            fi
+            open -ga "$app" 2>/dev/null || continue
+            i=0
+            while [ "$i" -lt 40 ]; do
+              pgrep -f "/${app}.app/Contents/MacOS/" >/dev/null 2>&1 && break
+              sleep 0.5
+              i=$((i+1))
+            done
+            break
+          fi
+        done
+
+        """
+    }
+
+    private static func clientAppsToLaunch(_ chat: DesktopAgentChat) -> [String] {
+        let name = (chat.clientName ?? "").lowercased()
+        let inIDE = name.contains("ide") || name.contains("extension")
+            || name.contains("vscode") || name.contains("code assist")
+        if inIDE {
+            return ["Cursor", "Visual Studio Code"]
+        }
+        switch chat.agentKind {
+        case .claude: return ["Claude", "Cursor"]
+        case .codex: return ["Codex", "Cursor"]
+        case .gemini: return ["Gemini", "Cursor"]
+        case .trae: return ["Trae", "Trae CN", "Cursor"]
+        case .qoder: return ["Qoder", "Cursor"]
+        case .codebuddy: return ["CodeBuddy", "Cursor"]
+        case .cursor: return ["Cursor"]
+        }
+    }
+
+    /// Agents that ship `client-mirror` export RE_AGENT_BIN into their PTYs.
+    private static func clientMirrorScript(chat: DesktopAgentChat) -> String {
+        let lang = Locale.preferredLanguages.first?.hasPrefix("zh") == true ? "zh" : "en"
+        let outdated = String(localized: "The RunEverything Agent on this computer is too old to sync IDE chats. Update the Agent, then choose Reconnect.")
+        let folder = chat.cwd ?? ""
+        let client = chat.clientName ?? ""
+        let kind = chat.agentKind.rawValue
+        var args = "--lang \(lang)"
+        if !folder.isEmpty { args += " --folder \(q(folder))" }
+        if !client.isEmpty { args += " --client \(q(client))" }
+        args += " \(kind) \(q(chat.chatId))"
+        return """
+        export LANG="${LANG:-en_US.UTF-8}" TERM=xterm-256color
+        if [ -n "$RE_AGENT_BIN" ] && [ -x "$RE_AGENT_BIN" ]; then
+          exec "$RE_AGENT_BIN" client-mirror \(args)
+        fi
+        echo \(q("[KoKo] " + outdated))
+        exec "${SHELL:-/bin/zsh}" -l
         """
     }
 
@@ -592,9 +733,16 @@ enum DesktopAgentLaunch {
     private static func ideMirrorScript(chat: DesktopAgentChat) -> String {
         let lang = Locale.preferredLanguages.first?.hasPrefix("zh") == true ? "zh" : "en"
         let outdated = String(localized: "The RunEverything Agent on this computer is too old to sync IDE chats. Update the Agent, then choose Reconnect.")
-        let target = chat.chatId.isEmpty
-            ? "--new \(q(chat.cwd ?? "")) cursor"
-            : "cursor \(q(chat.chatId))"
+        let folder = chat.cwd ?? ""
+        let target: String = {
+            if chat.chatId.isEmpty {
+                return "--new \(q(folder)) cursor"
+            }
+            if folder.isEmpty {
+                return "cursor \(q(chat.chatId))"
+            }
+            return "--folder \(q(folder)) cursor \(q(chat.chatId))"
+        }()
         return """
         export LANG="${LANG:-en_US.UTF-8}" TERM=xterm-256color
         if [ -n "$RE_AGENT_BIN" ] && [ -x "$RE_AGENT_BIN" ]; then
@@ -652,6 +800,12 @@ enum DesktopAgentLaunch {
             ]
         case .gemini:
             return ["gemini"]
+        case .trae:
+            return ["traex", "traecli", "\"$HOME/.local/bin/traex\"", "\"$HOME/.local/bin/traecli\""]
+        case .qoder:
+            return ["qoder", "\"$HOME/.local/bin/qoder\""]
+        case .codebuddy:
+            return ["codebuddy", "\"$HOME/.local/bin/codebuddy\""]
         }
     }
 
@@ -662,6 +816,9 @@ enum DesktopAgentLaunch {
         case .claude: return "--resume \(id)"
         case .codex: return "resume \(id)"
         case .gemini: return "--resume \(id)"
+        case .trae: return "resume \(id)"
+        case .qoder: return "-r \(id)"
+        case .codebuddy: return "--resume \(id)"
         }
     }
 
@@ -673,9 +830,26 @@ enum DesktopAgentLaunch {
 /// Live state of a mirrored Cursor IDE chat, published in-band by the Agent's `ide-mirror`
 /// as OSC 7788 (base64 JSON). Phone actions go back as OSC 7789 on the PTY input.
 struct IDEChatState: Codable, Equatable {
+    struct ModelParameterValue: Codable, Equatable, Identifiable, Hashable {
+        var id: String
+        var name: String
+    }
+    struct ModelParameter: Codable, Equatable, Identifiable, Hashable {
+        var id: String
+        var name: String
+        var tooltip: String?
+        var kind: String
+        var selected: String?
+        var values: [ModelParameterValue]
+
+        var selectedName: String {
+            values.first(where: { $0.id == selected })?.name ?? selected ?? ""
+        }
+    }
     struct Option: Codable, Equatable, Identifiable, Hashable {
         var id: String
         var name: String
+        var parameters: [ModelParameter]?
     }
     struct File: Codable, Equatable, Identifiable, Hashable {
         var path: String
@@ -686,10 +860,21 @@ struct IDEChatState: Codable, Equatable {
         var ready: Bool
         var needsReload: Bool
     }
+    struct SubChat: Codable, Equatable, Identifiable, Hashable {
+        var composerId: String
+        var name: String
+        var id: String { composerId }
+    }
+    struct Queued: Codable, Equatable, Identifiable, Hashable {
+        var id: String
+        var text: String
+    }
 
     var composerId: String
     var name: String
     var cwd: String
+    /// `cursor-ide`, `claude-client`, `codex-client`, `gemini-client`.
+    var kind: String? = nil
     var mode: String
     var modes: [Option]?
     var model: String
@@ -698,6 +883,16 @@ struct IDEChatState: Codable, Equatable {
     var linesAdded: Int
     var linesRemoved: Int
     var files: [File]?
+    /// Cursor's Files chip count (filesChangedCount). May be > files.count when
+    /// the path list is still catching up.
+    var filesChangedCount: Int?
+    var subChats: [SubChat]?
+    var generating: Bool?
+    /// True while Cursor is still showing Keep All / Undo All for unaccepted edits.
+    var pendingReview: Bool?
+    var queued: [Queued]?
+    /// Set when a queue edit, delete, or send-now did not reach Cursor.
+    var actionError: String?
     var bridge: Bridge
     /// Non-zero when the mirror also publishes structured messages (OSC 7790).
     var chat: Int?
@@ -706,9 +901,11 @@ struct IDEChatState: Codable, Equatable {
     var modelName: String { models?.first(where: { $0.id == model })?.name ?? model }
     var supportsNativeChat: Bool { (chat ?? 0) > 0 }
 
-    static func actionBytes(op: String, id: String? = nil) -> Data {
+    static func actionBytes(op: String, id: String? = nil, text: String? = nil, bubbleId: String? = nil) -> Data {
         var obj: [String: Any] = ["op": op]
         if let id { obj["id"] = id }
+        if let text { obj["text"] = text }
+        if let bubbleId { obj["bubbleId"] = bubbleId }
         return actionBytes(obj)
     }
 
@@ -721,13 +918,57 @@ struct IDEChatState: Codable, Equatable {
 /// One conversation row of a mirrored Cursor IDE chat, published as OSC 7790.
 struct IDEChatMessage: Codable, Equatable, Identifiable {
     enum Role: String, Codable {
-        case user, assistant, tool, question
+        case user, assistant, thought, tool, question
+        /// Cursor's own injected turn (background task finished); text is the task title.
+        case notice
+
+        init(from decoder: Decoder) throws {
+            let raw = try decoder.singleValueContainer().decode(String.self)
+            self = Role(rawValue: raw) ?? .assistant
+        }
     }
     struct Tool: Codable, Equatable {
+        struct DiffLine: Codable, Equatable {
+            var kind: String
+            var oldLine: Int?
+            var newLine: Int?
+            var text: String
+
+            private enum CodingKeys: String, CodingKey {
+                case kind, oldLine = "old", newLine = "new", text
+            }
+        }
+        struct Diff: Codable, Equatable {
+            var path: String
+            var language: String?
+            var additions: Int
+            var deletions: Int
+            var truncated: Bool?
+            var binary: Bool?
+            var lines: [DiffLine]
+        }
+
         var name: String
         var label: String
         var summary: String?
         var status: String?
+        /// The tool's own one-line description (shell commandDescription).
+        var title: String?
+        /// Tail of a shell command's output.
+        var output: String?
+        var outputBytes: Int?
+        var outputTruncated: Bool?
+        var toolCallId: String?
+        var userDecision: String?
+        var diff: Diff?
+
+        var isRunning: Bool {
+            ["loading", "pending", "running", "in_progress", "streaming"].contains(status ?? "")
+        }
+        var isFailed: Bool { ["error", "failed"].contains(status ?? "") }
+        var isPendingApproval: Bool {
+            status == "pending" && (userDecision?.isEmpty ?? true)
+        }
     }
     struct Option: Codable, Equatable, Identifiable, Hashable {
         var id: String
@@ -761,17 +1002,28 @@ struct IDEChatMessage: Codable, Equatable, Identifiable {
     var text: String?
     var tool: Tool?
     var question: Question?
+    /// Thinking time for `.thought` rows.
+    var durationMs: Int?
+    /// ISO-8601 timestamp from Cursor (footer “20m ago”).
+    var createdAt: String?
 
     var id: Int { idx }
 
     private enum CodingKeys: String, CodingKey {
-        case idx, bubbleId = "id", role, text, tool, question
+        case idx, bubbleId = "id", role, text, tool, question, durationMs, createdAt
     }
 }
 
 struct IDEChatFrame: Codable {
     var reset: Bool?
+    var composerId: String?
     var messages: [IDEChatMessage]?
+}
+
+struct IDEFilePreviewFrame: Codable, Equatable {
+    var path: String
+    var diff: IDEChatMessage.Tool.Diff?
+    var error: String?
 }
 
 /// Splits the mirror's OSC 7788 (state) and OSC 7790 (chat) frames out of the PTY byte
@@ -780,6 +1032,7 @@ struct IDEStateExtractor {
     private static let open = Data("\u{1b}]77".utf8)
     private static let stateTag = Data("88;".utf8)
     private static let chatTag = Data("90;".utf8)
+    private static let fileTag = Data("91;".utf8)
     private static let bel: UInt8 = 0x07
     private var carry = Data()
 
@@ -787,6 +1040,7 @@ struct IDEStateExtractor {
         var output = Data()
         var states: [IDEChatState] = []
         var chats: [IDEChatFrame] = []
+        var filePreviews: [IDEFilePreviewFrame] = []
     }
 
     mutating func process(_ chunk: Data) -> Result {
@@ -802,7 +1056,10 @@ struct IDEStateExtractor {
                 return result
             }
             let tag = data[tagStart..<data.index(tagStart, offsetBy: Self.stateTag.count)]
-            guard tag == Self.stateTag || tag == Self.chatTag else {
+            let isState = tag == Self.stateTag
+            let isChat = tag == Self.chatTag
+            let isFile = tag == Self.fileTag
+            guard isState || isChat || isFile else {
                 searchFrom = tagStart
                 continue
             }
@@ -813,10 +1070,12 @@ struct IDEStateExtractor {
                 return result
             }
             if let raw = Data(base64Encoded: Data(data[bodyStart..<end])) {
-                if tag == Self.stateTag, let state = try? JSONDecoder().decode(IDEChatState.self, from: raw) {
+                if isState, let state = try? JSONDecoder().decode(IDEChatState.self, from: raw) {
                     result.states.append(state)
-                } else if tag == Self.chatTag, let frame = try? JSONDecoder().decode(IDEChatFrame.self, from: raw) {
+                } else if isChat, let frame = try? JSONDecoder().decode(IDEChatFrame.self, from: raw) {
                     result.chats.append(frame)
+                } else if isFile, let preview = try? JSONDecoder().decode(IDEFilePreviewFrame.self, from: raw) {
+                    result.filePreviews.append(preview)
                 }
             }
             data = Data(data[data.index(after: end)...])

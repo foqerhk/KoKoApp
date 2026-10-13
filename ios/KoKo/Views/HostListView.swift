@@ -64,51 +64,33 @@ struct HostListView: View {
                 if !store.desktops.isEmpty {
                     Section {
                         ForEach(store.desktops) { desk in
-                            Button {
-                                // Reattach to the session kept alive after Back; a second
-                                // connect would race the Agent's still-live UDP stream.
-                                if desktopSession.currentPaired?.deviceID == desk.deviceID,
-                                   desktopSession.holdsAgentPeer {
-                                    activeDesktop = desk
-                                    return
+                            NavigationLink {
+                                DesktopHostDetailView(desktop: desk) {
+                                    openRemoteDesktop(desk)
                                 }
-                                pendingReconnect = desk
-                                let saved = RE2DesktopSecrets.loadPassword(desktopID: desk.id)
-                                Task { await reconnectDesktop(desk, password: saved) }
                             } label: {
                                 HStack {
                                     Image(systemName: "desktopcomputer")
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text(desk.name)
-                                        Text(desk.deviceID)
+                                        Text(desk.name).font(.headline)
+                                        if let health = store.hostHealth(for: desk.id) {
+                                            Text(Self.healthSubtitle(health))
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
-                                            .lineLimit(1)
-                                        if let lan = Self.lanSubtitle(
-                                            desk: desk,
-                                            live: desktopSession.currentPaired?.deviceID == desk.deviceID
-                                                ? desktopSession.lanEndpointsDisplay
-                                                : nil
-                                        ) {
-                                            Text(lan)
-                                                .font(.caption2.monospaced())
-                                                .foregroundStyle(.tertiary)
                                                 .lineLimit(2)
+                                        } else {
+                                            Text(String(localized: "Status unavailable"))
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
                                         }
                                     }
-                                    Spacer()
-                                    if desktopSession.currentPaired?.deviceID == desk.deviceID, desktopSession.isStreaming {
-                                        Text(desktopSession.pathLabel.isEmpty
-                                             ? String(localized: "Connected")
-                                             : desktopSession.pathLabel)
-                                            .font(.caption2.monospaced())
-                                            .foregroundStyle(.green)
-                                    } else if !desk.canReconnect {
+                                    if !desk.canReconnect {
                                         Text(String(localized: "Re-pair"))
                                             .font(.caption)
                                             .foregroundStyle(.orange)
                                     }
                                 }
+                                .foregroundStyle(.primary)
                             }
                             .swipeActions(edge: .trailing) {
                                 Button(role: .destructive) {
@@ -119,7 +101,7 @@ struct HostListView: View {
                             }
                         }
                     } header: {
-                        Text(String(localized: "Remote Desktop"))
+                        Text(String(localized: "Desktop Hosts"))
                     }
                 }
             }
@@ -199,7 +181,9 @@ struct HostListView: View {
                     store.upsertDesktop(p)
                     // Same id → keep navigation item stable. Replacing Hashable fields
                     // was briefly nil'ing the destination and killing in-flight connect.
-                    if activeDesktop?.id != p.id {
+                    // Only restore during an in-progress connect — after the user
+                    // leaves, this would push the viewer right back (a one-frame pop).
+                    if connecting, activeDesktop?.id != p.id {
                         activeDesktop = p
                     }
                 }
@@ -226,19 +210,6 @@ struct HostListView: View {
                     .padding(20)
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
                 }
-            }
-        }
-        // Push viewer as soon as PairRedeem yields a profile (like reconnect),
-        // so status is not stuck behind a frozen Hosts overlay.
-        .onChange(of: desktopSession.phase) { _, phase in
-            guard connecting, activeDesktop == nil,
-                  let p = desktopSession.currentPaired else { return }
-            switch phase {
-            case .binding, .associating, .openingDesktop, .streaming, .reconnecting:
-                store.upsertDesktop(p)
-                activeDesktop = p
-            default:
-                break
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .kokoE2EShowDesktop)) { note in
@@ -288,9 +259,17 @@ struct HostListView: View {
                 }
             }
         } message: {
-            Text(takeoverPeer.isEmpty
-                 ? String(localized: "Another device is controlling this computer. Continue and disconnect it?")
-                 : String(localized: "\(takeoverPeer) is controlling this computer. Continue and disconnect it?"))
+            Text(RE2Error.controllerBusy(peer: takeoverPeer).localizedDescription)
+        }
+        .alert(String(localized: "Session Taken Over"), isPresented: Binding(
+            get: { activeDesktop == nil && desktopSession.kickAlertMessage != nil },
+            set: { if !$0 { desktopSession.kickAlertMessage = nil } }
+        )) {
+            Button(String(localized: "OK"), role: .cancel) {
+                desktopSession.kickAlertMessage = nil
+            }
+        } message: {
+            Text(desktopSession.kickAlertMessage ?? "")
         }
         .alert(String(localized: "Session Password"), isPresented: $askPassword) {
             SecureField(String(localized: "Password"), text: $password)
@@ -313,6 +292,16 @@ struct HostListView: View {
                 pendingPayload = p
                 Task { await pairDesktop(p) }
             }
+            consumePendingOpenDesktop()
+        }
+        .onChange(of: store.pendingOpenDesktopId) { _, _ in
+            consumePendingOpenDesktop()
+        }
+        .task {
+            while !Task.isCancelled {
+                await refreshDesktopHealth()
+                try? await Task.sleep(nanoseconds: 30_000_000_000)
+            }
         }
         .onChange(of: pendingPair.payload) { _, new in
             guard let new else { return }
@@ -332,17 +321,33 @@ struct HostListView: View {
         return String(localized: "Delete the selected hosts? Related sessions on this device will also be removed.")
     }
 
-    /// `LAN host:port` line for Remote Desktop rows (QR + live PreferDirect).
-    private static func lanSubtitle(desk: PairedDesktop, live: String?) -> String? {
-        let liveTrim = live?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if !liveTrim.isEmpty {
-            return "LAN \(liveTrim)"
+    private static func healthSubtitle(_ health: DesktopHostHealth) -> String {
+        let age = RelativeDateTimeFormatter().localizedString(for: health.fetchedAt, relativeTo: .now)
+        guard health.reachability == .online, let snapshot = health.snapshot else {
+            let state = health.reachability == .offline
+                ? String(localized: "Offline")
+                : String(localized: "Last status")
+            return "\(state) · \(age)"
         }
-        let saved = desk.lanCandidates
-            .filter { !$0.isEmpty && !$0.hasSuffix(":0") }
-            .joined(separator: " · ")
-        guard !saved.isEmpty else { return nil }
-        return "LAN \(saved)"
+        if snapshot.phase == "booted_waiting_login" {
+            return String(localized: "Powered on · waiting for login")
+        }
+        if snapshot.phase == "user_logged_in" {
+            return String(localized: "Logged in · Agent starting")
+        }
+        var parts = [String(localized: "Online")]
+        if let power = snapshot.power, power.available {
+            parts.append(power.onAc ? String(localized: "AC") : String(localized: "Battery"))
+            if power.batteryPercent >= 0 { parts.append("\(power.batteryPercent)%") }
+            if power.sleepDisabled { parts.append(String(localized: "Lid-close awake")) }
+        }
+        return parts.joined(separator: " · ")
+    }
+
+    private func refreshDesktopHealth() async {
+        for desk in store.desktops where desk.canReconnect {
+            _ = try? await desktopHub.fetchHostHealth(for: desk)
+        }
     }
 
     @ViewBuilder
@@ -380,10 +385,14 @@ struct HostListView: View {
         showScanner = false
         showPaste = false
         do {
-            let profile = try await desktopSession.connect(payload: payload, accessPassword: password)
+            let profile = try await desktopSession.connect(
+                payload: payload,
+                accessPassword: password,
+                openDesktop: false
+            )
             let stored = store.upsertDesktop(profile)
             desktopSession.adoptStoredIdentity(stored)
-            activeDesktop = stored
+            _ = try? await desktopHub.fetchHostHealth(for: stored)
         } catch let err as RE2Error {
             if case .cancelled = err {
                 // superseded
@@ -408,6 +417,29 @@ struct HostListView: View {
         connecting = false
     }
 
+    private func consumePendingOpenDesktop() {
+        guard let id = store.pendingOpenDesktopId else { return }
+        guard let desk = store.desktops.first(where: { $0.id == id }) else {
+            store.pendingOpenDesktopId = nil
+            return
+        }
+        store.pendingOpenDesktopId = nil
+        openRemoteDesktop(desk)
+    }
+
+    private func openRemoteDesktop(_ desk: PairedDesktop) {
+        // Reattach to the session kept alive after Back; a second connect would
+        // race the Agent's still-live UDP stream.
+        if desktopSession.currentPaired?.deviceID == desk.deviceID,
+           desktopSession.holdsAgentPeer {
+            activeDesktop = desk
+            return
+        }
+        pendingReconnect = desk
+        let saved = RE2DesktopSecrets.loadPassword(desktopID: desk.id)
+        Task { await reconnectDesktop(desk, password: saved) }
+    }
+
     private func askTakeover(_ desk: PairedDesktop, peer: String, password: String?) {
         takeoverPeer = peer
         takeoverPassword = password
@@ -426,6 +458,7 @@ struct HostListView: View {
                 if activeDesktop?.id != updated.id {
                     activeDesktop = updated
                 }
+                _ = try? await desktopHub.fetchHostHealth(for: updated)
             }
         } catch let err as RE2Error {
             if case .cancelled = err { connecting = false; return }
@@ -435,14 +468,25 @@ struct HostListView: View {
                 askTakeover(desk, peer: peer, password: password)
                 return
             }
+            if case .signaling(let message) = err,
+               message.lowercased().contains("password") {
+                activeDesktop = nil
+                connecting = false
+                pendingReconnect = desk
+                askPassword = true
+                return
+            }
             connectError = [err.localizedDescription, err.recoveryHint]
                 .compactMap { $0 }
                 .filter { !$0.isEmpty }
                 .joined(separator: "\n\n")
+            // Close the half-open viewer so "Binding…" does not stick after a timeout.
+            activeDesktop = nil
         } catch is CancellationError {
             // Superseded by another reconnect (network / foreground) — not a user-facing failure.
         } catch {
             connectError = error.localizedDescription
+            activeDesktop = nil
         }
         connecting = false
     }
@@ -472,6 +516,158 @@ struct HostListView: View {
         } catch {
             RE2Log.error("desktop agent chat sync: \(error.localizedDescription)")
         }
+    }
+}
+
+private struct DesktopHostDetailView: View {
+    @EnvironmentObject private var store: AppStore
+    @ObservedObject private var desktopHub = DesktopSessionHub.shared
+    let desktop: PairedDesktop
+    let onRemoteDesktop: () -> Void
+
+    private var currentDesktop: PairedDesktop {
+        store.desktops.first(where: { $0.id == desktop.id }) ?? desktop
+    }
+
+    private var health: DesktopHostHealth? {
+        store.hostHealth(for: currentDesktop.id)
+    }
+
+    private var events: [HostPowerEvent] {
+        store.hostPowerEvents.filter { $0.desktopId == currentDesktop.id }
+    }
+
+    private var projectDirectories: [String] {
+        var seen = Set<String>()
+        return store.desktopAgentChats
+            .filter { $0.desktopId == currentDesktop.id }
+            .sorted { $0.updatedAt > $1.updatedAt }
+            .compactMap { $0.cwd?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty && seen.insert($0).inserted }
+    }
+
+    var body: some View {
+        List {
+            Section("Host Health") {
+                LabeledContent("Computer", value: currentDesktop.name)
+                LabeledContent("Reachability", value: health?.reachability.rawValue ?? "unknown")
+                if let fetchedAt = health?.fetchedAt {
+                    LabeledContent("Last heartbeat", value: fetchedAt.formatted(date: .abbreviated, time: .standard))
+                }
+                if let reason = health?.offlineReason, !reason.isEmpty {
+                    LabeledContent("Offline reason", value: reason)
+                }
+                if let snapshot = health?.snapshot {
+                    LabeledContent("Phase", value: snapshot.phase ?? "unknown")
+                    LabeledContent("Agent", value: snapshot.agentVersion ?? "unknown")
+                    LabeledContent("Thermal", value: snapshot.thermal ?? "unknown")
+                    if let user = snapshot.consoleUser, !user.isEmpty {
+                        LabeledContent("Console user", value: user)
+                    } else {
+                        LabeledContent("Console user", value: String(localized: "Waiting for login"))
+                    }
+                }
+            }
+            if let power = health?.snapshot?.power {
+                Section("Power") {
+                    LabeledContent("Source", value: power.onAc ? String(localized: "AC") : String(localized: "Battery"))
+                    if power.batteryPercent >= 0 {
+                        LabeledContent("Battery", value: "\(power.batteryPercent)%")
+                    }
+                    LabeledContent("Mac mini mode", value: power.mode ?? "unknown")
+                    LabeledContent("Lid-close awake", value: power.sleepDisabled ? String(localized: "Yes") : String(localized: "No"))
+                    if power.lowBattery {
+                        Label("Low-battery protection is active", systemImage: "battery.25")
+                            .foregroundStyle(.orange)
+                    }
+                }
+            }
+            if let disk = health?.snapshot?.disk {
+                Section("Storage") {
+                    LabeledContent("Free", value: ByteCountFormatter.string(fromByteCount: Int64(disk.freeBytes), countStyle: .file))
+                    LabeledContent("Total", value: ByteCountFormatter.string(fromByteCount: Int64(disk.totalBytes), countStyle: .file))
+                }
+            }
+            if let ups = health?.snapshot?.ups {
+                Section("UPS") {
+                    LabeledContent("Reachable", value: ups.reachable ? String(localized: "Yes") : String(localized: "No"))
+                    if let status = ups.status { LabeledContent("Status", value: status) }
+                    if let error = ups.error { Text(error).foregroundStyle(.secondary) }
+                }
+            }
+            if !events.isEmpty {
+                Section("Recent power events") {
+                    ForEach(events.sorted { $0.timeUnix > $1.timeUnix }.prefix(20)) { event in
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(event.event)
+                            if let detail = event.detail, !detail.isEmpty {
+                                Text(detail).font(.caption).foregroundStyle(.secondary)
+                            }
+                            Text(Date(timeIntervalSince1970: TimeInterval(event.timeUnix)).formatted())
+                                .font(.caption2).foregroundStyle(.tertiary)
+                        }
+                    }
+                }
+            }
+
+            Section("Projects") {
+                if projectDirectories.isEmpty {
+                    Text("No project directories discovered")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(projectDirectories, id: \.self) { directory in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(URL(fileURLWithPath: directory).lastPathComponent)
+                                .font(.headline)
+                            Text(DesktopPath.abbreviate(directory))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+
+            Section {
+                NavigationLink("Session List") {
+                    SessionListView(desktopFilter: currentDesktop.id)
+                }
+                Button {
+                    onRemoteDesktop()
+                } label: {
+                    Label("Remote Control Desktop", systemImage: "display")
+                }
+                .disabled(!currentDesktop.canReconnect)
+            }
+        }
+        .navigationTitle(currentDesktop.name)
+        .refreshable { await refresh() }
+        .task { await refresh() }
+    }
+
+    private func refresh() async {
+        _ = try? await desktopHub.fetchHostHealth(for: currentDesktop)
+        guard let conversations = try? await desktopHub.listAgentChats(for: currentDesktop) else { return }
+        let rows = conversations.map { conversation in
+            DesktopAgentChat(
+                id: DesktopAgentChat.stableID(
+                    desktopId: currentDesktop.id,
+                    kind: conversation.agentKind,
+                    chatId: conversation.chatId
+                ),
+                desktopId: currentDesktop.id,
+                desktopName: currentDesktop.name,
+                agentKind: conversation.agentKind,
+                chatId: conversation.chatId,
+                title: conversation.title,
+                cwd: conversation.cwd,
+                updatedAt: conversation.updatedAt,
+                screenName: conversation.screenName,
+                screenAlive: conversation.screenAlive,
+                source: conversation.source,
+                clientName: conversation.client
+            )
+        }
+        store.replaceDesktopAgentChats(desktopId: currentDesktop.id, chats: rows)
     }
 }
 

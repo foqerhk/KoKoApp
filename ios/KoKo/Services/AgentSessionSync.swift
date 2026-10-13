@@ -34,7 +34,7 @@ enum AgentSessionSyncError: LocalizedError {
     }
 }
 
-/// Lists Cursor / Claude / Codex / Gemini sessions plus live `screen -ls` rows tagged `koko-*`.
+/// Lists desktop Agent sessions plus live `screen -ls` rows tagged `koko-*`.
 enum AgentSessionSync {
     static func listConversations(
         server: ServerProfile,
@@ -195,6 +195,9 @@ enum AgentSessionSync {
         updated.remoteSessionName = chat.screenName
         let latest = max(local.lastConnectedAt ?? chat.updatedAt, chat.updatedAt)
         updated.lastConnectedAt = latest
+        if let cwd = chat.cwd?.trimmingCharacters(in: .whitespacesAndNewlines), !cwd.isEmpty {
+            updated.agentCwd = cwd
+        }
         return updated
     }
 
@@ -204,6 +207,7 @@ enum AgentSessionSync {
         projectId: UUID
     ) -> TerminalSession {
         let stableId = UUID(uuidString: chat.chatId) ?? UUID()
+        let cwd = chat.cwd?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return TerminalSession(
             id: stableId,
             serverId: serverId,
@@ -213,7 +217,8 @@ enum AgentSessionSync {
             remoteSessionName: chat.screenName,
             agentChatId: chat.chatId,
             createdAt: chat.createdAt,
-            lastConnectedAt: chat.updatedAt
+            lastConnectedAt: chat.updatedAt,
+            agentCwd: cwd.isEmpty ? nil : cwd
         )
     }
 
@@ -438,6 +443,23 @@ enum AgentSessionSync {
             except Exception:
                 return False
 
+        def peek_cwd(path, limit=40):
+            try:
+                with path.open(errors="replace") as fh:
+                    for line_no, line in enumerate(fh):
+                        if line_no >= limit:
+                            break
+                        try:
+                            row = json.loads(line)
+                        except Exception:
+                            continue
+                        cwd = row.get("cwd")
+                        if isinstance(cwd, str) and cwd.strip():
+                            return cwd.strip()
+            except Exception:
+                return None
+            return None
+
         def codex_title(text):
             if not text:
                 return None
@@ -505,7 +527,7 @@ enum AgentSessionSync {
                         sid = f.stem
                         mtime = f.stat().st_mtime * 1000
                         title = sid[:8]
-                        add("claude", sid, title, updated_ms=mtime)
+                        add("claude", sid, title, cwd=peek_cwd(f), updated_ms=mtime)
 
         codex_root = pathlib.Path.home() / ".codex" / "sessions"
         codex_archived = pathlib.Path.home() / ".codex" / "archived_sessions"
@@ -567,14 +589,79 @@ enum AgentSessionSync {
                 sid = data.get("sessionId") or data.get("id") or f.stem
                 title = data.get("title") or str(sid)[:8]
                 mtime = f.stat().st_mtime * 1000
-                add("gemini", str(sid), title, updated_ms=mtime)
+                cwd = data.get("cwd") if isinstance(data.get("cwd"), str) else None
+                add("gemini", str(sid), title, cwd=cwd, updated_ms=mtime)
+
+        for root in [
+            pathlib.Path.home() / ".trae" / "cli" / "sessions",
+            pathlib.Path.home() / ".trae" / "cli" / "archived_sessions",
+        ]:
+            if not root.is_dir():
+                continue
+            for f in root.rglob("*.jsonl"):
+                sid = None
+                title = None
+                cwd = None
+                created_ms = None
+                try:
+                    with f.open(errors="replace") as fh:
+                        for line_no, line in enumerate(fh):
+                            if line_no >= 80:
+                                break
+                            try:
+                                row = json.loads(line)
+                            except Exception:
+                                continue
+                            payload = row.get("payload") or {}
+                            if row.get("type") == "session_meta":
+                                sid = payload.get("id") or sid
+                                cwd = payload.get("cwd") or cwd
+                                ts = payload.get("timestamp") or row.get("timestamp")
+                                if ts:
+                                    try:
+                                        created_ms = __import__("datetime").datetime.fromisoformat(
+                                            ts.replace("Z", "+00:00")
+                                        ).timestamp() * 1000
+                                    except Exception:
+                                        pass
+                            if not title and row.get("type") == "event_msg" and payload.get("type") == "user_message":
+                                title = codex_title(payload.get("message"))
+                            if sid and title and cwd:
+                                break
+                except Exception:
+                    pass
+                if not sid:
+                    m = re.search(r"[0-9a-fA-F]{8}-[0-9a-fA-F-]{27,}", f.stem)
+                    sid = m.group(0) if m else f.stem
+                if cwd and not cwd_matches(cwd):
+                    continue
+                mtime = f.stat().st_mtime * 1000
+                add("trae", sid, title or sid[:8], cwd=cwd, created_ms=created_ms, updated_ms=mtime)
+
+        qoder_root = pathlib.Path.home() / ".qoder" / "projects"
+        if qoder_root.is_dir():
+            for f in qoder_root.rglob("*.jsonl"):
+                if not f.is_file():
+                    continue
+                sid = f.stem
+                mtime = f.stat().st_mtime * 1000
+                add("qoder", sid, sid[:8], updated_ms=mtime)
+
+        cb_root = pathlib.Path.home() / ".codebuddy" / "projects"
+        if cb_root.is_dir():
+            for f in cb_root.rglob("*.jsonl"):
+                if not f.is_file() or "/subagents/" in str(f):
+                    continue
+                sid = f.stem
+                mtime = f.stat().st_mtime * 1000
+                add("codebuddy", sid, sid[:8], updated_ms=mtime)
 
         for name in sorted(alive):
             parts = name.split("-", 2)
             if len(parts) < 3 or parts[0] != "koko":
                 continue
             kind = parts[1]
-            if kind not in ("cursor", "claude", "codex", "gemini"):
+            if kind not in ("cursor", "claude", "codex", "gemini", "trae", "qoder", "codebuddy"):
                 continue
             sid = parts[2]
             add(kind, sid, f"Screen {name}", updated_ms=time.time() * 1000, screen_name=name)

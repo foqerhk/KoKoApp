@@ -63,6 +63,11 @@ struct LargeScreenShellView: View {
             layout.openSession(sessionId)
             store.e2eOpenSessionId = nil
         }
+        .onChange(of: store.pendingOpenDesktopId) { _, desktopId in
+            guard desktopId != nil else { return }
+            layout.showingSessionPicker = false
+            layout.showingManagement = .hosts
+        }
         .onAppear {
             if layout.activeSessionIds.isEmpty,
                let first = store.sessions.sorted(by: { ($0.lastConnectedAt ?? $0.createdAt) > ($1.lastConnectedAt ?? $1.createdAt) }).first {

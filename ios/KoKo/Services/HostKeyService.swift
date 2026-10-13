@@ -37,11 +37,14 @@ final class HostKeyApprovalGate {
 
     private var continuation: CheckedContinuation<Bool, Never>?
 
-    func requestApproval() async -> Bool {
-        // Never leave a previous waiter hanging (e.g. timed-out connect).
-        resume(false)
+    func requestApproval(onPrompt: @MainActor () -> Void) async -> Bool {
+        // Only one global host-key sheet can be shown. Reject a concurrent
+        // unknown-host connection instead of replacing the prompt and later
+        // approving the wrong connection with another server's fingerprint.
+        guard continuation == nil else { return false }
         return await withCheckedContinuation { continuation in
             self.continuation = continuation
+            onPrompt()
         }
     }
 
@@ -85,10 +88,10 @@ final class TOFUHostKeyValidator: NIOSSHClientServerAuthenticationDelegate, @unc
             return
         }
 
-        onUnknown(fingerprint)
-
         Task { @MainActor in
-            let approved = await HostKeyApprovalGate.shared.requestApproval()
+            let approved = await HostKeyApprovalGate.shared.requestApproval {
+                onUnknown(fingerprint)
+            }
             if approved {
                 validationCompletePromise.succeed(())
             } else {

@@ -22,6 +22,8 @@ enum KeychainAccount: String {
     case password = "ssh-password"
     case desktopAccessPassword = "re2-desktop-password"
     case re2ControllerID = "re2-controller-id"
+    case re2SessionTicket = "re2-session-ticket"
+    case re2PairingToken = "re2-pairing-token"
 }
 
 final class KeychainService {

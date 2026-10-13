@@ -13,7 +13,31 @@ AGENT_APP="${AGENT_APP:-/Applications/RunEverything.app}"
 OUT_DIR="${OUT_DIR:-/tmp/koko-re2-e2e-${DEVICE}}"
 CASE="${1:-all}"
 AGENT_LOG_FILE=""
+SAFE_ALL_CASES=(lan wss udp-relay life weak-relay data-chat)
 mkdir -p "$OUT_DIR"
+
+usage() {
+  cat >&2 <<EOF
+usage: $0 CASE
+
+Cases:
+  lan | wss | udp-relay | life | weak-relay
+  external-life       Real app background/foreground (launches Settings)
+  display-switch      Virtual display <-> primary (requires both displays)
+  data-chat           Streaming desktop plus separate data-channel chat list
+  cellular-life       Lifecycle recovery while forced through public UDP Relay
+  cellular-data-chat  Desktop + data-channel chat through public UDP Relay
+  stored-reconnect    Reconnect an existing KoKo stored desktop
+  ide-chat            Exercise stored IDE chat lifecycle (requires IDE_CHAT_ID)
+  gestures | gestures-relay | gestures-wss
+  pip | pip-relay | 5k | 5k-relay
+  8k-wss             Virtual 8K boundary over WSS (requires RE_VDISPLAY=8k)
+  all                 Safe unattended set: ${SAFE_ALL_CASES[*]}
+
+"all" excludes cases that foreground another app, inject gestures, require
+special display hardware, rely on stored KoKo state, or need an IDE chat ID.
+EOF
+}
 
 [[ -d "$APP" ]] || { echo "missing app: $APP" >&2; exit 1; }
 [[ -d "$AGENT_APP" ]] || { echo "missing Agent: $AGENT_APP" >&2; exit 1; }
@@ -80,6 +104,13 @@ strict_gate() {
   python3 - "$result" "$name" <<'PY'
 import json,sys
 p=json.load(open(sys.argv[1])); name=sys.argv[2]
+if name == "ide-chat":
+    ide=p.get("ideChat") or {}
+    checks={"ok":p.get("ok") is True, "ideChat.ok":ide.get("ok") is True}
+    bad=[k for k,v in checks.items() if not v]
+    print(name, "PASS" if not bad else "FAIL", "bad=",bad,
+          "steps=",ide.get("steps"), "err=",(p.get("error") or "")[:180])
+    raise SystemExit(1 if bad else 0)
 checks={"ok":p.get("ok") is True, "done":p.get("done") is True,
         "pathOK":p.get("pathOK") is True,
         "gestureOK":((p.get("gesture") or {}).get("gestureOK") is True),
@@ -92,6 +123,14 @@ if p.get("testMenu"):
 if p.get("testLife"): checks["lifeBackground"]=p.get("lifeBackground") is True
 if p.get("test5K"): checks["fiveKOK"]=p.get("fiveKOK") is True
 if p.get("testPip"): checks["pipOK"]=p.get("pipOK") is True
+if name == "external-life":
+    checks["externalLife"]=p.get("externalLife") is True
+if name == "display-switch":
+    checks["dispSwitchOK"]=p.get("dispSwitchOK") is True
+if name in ("data-chat", "cellular-data-chat"):
+    checks["chatOK"]=p.get("chatOK") is True
+if name == "stored-reconnect":
+    checks["stored"]=p.get("stored") is True
 if p.get("testGestures"):
     g=p.get("gesture") or {}
     for key in ("remoteCursorFeedback","doubleTap","longPressRightClick","holdDrag",
@@ -164,7 +203,7 @@ PY
   while (( SECONDS < deadline )); do
     sleep 5
     if pull_result "$OUT_DIR/$name-result.json"; then
-      if python3 - "$OUT_DIR/$name-result.json" "$marker" <<'PY'
+      if python3 - "$OUT_DIR/$name-result.json" "$marker" "$name" <<'PY'
 import json,sys
 try: p=json.load(open(sys.argv[1]))
 except Exception: raise SystemExit(2)
@@ -172,7 +211,9 @@ if p.get("phase")=="waiting" and abs(float(p.get("marker") or 0)-float(sys.argv[
   raise SystemExit(2)
 print("phase=",p.get("phase"),"ok=",p.get("ok"),"path=",p.get("pathAfter") or p.get("path"),
       "err=",(p.get("error") or "")[:120])
-raise SystemExit(0 if p.get("done") else 2)
+if sys.argv[3] == "ide-chat":
+  raise SystemExit(0 if isinstance(p.get("ideChat"),dict) or p.get("error") else 2)
+raise SystemExit(0 if p.get("done") or p.get("error") else 2)
 PY
       then terminal=1; break; fi
     fi
@@ -215,6 +256,23 @@ case "$CASE" in
   life) run_case life '{"e2e":true,"testLife":true}' 500 ;;
   external-life) run_case external-life '{"e2e":true,"externalLife":true,"forceUDP":true,"stripLAN":true}' 500 ;;
   weak-relay) run_case weak-relay '{"e2e":true,"forceUDP":true,"stripLAN":true}' 400 ;;
+  display-switch) run_case display-switch '{"e2e":true,"testDispSwitch":true}' 700 ;;
+  data-chat) run_case data-chat '{"e2e":true,"testChat":true}' 600 ;;
+  cellular-life) run_case cellular-life '{"e2e":true,"testLife":true,"forceUDP":true,"stripLAN":true}' 500 ;;
+  cellular-data-chat) run_case cellular-data-chat '{"e2e":true,"testChat":true,"forceUDP":true,"stripLAN":true}' 600 ;;
+  stored-reconnect) run_case stored-reconnect '{"e2e":true,"stored":true}' 600 ;;
+  ide-chat)
+    [[ -n "${IDE_CHAT_ID:-}" ]] || {
+      echo "ide-chat requires IDE_CHAT_ID=<existing Cursor composer ID>" >&2
+      exit 2
+    }
+    request="$(python3 - "$IDE_CHAT_ID" <<'PY'
+import json,sys
+print(json.dumps({"e2e":True,"stored":True,"ideChat":sys.argv[1]}))
+PY
+)"
+    run_case ide-chat "$request" 180
+    ;;
   gestures) run_case gestures '{"e2e":true,"gestures":true}' 500 ;;
   gestures-relay) run_case gestures-relay '{"e2e":true,"gestures":true,"forceUDP":true,"stripLAN":true}' 600 ;;
   gestures-wss) run_case gestures-wss '{"e2e":true,"gestures":true,"forceWSS":true,"stripLAN":true}' 600 ;;
@@ -222,12 +280,12 @@ case "$CASE" in
   pip-relay) run_case pip-relay '{"e2e":true,"pip":true,"forceUDP":true,"stripLAN":true}' 700 ;;
   5k) run_case 5k '{"e2e":true,"test5K":true}' 900 ;;
   5k-relay) run_case 5k-relay '{"e2e":true,"forceUDP":true,"stripLAN":true,"test5K":true}' 900 ;;
+  8k-wss) run_case 8k-wss '{"e2e":true,"forceWSS":true,"stripLAN":true,"test8K":true}' 600 ;;
   all)
-    "$0" lan
-    "$0" wss
-    "$0" udp-relay
-    "$0" life
-    "$0" weak-relay
+    echo "Running safe unattended cases: ${SAFE_ALL_CASES[*]}"
+    for name in "${SAFE_ALL_CASES[@]}"; do
+      "$0" "$name"
+    done
     ;;
-  *) echo "usage: $0 lan|wss|udp-relay|life|external-life|weak-relay|gestures|gestures-relay|gestures-wss|pip|pip-relay|5k|5k-relay|all" >&2; exit 2 ;;
+  *) usage; exit 2 ;;
 esac

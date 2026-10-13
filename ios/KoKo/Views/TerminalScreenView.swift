@@ -444,6 +444,9 @@ struct AgentLoginView: View {
         case .claude: return String(localized: "Claude Login")
         case .codex: return String(localized: "Codex Login")
         case .gemini: return String(localized: "Gemini Login")
+        case .trae: return String(localized: "TRAE Login")
+        case .qoder: return String(localized: "Qoder Login")
+        case .codebuddy: return String(localized: "CodeBuddy Login")
         }
     }
 
@@ -468,6 +471,10 @@ struct AgentLoginView: View {
         case .gemini:
             return String(
                 localized: "Open the link and sign in. Paste the authorization code into the field below, then tap Send to server terminal."
+            )
+        case .trae, .qoder, .codebuddy:
+            return String(
+                localized: "Copy the link and sign in in your browser. Switch back to KoKo when done — the session reconnects automatically."
             )
         }
     }

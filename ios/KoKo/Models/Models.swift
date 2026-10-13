@@ -50,6 +50,9 @@ enum AgentKind: String, Codable, CaseIterable, Identifiable, Hashable {
     case claude
     case codex
     case gemini
+    case trae
+    case qoder
+    case codebuddy
 
     var id: String { rawValue }
 
@@ -59,6 +62,9 @@ enum AgentKind: String, Codable, CaseIterable, Identifiable, Hashable {
         case .claude: return "Claude"
         case .codex: return "Codex"
         case .gemini: return "Gemini"
+        case .trae: return "TRAE"
+        case .qoder: return "Qoder"
+        case .codebuddy: return "CodeBuddy"
         }
     }
 
@@ -73,6 +79,9 @@ enum AgentKind: String, Codable, CaseIterable, Identifiable, Hashable {
         case .claude: return "claude"
         case .codex: return "codex"
         case .gemini: return "gemini"
+        case .trae: return "traex"
+        case .qoder: return "qoder"
+        case .codebuddy: return "codebuddy"
         }
     }
 
@@ -82,6 +91,9 @@ enum AgentKind: String, Codable, CaseIterable, Identifiable, Hashable {
         case .claude: return "CLAUDE_CLI_OK"
         case .codex: return "CODEX_CLI_OK"
         case .gemini: return "GEMINI_CLI_OK"
+        case .trae: return "TRAE_CLI_OK"
+        case .qoder: return "QODER_CLI_OK"
+        case .codebuddy: return "CODEBUDDY_CLI_OK"
         }
     }
 
@@ -91,6 +103,9 @@ enum AgentKind: String, Codable, CaseIterable, Identifiable, Hashable {
         case .claude: return "CLAUDE_AUTH_OK"
         case .codex: return "CODEX_AUTH_OK"
         case .gemini: return "GEMINI_AUTH_OK"
+        case .trae: return "TRAE_AUTH_OK"
+        case .qoder: return "QODER_AUTH_OK"
+        case .codebuddy: return "CODEBUDDY_AUTH_OK"
         }
     }
 
@@ -98,14 +113,14 @@ enum AgentKind: String, Codable, CaseIterable, Identifiable, Hashable {
     var requiresTerminalAuthCode: Bool {
         switch self {
         case .claude, .gemini: return true
-        case .cursor, .codex: return false
+        case .cursor, .codex, .trae, .qoder, .codebuddy: return false
         }
     }
 
     /// Install may bootstrap npm on the server when missing (Claude/Codex/Gemini).
     var needsNpmBootstrap: Bool {
         switch self {
-        case .claude, .codex, .gemini: return true
+        case .claude, .codex, .gemini, .trae, .qoder, .codebuddy: return true
         case .cursor: return false
         }
     }
@@ -236,9 +251,12 @@ struct DesktopAgentChat: Identifiable, Codable, Hashable {
         !(isClientSession && agentKind == .cursor)
     }
 
-    /// Cursor IDE chats are mirrored live: output streams from the IDE, typed lines go into its window.
+    /// Client sessions render as bubbles. Cursor uses ide-mirror; other
+    /// agents use client-mirror against their local transcript.
+    /// CLI-only chats stay on the terminal path — forcing those through a
+    /// mirror exits immediately and the phone shows "session ended".
     var mirrorsIDEChat: Bool {
-        isClientSession && agentKind == .cursor
+        isClientSession
     }
 
     var originLabel: String? {
@@ -252,6 +270,13 @@ struct DesktopAgentChat: Identifiable, Codable, Hashable {
                 : String(format: String(localized: "Client · %@"), name)
         }
         return isCLISession ? "CLI" : nil
+    }
+
+    /// Session list badge: agent kind + store. Cursor GUI composers and CLI
+    /// chats cannot be split by Agent-window vs IDE panel, so there is no
+    /// third segment. Client Cursor chats still open via IDE mirror.
+    var listModeLabel: String {
+        "\(agentKind.displayName)·\(isClientSession ? "客户端" : "终端")"
     }
 
     /// Codex records injected environment/AGENTS payloads as user messages.
@@ -328,10 +353,12 @@ struct TerminalSession: Identifiable, Codable, Hashable {
     var remoteSessionName: String
     var createdAt: Date
     var lastConnectedAt: Date?
+    /// Working directory the agent itself recorded. Falls back to the host project path when nil.
+    var agentCwd: String?
 
     enum CodingKeys: String, CodingKey {
         case id, serverId, projectId, displayName, agentKind, agentChatId, remoteSessionName
-        case createdAt, lastConnectedAt, persistenceMode
+        case createdAt, lastConnectedAt, persistenceMode, agentCwd
     }
 
     init(
@@ -343,7 +370,8 @@ struct TerminalSession: Identifiable, Codable, Hashable {
         remoteSessionName: String? = nil,
         agentChatId: String? = nil,
         createdAt: Date = .now,
-        lastConnectedAt: Date? = nil
+        lastConnectedAt: Date? = nil,
+        agentCwd: String? = nil
     ) {
         self.id = id
         self.serverId = serverId
@@ -356,6 +384,8 @@ struct TerminalSession: Identifiable, Codable, Hashable {
             ?? Self.defaultScreenName(kind: agentKind, sessionKey: sessionKey)
         self.createdAt = createdAt
         self.lastConnectedAt = lastConnectedAt
+        let cwd = agentCwd?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        self.agentCwd = cwd.isEmpty ? nil : cwd
     }
 
     init(from decoder: Decoder) throws {
@@ -372,6 +402,9 @@ struct TerminalSession: Identifiable, Codable, Hashable {
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         lastConnectedAt = try container.decodeIfPresent(Date.self, forKey: .lastConnectedAt)
         _ = try container.decodeIfPresent(String.self, forKey: .persistenceMode)
+        let cwd = try container.decodeIfPresent(String.self, forKey: .agentCwd)?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        agentCwd = cwd.isEmpty ? nil : cwd
     }
 
     func encode(to encoder: Encoder) throws {
@@ -385,6 +418,7 @@ struct TerminalSession: Identifiable, Codable, Hashable {
         try container.encode(remoteSessionName, forKey: .remoteSessionName)
         try container.encode(createdAt, forKey: .createdAt)
         try container.encodeIfPresent(lastConnectedAt, forKey: .lastConnectedAt)
+        try container.encodeIfPresent(agentCwd, forKey: .agentCwd)
     }
 
     static func defaultScreenName(kind: AgentKind, sessionKey: String) -> String {
@@ -393,6 +427,11 @@ struct TerminalSession: Identifiable, Codable, Hashable {
             .replacingOccurrences(of: "/", with: "-")
         let suffix = String(safe.prefix(24))
         return "koko-\(kind.rawValue)-\(suffix)"
+    }
+
+    /// SSH / remote Linux hosts only attach through CLI (`screen` or `agent persist`).
+    var listModeLabel: String {
+        "\(agentKind.displayName)·终端"
     }
 }
 

@@ -60,6 +60,7 @@ struct DesktopViewerView: View {
                 if let cg = session.frameImage {
                     Image(decorative: cg, scale: 1, orientation: .up)
                         .resizable()
+                        .interpolation(.high)
                         .aspectRatio(contentMode: .fit)
                         .scaleEffect(pinchScale)
                         .offset(panOffset)
@@ -115,9 +116,7 @@ struct DesktopViewerView: View {
                                     Task { try? await session.reconnect(profile: paired, force: true) }
                                 }
                             } message: {
-                                Text(takeoverPeer.isEmpty
-                                     ? String(localized: "Another device is controlling this computer. Continue and disconnect it?")
-                                     : String(localized: "\(takeoverPeer) is controlling this computer. Continue and disconnect it?"))
+                                Text(RE2Error.controllerBusy(peer: takeoverPeer).localizedDescription)
                             }
                             .buttonStyle(.borderedProminent)
                         } else if session.phase == .failed {
@@ -342,6 +341,11 @@ struct DesktopViewerView: View {
             )
             .frame(width: 0, height: 0)
             .accessibilityHidden(true)
+            .onChange(of: keyboardFocused) { _, focused in
+                if focused {
+                    session.requestKeyframe(force: true)
+                }
+            }
         }
         .sheet(isPresented: $showMoreMenu) {
             DesktopMoreMenuSheet(
@@ -445,6 +449,16 @@ struct DesktopViewerView: View {
         } message: {
             Text(String(localized: "Send a magic packet via the Agent."))
         }
+        .alert(String(localized: "Session Taken Over"), isPresented: Binding(
+            get: { session.kickAlertMessage != nil },
+            set: { if !$0 { session.kickAlertMessage = nil } }
+        )) {
+            Button(String(localized: "OK"), role: .cancel) {
+                session.kickAlertMessage = nil
+            }
+        } message: {
+            Text(session.kickAlertMessage ?? "")
+        }
         .fileImporter(isPresented: $importerPresented, allowedContentTypes: [.item], allowsMultipleSelection: false) { result in
             if case .success(let urls) = result, let url = urls.first {
                 Task {
@@ -487,6 +501,9 @@ struct DesktopViewerView: View {
                 dragIsViewportPan = false
                 lastFingerTranslation = .zero
                 session.suspendRemotePointer(true)
+                // Magnifying a still must not sit on a later cheap P-frame; ask
+                // for a high-quality IDR of the last sharp buffer.
+                session.requestKeyframe(force: true)
             }
             let oldScale = max(pinchScale, 1)
             let next = DesktopGestureMath.pinchScale(anchor: pinchAnchorScale, gestureScale: scale)
@@ -509,6 +526,9 @@ struct DesktopViewerView: View {
         isPinching = false
         lastFingerTranslation = .zero
         session.suspendRemotePointer(false)
+        if pinchScale > 1.05 {
+            session.requestKeyframe(force: true)
+        }
     }
 
     /// Keep the pinch centroid on the same screen pixel while scale changes.
@@ -1365,9 +1385,9 @@ private struct DesktopNavTitleToolbar: ToolbarContent {
                         Text(statusLine)
                             .font(.caption2.monospaced())
                             .foregroundStyle(.secondary)
-                            .lineLimit(1)
+                            .lineLimit(2)
                             .truncationMode(.tail)
-                            .minimumScaleFactor(0.7)
+                            .minimumScaleFactor(0.65)
                     }
                 }
                 .frame(maxWidth: maxWidth, alignment: .leading)

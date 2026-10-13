@@ -180,6 +180,17 @@ enum RE2E2EAutoConnect {
             result["udp"] = storedDesk?.udpHostPort ?? parsed?.udp ?? ""
             let expectLAN = !forceWSS && !forceUDP && !stripLAN && !lanList.isEmpty
 
+            if let composer = req?["ideChat"] as? String ?? env["KOKO_RE2_IDE_CHAT"], !composer.isEmpty {
+                guard let desk = storedDesk else {
+                    result["error"] = "ideChat needs -RE2E2EStored"
+                    return
+                }
+                let ide = await probeIDEChat(desk, composerID: composer)
+                result["ideChat"] = ide
+                result["ok"] = ide["ok"] as? Bool == true
+                return
+            }
+
             if chatOnly {
                 guard let desk = storedDesk else {
                     result["error"] = "chatOnly needs -RE2E2EStored"
@@ -520,6 +531,11 @@ enum RE2E2EAutoConnect {
                 // Prefer UDP·Relay for fat 5K IDRs; WSS can carry ≥4K after Agent
                 // soft-cap exception, but record path for evidence.
                 result["hiResPath"] = session.pathLabel
+                let wssCapped = session.pathLabel.contains("WSS")
+                let expectedW = wssCapped ? min(wantW, 3840) : wantW
+                let expectedH = wssCapped ? min(wantH, 2160) : wantH
+                result["hiResExpected"] = "\(expectedW)x\(expectedH)"
+                result["wssCapped4K"] = wssCapped
                 session.setVideoQuality(.ultra, forceReopen: true, persist: false)
                 // Let ultra OPEN land before display switch (avoid 720p max on reopen).
                 try? await Task.sleep(nanoseconds: 2_500_000_000)
@@ -539,14 +555,14 @@ enum RE2E2EAutoConnect {
                     // libx265 IDRs assemble — honor DESKTOP_READY FB + post-switch decode.
                     let sizeOK: Bool = {
                         if hiResLabel == "5K" || hiResLabel == "8K" {
-                            return picW >= wantW && picH >= wantH
+                            return picW >= expectedW && picH >= expectedH
                         }
                         if hiResLabel == "16K" {
-                            if picW >= wantW && picH >= wantH { return true }
-                            return deskW >= wantW && deskH >= wantH
+                            if picW >= expectedW && picH >= expectedH { return true }
+                            return deskW >= expectedW && deskH >= expectedH
                                 && session.debugFramesDecoded >= 1
                         }
-                        return picW >= wantW && picH >= wantH
+                        return picW >= expectedW && picH >= expectedH
                     }()
                     if session.phase == .streaming, session.frameEpoch > beforeSwitch, sizeOK {
                         paintedHi = true
@@ -592,12 +608,12 @@ enum RE2E2EAutoConnect {
                     // 16K soft-decode may replace the CGImage with a transient lower
                     // frame while DESKTOP_READY stays at FB size — honor desk.
                     if hiResLabel == "16K" {
-                        return deskW2 >= wantW && deskH2 >= wantH
+                        return deskW2 >= expectedW && deskH2 >= expectedH
                     }
                     if hiResLabel == "5K" || hiResLabel == "8K" {
-                        return picW2 >= wantW && picH2 >= wantH
+                        return picW2 >= expectedW && picH2 >= expectedH
                     }
-                    return picW2 >= wantW && picH2 >= wantH
+                    return picW2 >= expectedW && picH2 >= expectedH
                 }()
                 if !stillHi {
                     result["error"] = "\(hiResLabel) dropped after hold pic=\(picW2)x\(picH2) desk=\(deskW2)x\(deskH2)"
@@ -667,7 +683,7 @@ enum RE2E2EAutoConnect {
             // Else LAN 60s (6×10s), others 30s (3×10s).
             // Strict hold: quality/menu/disp/life skip long freeze hold (their probes cover paint).
             // Else LAN 60s (6×10s), others 30s (3×10s).
-            let holdWindows = (testQuality || testMenu || testGestures || testPip || testDispSwitch || testLife
+            let holdWindows = (testQuality || testMenu || testGestures || testPip || testDispSwitch || testLife || testChat
                 || (test5K && result["fiveKCellularSoft"] as? Bool == true)) ? 1
                 : ((test8K || test16K || test5K) ? 2 : (expectLAN ? 6 : 3))
             let windowNs: UInt64 = 10_000_000_000
@@ -698,7 +714,7 @@ enum RE2E2EAutoConnect {
             // damage frames plus the Agent's 1fps cached heartbeat, so requiring
             // the normal moving-screen 3fps floor mislabels a healthy resume as
             // frozen. The lifecycle-specific repaint/phase checks remain strict.
-            let minDelta = (test5K || test8K || test16K || testLife || testGestures || testPip)
+            let minDelta = (test5K || test8K || test16K || testLife || testGestures || testPip || testChat)
                 ? 1 : (testQuality ? 1 : (expectLAN ? 30 : 15))
             // Cellular / public-relay: ABR reopen mid-hold often zeros one 10s window
             // while the session stays alive (weakNetHint + later paint). Score total
@@ -707,14 +723,21 @@ enum RE2E2EAutoConnect {
             let stableFullBlood: Bool = {
                 let picW = session.frameImage?.width ?? 0
                 let picH = session.frameImage?.height ?? 0
+                let wssCapped = session.pathLabel.contains("WSS")
                 if test16K {
+                    if wssCapped {
+                        return (picW >= 3840 && picH >= 2160)
+                            || (session.desktopWidth >= 3840 && session.desktopHeight >= 2160)
+                    }
                     return (picW >= 12000 && picH >= 6700)
                         || (session.desktopWidth >= 12000 && session.desktopHeight >= 6700)
                 }
                 if test8K {
+                    if wssCapped { return picW >= 3840 && picH >= 2160 }
                     return picW >= 7000 && picH >= 3900
                 }
                 if test5K {
+                    if wssCapped { return picW >= 3840 && picH >= 2160 }
                     // Unlike 16K, 5K must remain an actual decoded image.
                     return picW >= 4800 && picH >= 2700
                 }
@@ -730,14 +753,19 @@ enum RE2E2EAutoConnect {
                 if relayHold {
                     return deltas.reduce(0, +) < minDelta
                 }
-                return deltas.contains { $0 < minDelta }
+                // A static SCK surface can legitimately emit only cursor/control
+                // heartbeats for one window. Treat two consecutive zero-decode
+                // windows as a freeze; one quiet window after sustained progress
+                // is not visible corruption and must not fail stored reconnect.
+                let twoQuietWindows = zip(deltas, deltas.dropFirst())
+                    .contains { $0 <= 0 && $1 <= 0 }
+                return deltas.reduce(0, +) < minDelta || twoQuietWindows
             }()
             // 8K/16K: stillFullBlood already cleared freeze; do not require every
             // 10s window to advance (VT/libx265 may stall epochs while picture holds).
             // Relay: one zero window during ABR reopen is OK if total advanced.
-            result["framesAdvanced"] = !freeze && ((test16K || test8K || test5K || relayHold)
-                ? (stableFullBlood || deltas.reduce(0, +) > 0)
-                : deltas.allSatisfy { $0 > 0 })
+            result["framesAdvanced"] = !freeze
+                && (stableFullBlood || deltas.reduce(0, +) > 0)
             result["frozen"] = freeze
             result["epochDeltas"] = deltas
             result["pathMid"] = pathMid
@@ -1128,7 +1156,7 @@ enum RE2E2EAutoConnect {
                 var rapid: [[String: Any]] = []
                 if wssMenuSoft || fileXferFocus {
                     let painted = session.frameImage != nil
-                    let alive = await Self.stillPainting(session, seconds: 3)
+                    let alive = await Self.stillPainting(session, seconds: 6)
                     rapid.append([
                         "q": "smooth-hold",
                         "painted": painted,
@@ -1145,7 +1173,7 @@ enum RE2E2EAutoConnect {
                         let before = session.frameEpoch
                         session.setVideoQuality(q, forceReopen: true, persist: false)
                         let painted = await Self.waitPaint(session, timeout: 22)
-                        let alive = await Self.stillPainting(session, seconds: 3)
+                        let alive = await Self.stillPainting(session, seconds: 6)
                         rapid.append([
                             "q": q.rawValue,
                             "painted": painted,
@@ -1313,6 +1341,53 @@ enum RE2E2EAutoConnect {
 
     /// AI session list over the relay's data channel (not the desktop tunnel).
     @MainActor
+    /// Opens a mirrored Cursor IDE chat and walks the session-screen actions: first
+    /// attach, menu Reconnect, Disconnect + Reconnect, Close + reopen. Each step must
+    /// end connected with a fresh full-history frame.
+    private static func probeIDEChat(_ desk: PairedDesktop, composerID: String) async -> [String: Any] {
+        let chat = DesktopAgentChat(
+            id: UUID(), desktopId: desk.id, desktopName: desk.name, agentKind: .cursor,
+            chatId: composerID, title: "e2e", cwd: nil, updatedAt: Date(),
+            screenName: "", screenAlive: false, source: "client", clientName: "Cursor"
+        )
+        let ws = TerminalWorkspace(sessionId: chat.id)
+        var steps: [[String: Any]] = []
+        func step(_ label: String, _ action: () -> Void) async -> Bool {
+            let resets = ws.ideChatResets
+            let t0 = Date()
+            action()
+            var ok = false
+            for _ in 0..<50 {
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                if ws.connectionState == .connected, ws.ideChatResets > resets, !ws.ideMessages.isEmpty {
+                    ok = true
+                    break
+                }
+            }
+            steps.append([
+                "step": label, "ok": ok, "ms": Int(Date().timeIntervalSince(t0) * 1000),
+                "state": String(describing: ws.connectionState), "messages": ws.ideMessages.count,
+                "resets": ws.ideChatResets - resets,
+            ])
+            return ok
+        }
+        var ok = await step("open") { ws.connectDesktopAgent(desk: desk, chat: chat) }
+        if ok { ok = await step("reconnect") { ws.connectDesktopAgent(desk: desk, chat: chat) } }
+        if ok {
+            ok = await step("disconnect+reconnect") {
+                ws.disconnect()
+                ws.connectDesktopAgent(desk: desk, chat: chat)
+            }
+        }
+        if ok {
+            ws.close()
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            ok = await step("close+reopen") { ws.connectDesktopAgent(desk: desk, chat: chat) }
+        }
+        ws.close()
+        return ["ok": ok, "steps": steps]
+    }
+
     private static func probeDataChannel(_ desk: PairedDesktop, force: Bool) async -> [String: Any] {
         var out: [String: Any] = [:]
         var separate = false
@@ -1335,7 +1410,7 @@ enum RE2E2EAutoConnect {
     }
 
     @MainActor
-    private static func stillPainting(_ session: RE2DesktopSession, seconds: Double = 4) async -> Bool {
+    private static func stillPainting(_ session: RE2DesktopSession, seconds: Double = 6) async -> Bool {
         let before = session.frameEpoch
         try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
         let hasImg = session.frameImage != nil

@@ -1,10 +1,47 @@
 import Citadel
-import Combine
 import Foundation
 import NIO
 import NIOSSH
 import SwiftTerm
 import UIKit
+
+/// A mode, model, or review action that has been sent and not confirmed yet.
+struct IDEPendingAction: Equatable {
+    enum Kind: Equatable {
+        case mode(String)
+        case model(String)
+        case modelParam(id: String, value: String)
+        case review
+        case attach
+    }
+
+    var kind: Kind
+    var text: String
+}
+
+extension IDEPendingAction.Kind {
+    var isMode: Bool {
+        if case .mode = self { return true }
+        return false
+    }
+
+    var isModel: Bool {
+        switch self {
+        case .model, .modelParam: return true
+        default: return false
+        }
+    }
+
+    var isReview: Bool {
+        if case .review = self { return true }
+        return false
+    }
+
+    var isAttach: Bool {
+        if case .attach = self { return true }
+        return false
+    }
+}
 
 @MainActor
 final class TerminalWorkspace: ObservableObject {
@@ -21,14 +58,31 @@ final class TerminalWorkspace: ObservableObject {
     @Published private(set) var terminalFontSize: CGFloat
     /// Mode / model / changed files of a mirrored Cursor IDE chat.
     @Published private(set) var ideState: IDEChatState?
+    /// Mode, model, or Keep / Undo still waiting on Cursor. Shown like the connection status.
+    @Published private(set) var idePendingAction: IDEPendingAction?
+    private var idePendingToken = 0
     /// Structured conversation of a mirrored Cursor IDE chat, ordered by bubble index.
     @Published private(set) var ideMessages: [IDEChatMessage] = []
+    @Published private(set) var ideSubMessages: [String: [IDEChatMessage]] = [:]
+    @Published var ideFilePreview: IDEFilePreviewFrame?
+    private var ideSubWatched: Set<String> = []
     /// Messages sent from the phone that Cursor has not stored yet.
     @Published private(set) var idePendingSends: [String] = []
+    /// Keep Stop visible across brief gaps where Cursor clears `generating` between tools.
+    @Published private(set) var ideStopArmed = false
+    private var ideStopIdleTask: Task<Void, Never>?
+    /// Why the session is not attached, when it was not the user's own action.
+    @Published private(set) var connectionNote: String?
     private var backgroundDisconnectTask: Task<Void, Never>?
+    /// Detach of the previous PTY; a reattach reuses its id, so it must land first.
+    private var pendingClose: Task<Void, Never>?
+    /// Delayed drop after phone Close sent `closeSession` — cancelled if the user reopens.
+    private var pendingLeave: Task<Void, Never>?
     private var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
     private var ideExtractor = IDEStateExtractor()
     private var ideChatSynced = false
+    /// Full-history frames received; each attach should produce at least one.
+    private(set) var ideChatResets = 0
 
     let terminalView: TerminalView
     private let sessionId: UUID
@@ -43,10 +97,8 @@ final class TerminalWorkspace: ObservableObject {
     private var activeServer: ServerProfile?
     /// Paired-desktop AI CLI over the Agent PTY channel instead of SSH.
     private var agentPTY: (transport: AgentPTYTransport, id: String)?
-    private var dataTunnel: RE2DataTunnel?
     private var desktopChat: DesktopAgentChat?
     private var desktopProfile: PairedDesktop?
-    private var hubPhaseObserver: AnyCancellable?
     private var desktopAutoReconnects = 0
     private var connectGeneration = 0
     /// Batched scrollback/login parsing — never block the SSH reader.
@@ -267,7 +319,10 @@ final class TerminalWorkspace: ObservableObject {
                     let message = SSHErrorMapper.message(for: error)
                     self.connectionState = .failed(message)
                     self.appendLocalStatus(message, kind: .error)
-                    HostKeyApprovalGate.shared.reset()
+                    if self.pendingFingerprint != nil {
+                        HostKeyApprovalGate.shared.reset()
+                        self.pendingFingerprint = nil
+                    }
                 }
             }
         }
@@ -280,12 +335,16 @@ final class TerminalWorkspace: ObservableObject {
         chat: DesktopAgentChat,
         mode: RemoteBootstrap.LaunchMode = .preferExisting
     ) {
+        pendingLeave?.cancel()
+        pendingLeave = nil
         closeConnection(updateState: .connecting, feedErrors: false)
         intentionalClose = false
+        connectionNote = nil
         activeSession = nil
         activeServer = nil
         desktopChat = chat
         desktopProfile = desk
+        DesktopSessionHub.shared.claimChatSession(deviceID: desk.deviceID, by: self)
         desktopAutoReconnects = 0
         ideExtractor = IDEStateExtractor()
         ideChatSynced = false
@@ -293,6 +352,8 @@ final class TerminalWorkspace: ObservableObject {
             ideState = nil
             ideMessages = []
             idePendingSends = []
+            ideStopArmed = false
+            ideStopIdleTask?.cancel()
         }
         title = chat.displayTitle
         detectedLoginURL = nil
@@ -329,35 +390,20 @@ final class TerminalWorkspace: ObservableObject {
         generation: Int
     ) async throws {
         let hub = DesktopSessionHub.shared
-        let hubSession = hub.session
-        var tunnel: RE2DataTunnel?
-        if hub.usesDataChannel(desk) {
-            appendLocalStatus("Opening encrypted data channel (no desktop video)…", kind: .info)
-            do {
-                tunnel = try await hub.dataTunnel(for: desk)
-            } catch RE2Error.channelUnsupported {
-            }
+        await pendingClose?.value
+        appendLocalStatus("Opening encrypted data channel (no desktop video)…", kind: .info)
+        let tunnel: RE2DataTunnel
+        do {
+            tunnel = try await hub.dataTunnel(for: desk)
+        } catch RE2Error.channelUnsupported {
+            throw RE2Error.signaling(
+                String(localized: "This Relay or Agent does not support screen-independent sessions. Update it, then try again.")
+            )
         }
-        if tunnel == nil, !(try await hub.sharedTunnel(for: desk)) {
-            let t = RE2DataTunnel(profile: desk)
-            try await t.connect(channel: false)
-            tunnel = t
+        guard generation == connectGeneration, !intentionalClose else {
+            throw CancellationError()
         }
-        let transport: AgentPTYTransport
-        if let tunnel {
-            guard generation == connectGeneration, !intentionalClose else {
-                tunnel.shutdown()
-                throw CancellationError()
-            }
-            transport = tunnel
-            if !tunnel.isShared {
-                // Pre-channel link of our own in the desktop slot: a desktop connect replaces it.
-                dataTunnel = tunnel
-                watchDesktopTakeover(deviceID: desk.deviceID, generation: generation)
-            }
-        } else {
-            transport = DesktopTunnelPTYTransport(session: hubSession)
-        }
+        let transport: AgentPTYTransport = tunnel
         appendLocalStatus("Agent reached via \(transport.label) — attaching \(chat.agentKind.displayName)…", kind: .success)
 
         terminalView.layoutIfNeeded()
@@ -408,6 +454,7 @@ final class TerminalWorkspace: ObservableObject {
                     let split = self.ideExtractor.process(output)
                     output = split.output
                     for frame in split.chats { self.applyIDEChat(frame) }
+                    for preview in split.filePreviews { self.ideFilePreview = preview }
                     if let state = split.states.last { self.applyIDEState(state) }
                 }
                 guard !output.isEmpty else { return }
@@ -425,6 +472,10 @@ final class TerminalWorkspace: ObservableObject {
 
     private func applyIDEState(_ state: IDEChatState) {
         ideState = state
+        settleIDEPending(against: state)
+        // A follow-up that Cursor queued should leave the bottom "waiting" bubble.
+        // Otherwise the same text shows twice: once pending, once in the queue.
+        dropPendingSends(matching: (state.queued ?? []).map(\.text))
         // A chat created from the phone learns its Cursor id from the first state, so
         // reconnects reopen it instead of creating another one.
         if var chat = desktopChat, chat.chatId.isEmpty, !state.composerId.isEmpty {
@@ -437,12 +488,68 @@ final class TerminalWorkspace: ObservableObject {
             ideChatSynced = true
             sendIDEAction("resync")
         }
+        refreshIDEStopArmed()
+    }
+
+    /// True while the mirrored turn should offer Stop (mainline and/or background agents).
+    var isIDETurnBusy: Bool {
+        ideStopArmed || idePhysicallyBusy
+    }
+
+    private var idePhysicallyBusy: Bool {
+        if ideState?.generating == true { return true }
+        if !(ideState?.subChats?.isEmpty ?? true) { return true }
+        if !idePendingSends.isEmpty { return true }
+        return ideMessages.contains { $0.tool?.isRunning == true }
+    }
+
+    private func armIDEStop() {
+        ideStopIdleTask?.cancel()
+        ideStopArmed = true
+    }
+
+    private func refreshIDEStopArmed() {
+        if idePhysicallyBusy {
+            armIDEStop()
+            return
+        }
+        guard ideStopArmed else { return }
+        ideStopIdleTask?.cancel()
+        ideStopIdleTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 900_000_000)
+            guard let self, !Task.isCancelled else { return }
+            if !self.idePhysicallyBusy {
+                self.ideStopArmed = false
+            }
+        }
+    }
+
+    /// Stop the current Cursor turn and every linked background subagent.
+    func stopIDEGeneration() {
+        armIDEStop()
+        sendIDEAction("cancel")
     }
 
     private func applyIDEChat(_ frame: IDEChatFrame) {
         let incoming = frame.messages ?? []
+        let mainID = ideState?.composerId ?? ""
+        let subID = frame.composerId?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let isSub = !subID.isEmpty && subID != mainID
+
+        if isSub {
+            if frame.reset == true {
+                ideSubMessages[subID] = incoming.sorted { $0.idx < $1.idx }
+            } else if !incoming.isEmpty {
+                var byIdx = Dictionary((ideSubMessages[subID] ?? []).map { ($0.idx, $0) }, uniquingKeysWith: { _, new in new })
+                for message in incoming { byIdx[message.idx] = message }
+                ideSubMessages[subID] = byIdx.values.sorted { $0.idx < $1.idx }
+            }
+            return
+        }
+
         if frame.reset == true {
             ideChatSynced = true
+            ideChatResets += 1
             ideMessages = incoming.sorted { $0.idx < $1.idx }
         } else if !incoming.isEmpty {
             var byIdx = Dictionary(ideMessages.map { ($0.idx, $0) }, uniquingKeysWith: { _, new in new })
@@ -451,16 +558,305 @@ final class TerminalWorkspace: ObservableObject {
         }
         let stored = Set(incoming.filter { $0.role == .user }.compactMap { $0.text.map(Self.squashed) })
         if !stored.isEmpty {
-            idePendingSends.removeAll { pending in stored.contains { $0.contains(Self.squashed(pending)) } }
+            dropPendingSends(matching: Array(stored))
+            // Cursor moves a queued follow-up into the transcript when it runs. Prune
+            // matching rows locally so a lagging state snapshot cannot resurrect them.
+            pruneIDEQueued(matching: Array(stored))
         }
+        refreshIDEStopArmed()
     }
 
     private static func squashed(_ text: String) -> String {
         text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
     }
 
-    func sendIDEAction(_ op: String, id: String? = nil) {
-        sendBytes(IDEChatState.actionBytes(op: op, id: id))
+    private static func textMatches(_ a: String, _ b: String) -> Bool {
+        let lhs = squashed(a)
+        let rhs = squashed(b)
+        guard !lhs.isEmpty, !rhs.isEmpty else { return false }
+        return lhs == rhs || lhs.contains(rhs) || rhs.contains(lhs)
+    }
+
+    private func dropPendingSends(matching texts: [String]) {
+        let needles = texts.map(Self.squashed).filter { !$0.isEmpty }
+        guard !needles.isEmpty else { return }
+        idePendingSends.removeAll { pending in
+            needles.contains { Self.textMatches(pending, $0) }
+        }
+    }
+
+    private func pruneIDEQueued(matching texts: [String]) {
+        guard var state = ideState, var queued = state.queued, !queued.isEmpty else { return }
+        let before = queued.count
+        queued.removeAll { item in
+            texts.contains { Self.textMatches(item.text, $0) }
+        }
+        guard queued.count != before else { return }
+        state.queued = queued.isEmpty ? nil : queued
+        ideState = state
+    }
+
+    func sendIDEAction(_ op: String, id: String? = nil, text: String? = nil, bubbleId: String? = nil) {
+        sendBytes(IDEChatState.actionBytes(op: op, id: id, text: text, bubbleId: bubbleId))
+    }
+
+    func requestIDEMode(_ id: String) {
+        guard ideState?.mode != id else { return }
+        let name = ideState?.modes?.first(where: { $0.id == id })?.name ?? id
+        beginIDEPending(IDEPendingAction(
+            kind: .mode(id),
+            text: String(format: String(localized: "Switching to %@"), name)
+        ))
+        sendIDEAction("mode", id: id)
+    }
+
+    func requestIDEModel(_ id: String) {
+        guard ideState?.model != id else { return }
+        let name = ideState?.models?.first(where: { $0.id == id })?.name ?? id
+        beginIDEPending(IDEPendingAction(
+            kind: .model(id),
+            text: String(format: String(localized: "Switching to %@"), name)
+        ))
+        sendIDEAction("model", id: id)
+    }
+
+    func requestIDEModelParameter(id: String, value: String) {
+        let parameter = ideState?.models?
+            .first(where: { $0.id == ideState?.model })?
+            .parameters?
+            .first(where: { $0.id == id })
+        guard parameter?.selected != value else { return }
+        let name = parameter?.name ?? id
+        let valueName = parameter?.values.first(where: { $0.id == value })?.name ?? value
+        beginIDEPending(IDEPendingAction(
+            kind: .modelParam(id: id, value: value),
+            text: String(format: String(localized: "Setting %@ to %@"), name, valueName)
+        ))
+        sendIDEAction("modelParam", id: id, text: value)
+    }
+
+    func requestIDEReview(keep: Bool) {
+        beginIDEPending(IDEPendingAction(
+            kind: .review,
+            text: keep ? String(localized: "Keeping changes…") : String(localized: "Undoing changes…")
+        ))
+        sendIDEAction(keep ? "keepAll" : "undoAll")
+    }
+
+    /// Send a phone photo or file into the Cursor composer (images are pasted; other files land in `.koko-uploads/`).
+    func attachIDEFile(name: String, mime: String, data: Data) {
+        let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, !data.isEmpty else { return }
+        let maxBytes = 6 * 1024 * 1024
+        guard data.count <= maxBytes else {
+            beginIDEPending(IDEPendingAction(
+                kind: .attach,
+                text: String(localized: "File is too large (max 6 MB)")
+            ))
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+                guard let self, self.idePendingAction?.kind.isAttach == true else { return }
+                self.cancelIDEPending()
+            }
+            return
+        }
+        beginIDEPending(IDEPendingAction(
+            kind: .attach,
+            text: String(format: String(localized: "Uploading %@…"), name)
+        ))
+        let chunkChars = 24 * 1024
+        let b64 = data.base64EncodedString()
+        if b64.count <= chunkChars {
+            sendBytes(IDEChatState.actionBytes([
+                "op": "attach",
+                "name": name,
+                "mime": mime,
+                "text": b64,
+                "size": data.count,
+            ]))
+        } else {
+            let id = UUID().uuidString
+            var parts: [String] = []
+            var i = b64.startIndex
+            while i < b64.endIndex {
+                let end = b64.index(i, offsetBy: chunkChars, limitedBy: b64.endIndex) ?? b64.endIndex
+                parts.append(String(b64[i..<end]))
+                i = end
+            }
+            sendBytes(IDEChatState.actionBytes([
+                "op": "attachStart",
+                "id": id,
+                "name": name,
+                "mime": mime,
+                "size": data.count,
+                "total": parts.count,
+            ]))
+            for (idx, part) in parts.enumerated() {
+                sendBytes(IDEChatState.actionBytes([
+                    "op": "attachChunk",
+                    "id": id,
+                    "idx": idx,
+                    "text": part,
+                ]))
+            }
+            sendBytes(IDEChatState.actionBytes([
+                "op": "attachEnd",
+                "id": id,
+            ]))
+        }
+        // Agent pastes into the composer; drop the status once Cursor has had time to accept it.
+        let token = idePendingToken
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8) { [weak self] in
+            guard let self, self.idePendingToken == token else { return }
+            self.idePendingAction = nil
+        }
+    }
+
+    func attachIDEImage(_ image: UIImage, preferredName: String = "photo.jpg") {
+        let resized = Self.resizedForIDEAttach(image)
+        guard let data = resized.jpegData(compressionQuality: 0.82) else { return }
+        attachIDEFile(name: preferredName, mime: "image/jpeg", data: data)
+    }
+
+    private static func resizedForIDEAttach(_ image: UIImage, maxEdge: CGFloat = 2048) -> UIImage {
+        let size = image.size
+        let longest = max(size.width, size.height)
+        guard longest > maxEdge, longest > 0 else { return image }
+        let scale = maxEdge / longest
+        let target = CGSize(width: (size.width * scale).rounded(), height: (size.height * scale).rounded())
+        let renderer = UIGraphicsImageRenderer(size: target)
+        return renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: target))
+        }
+    }
+
+    func cancelIDEPending() {
+        idePendingToken += 1
+        idePendingAction = nil
+    }
+
+    func reportIDEAttachError(_ text: String) {
+        beginIDEPending(IDEPendingAction(kind: .attach, text: text))
+        let token = idePendingToken
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+            guard let self, self.idePendingToken == token else { return }
+            self.idePendingAction = nil
+        }
+    }
+
+    /// Cursor can take a while to persist a mode, model, or review. Drop the status once it has.
+    private func beginIDEPending(_ action: IDEPendingAction) {
+        idePendingToken += 1
+        let token = idePendingToken
+        idePendingAction = action
+        DispatchQueue.main.asyncAfter(deadline: .now() + 25) { [weak self] in
+            guard let self, self.idePendingToken == token else { return }
+            self.idePendingAction = nil
+        }
+    }
+
+    private func settleIDEPending(against state: IDEChatState) {
+        guard let pending = idePendingAction else { return }
+        let done: Bool
+        switch pending.kind {
+        case .mode(let id):
+            done = state.mode == id
+        case .model(let id):
+            done = state.model == id
+        case .modelParam(let id, let value):
+            let selected = state.models?
+                .first(where: { $0.id == state.model })?
+                .parameters?
+                .first(where: { $0.id == id })?
+                .selected
+            done = selected == value
+        case .review:
+            done = state.pendingReview != true
+        case .attach:
+            return
+        }
+        if done {
+            idePendingToken += 1
+            idePendingAction = nil
+        }
+    }
+
+    func watchIDESubChat(_ composerId: String) {
+        let id = composerId.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !id.isEmpty, ideSubWatched.insert(id).inserted else { return }
+        sendIDEAction("watchSub", id: id)
+    }
+
+    func unwatchIDESubChat(_ composerId: String) {
+        let id = composerId.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !id.isEmpty else { return }
+        ideSubWatched.remove(id)
+        sendIDEAction("unwatchSub", id: id)
+    }
+
+    func forkIDEMessage(bubbleId: String) {
+        let id = bubbleId.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !id.isEmpty else { return }
+        sendIDEAction("fork", bubbleId: id)
+    }
+
+    func renameIDEChat(_ name: String) {
+        let title = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !title.isEmpty else { return }
+        sendIDEAction("rename", text: title)
+    }
+
+    func requestIDEFileDiff(path: String) {
+        let p = path.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !p.isEmpty else { return }
+        if let diff = ideMessages.compactMap(\.tool?.diff).first(where: { matchesIDEPath($0.path, p) }) {
+            ideFilePreview = IDEFilePreviewFrame(path: diff.path, diff: diff)
+            return
+        }
+        ideFilePreview = nil
+        sendIDEAction("fileDiff", id: p)
+    }
+
+    func removeIDEQueuedMessage(id: String) {
+        if var state = ideState {
+            state.queued = state.queued?.filter { $0.id != id }
+            ideState = state
+        }
+        sendIDEAction("queueRemove", id: id)
+    }
+
+    func updateIDEQueuedMessage(id: String, text: String) {
+        let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        if var state = ideState, var queued = state.queued {
+            for index in queued.indices where queued[index].id == id {
+                queued[index].text = text
+            }
+            state.queued = queued
+            ideState = state
+        }
+        sendIDEAction("queueUpdate", id: id, text: text)
+    }
+
+    func cancelIDEQueuedMessages() {
+        sendIDEAction("queueCancel")
+    }
+
+    /// Interrupt the current turn and send this queued message immediately.
+    func submitIDEQueuedMessage(id: String) {
+        armIDEStop()
+        sendIDEAction("queueSubmit", id: id)
+    }
+
+    private func matchesIDEPath(_ lhs: String, _ rhs: String) -> Bool {
+        if lhs == rhs { return true }
+        return lhs.hasSuffix(rhs) || rhs.hasSuffix(lhs)
+    }
+
+    func sendIDEToolAction(_ op: String, bubbleId: String, toolCallId: String? = nil, name: String? = nil) {
+        var payload: [String: Any] = ["op": op, "bubbleId": bubbleId]
+        if let toolCallId, !toolCallId.isEmpty { payload["toolCallId"] = toolCallId }
+        if let name, !name.isEmpty { payload["name"] = name }
+        sendBytes(IDEChatState.actionBytes(payload))
     }
 
     /// Sends a chat message into the Cursor IDE chat on the desktop.
@@ -468,6 +864,7 @@ final class TerminalWorkspace: ObservableObject {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, agentPTY != nil else { return }
         idePendingSends.append(text)
+        armIDEStop()
         sendBytes(IDEChatState.actionBytes(["op": "send", "text": text]))
     }
 
@@ -479,21 +876,6 @@ final class TerminalWorkspace: ObservableObject {
             return item
         }
         sendBytes(IDEChatState.actionBytes(["op": "answer", "id": toolCallId, "answers": payload]))
-    }
-
-    /// Opening the remote desktop moves the Agent to a new Noise session, which
-    /// silently orphans this data tunnel's PTY — reattach through the desktop tunnel.
-    private func watchDesktopTakeover(deviceID: String, generation: Int) {
-        let hubSession = DesktopSessionHub.shared.session
-        hubPhaseObserver = hubSession.$phase
-            .removeDuplicates()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] phase in
-                guard let self, generation == self.connectGeneration,
-                      phase == .streaming,
-                      hubSession.currentPaired?.deviceID == deviceID else { return }
-                self.handleDesktopAgentClosed(reason: "tunnel_reset", generation: generation)
-            }
     }
 
     private func handleDesktopAgentClosed(reason: String?, generation: Int) {
@@ -569,6 +951,83 @@ final class TerminalWorkspace: ObservableObject {
         pendingScrollbackRestore = false
         closeConnection(updateState: .disconnected, feedErrors: false)
         clearTerminalDisplay()
+        if let desk = desktopProfile {
+            DesktopSessionHub.shared.releaseChatSession(deviceID: desk.deviceID, by: self)
+        }
+    }
+
+    /// Leaving the session screen: close it on the computer, then drop the phone link.
+    func close() {
+        pendingLeave?.cancel()
+        let deviceID = desktopProfile?.deviceID
+        let detach = pendingClose
+        // Stop auto-reattach, but do not bump connectGeneration here. Bumping it
+        // while still `.connected` froze onData; reopen then skipped ensureConnected
+        // and the chat stayed empty.
+        intentionalClose = true
+        desktopAutoReconnects = 0
+        if desktopChat?.mirrorsIDEChat == true, agentPTY != nil {
+            if isIDETurnBusy {
+                sendIDEAction("cancel")
+            }
+            sendIDEAction("closeSession")
+            connectionState = .disconnected
+            pendingLeave = Task { [weak self] in
+                // Let the desktop finish closeSession (Confirm sheet) before
+                // dropping the PTY. Cancelled if the user reopens this chat.
+                try? await Task.sleep(nanoseconds: 8_000_000_000)
+                guard !Task.isCancelled else { return }
+                await MainActor.run { self?.disconnect() }
+                await detach?.value
+                if let deviceID {
+                    DesktopSessionHub.shared.releaseDataTunnelIfIdle(deviceID: deviceID)
+                }
+            }
+            return
+        }
+        if let chat = desktopChat, let agentPTY {
+            let transport = agentPTY.transport
+            let killID = agentPTY.id + "-quit"
+            Task {
+                try? await transport.open(
+                    id: killID,
+                    request: DesktopAgentLaunch.terminateRequest(chat: chat),
+                    onReady: {},
+                    onData: { _ in },
+                    onClose: { _ in }
+                )
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                await transport.close(id: killID)
+            }
+        }
+        disconnect()
+        guard let deviceID else { return }
+        Task {
+            await detach?.value
+            DesktopSessionHub.shared.releaseDataTunnelIfIdle(deviceID: deviceID)
+        }
+    }
+
+    /// True while Cursor is still working — phone Close must not kill that chat.
+    private var ideShouldDeferSyncClose: Bool {
+        if ideState?.generating == true { return true }
+        if !idePendingSends.isEmpty { return true }
+        if ideMessages.contains(where: { $0.tool?.isRunning == true }) { return true }
+        return false
+    }
+
+    /// Another AI session on the same computer was opened on this phone.
+    func yieldToOtherSession() {
+        switch connectionState {
+        case .connected, .connecting, .reconnecting: break
+        default: return
+        }
+        if desktopChat?.mirrorsIDEChat == true, !ideShouldDeferSyncClose {
+            sendIDEAction("closeSession")
+        }
+        disconnect()
+        connectionNote = String(localized: "Another session on this computer was opened, so this one was disconnected.")
+        appendLocalStatus(connectionNote ?? "", kind: .warning)
     }
 
     /// Close SSH and stop the remote agent or screen session.
@@ -591,7 +1050,6 @@ final class TerminalWorkspace: ObservableObject {
                 transport.shutdown()
             }
             self.agentPTY = nil
-            dataTunnel = nil
         } else if let activeSession, stdinWriter != nil {
             sendText(RemoteBootstrap.killSessionCommand(session: activeSession))
         }
@@ -756,18 +1214,20 @@ final class TerminalWorkspace: ObservableObject {
         stdinDrainTask = nil
         stdinPending.removeAll(keepingCapacity: false)
         connectionState = updateState
-        // Unblock any host-key sheet still awaiting approval from a prior attempt.
-        HostKeyApprovalGate.shared.reset()
+        // Only the workspace that owns the visible fingerprint prompt may
+        // cancel the global approval continuation.
+        if pendingFingerprint != nil {
+            HostKeyApprovalGate.shared.reset()
+            pendingFingerprint = nil
+        }
 
-        hubPhaseObserver = nil
         let pty = agentPTY
-        let tunnel = dataTunnel
         agentPTY = nil
-        dataTunnel = nil
-        if pty != nil || tunnel != nil {
-            Task {
+        if pty != nil {
+            let previous = pendingClose
+            pendingClose = Task {
+                await previous?.value
                 if let pty { await pty.transport.close(id: pty.id) }
-                tunnel?.shutdown()
             }
         }
 

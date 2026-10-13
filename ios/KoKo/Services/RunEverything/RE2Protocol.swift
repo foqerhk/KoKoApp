@@ -18,6 +18,9 @@ enum RE2 {
         static let pairAck: UInt8 = 0x05
         static let bind: UInt8 = 0x06
         static let bindOK: UInt8 = 0x07
+        static let lifecycleRegister: UInt8 = 0x08
+        static let lifecycleStatus: UInt8 = 0x09
+        static let lifecycleQuery: UInt8 = 0x0A
         static let noise: UInt8 = 0x10
         static let tunnel: UInt8 = 0x11
         static let ping: UInt8 = 0x1E
@@ -67,9 +70,11 @@ enum RE2 {
         static let phoneCamClose: UInt8 = 0x75
         static let phoneCamFrame: UInt8 = 0x76
         static let phoneCamReady: UInt8 = 0x77
-        /// AI chat inventory (Cursor/Claude/Codex/Gemini) — data only, no desktop.
+        /// AI chat inventory (seven agents) — data only, no desktop.
         static let agentChatList: UInt8 = 0xA0
         static let agentChatDetail: UInt8 = 0xA1 // reserved hook
+        static let hostHealth: UInt8 = 0xA2
+        static let powerEvent: UInt8 = 0xA3
         static let usbList: UInt8 = 0x80
         static let usbAttach: UInt8 = 0x81
         static let usbDetach: UInt8 = 0x82
@@ -521,6 +526,16 @@ enum RE2ControllerIdentity {
     /// Set from the main actor (UIDevice) before the first BIND.
     nonisolated(unsafe) static var name = "iPhone"
 
+    /// Marketing model (and optional custom name) plus local clock,
+    /// e.g. "iPhone Air 15:23:23" or "iPhone 14 Pro Max · Lili的iPhone 15:23:23".
+    static func stampDisplayName(_ deviceName: String) {
+        let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "en_US_POSIX")
+        fmt.dateFormat = "HH:mm:ss"
+        let base = deviceName.trimmingCharacters(in: .whitespacesAndNewlines)
+        name = base.isEmpty ? fmt.string(from: Date()) : "\(base) \(fmt.string(from: Date()))"
+    }
+
     static func bindPayload(deviceID: String, sessionTicket: String, force: Bool, channel: String? = nil) -> Data {
         var obj: [String: Any] = [
             "device_id": deviceID,
@@ -531,6 +546,23 @@ enum RE2ControllerIdentity {
         if force { obj["force"] = true }
         if let channel { obj["channel"] = channel }
         return RE2Codec.jsonData(obj)
+    }
+
+    /// Combine relay `peer` + optional `since` into the label shown in takeover/kick copy.
+    static func peerLabel(peer: String, since: Int64 = 0) -> String {
+        var label = peer.trimmingCharacters(in: .whitespacesAndNewlines)
+        if since > 0 {
+            let fmt = DateFormatter()
+            fmt.locale = Locale(identifier: "en_US_POSIX")
+            fmt.dateFormat = "HH:mm:ss"
+            let t = fmt.string(from: Date(timeIntervalSince1970: TimeInterval(since)))
+            if label.isEmpty {
+                label = t
+            } else if label.range(of: #"\d{2}:\d{2}:\d{2}"#, options: .regularExpression) == nil {
+                label = "\(label) \(t)"
+            }
+        }
+        return label
     }
 }
 
@@ -560,8 +592,8 @@ enum RE2Error: LocalizedError {
     case ticketRejected
     /// Repeated ticket rejection — relay likely restarted (in-memory sessions cleared).
     case relayRestarted
-    /// Another client took the session (kick / replaced).
-    case peerTaken
+    /// Another client took the session (kick / replaced). `peer` is who took over.
+    case peerTaken(peer: String = "")
     /// BIND refused: another phone is controlling. `peer` is its display name.
     case controllerBusy(peer: String)
     /// Relay or Agent predates separate data channels.
@@ -589,12 +621,14 @@ enum RE2Error: LocalizedError {
             return String(localized: "Session ticket rejected by relay")
         case .relayRestarted:
             return String(localized: "Relay restarted — session ticket is gone. Scan a fresh Agent QR.")
-        case .peerTaken:
-            return String(localized: "Disconnected — another client took over this session.")
+        case .peerTaken(let peer):
+            return peer.isEmpty
+                ? String(localized: "You were disconnected. Someone else is now controlling this computer.")
+                : String(format: String(localized: "You were disconnected. Someone else (%@) is now controlling this computer."), peer)
         case .controllerBusy(let peer):
             return peer.isEmpty
-                ? String(localized: "Another device is controlling this computer.")
-                : String(localized: "\(peer) is controlling this computer.")
+                ? String(localized: "This computer is being controlled. Someone else is controlling this computer. Continuing will disconnect them. Confirm?")
+                : String(format: String(localized: "This computer is being controlled. Someone else (%@) is controlling this computer. Continuing will disconnect them. Confirm?"), peer)
         case .channelUnsupported:
             return String(localized: "Update the RunEverything Agent to use the data channel.")
         case .expired: return String(localized: "Pairing QR expired — scan again")
@@ -624,14 +658,14 @@ enum RE2Error: LocalizedError {
         case "auth_failed", "invalid_session", "bad_ticket":
             return .ticketRejected
         case "kicked", "superseded", "replaced":
-            return .peerTaken
+            return .peerTaken(peer: "")
         case "controller_busy":
             return .controllerBusy(peer: "")
         case "channel_unsupported":
             return .channelUnsupported
         default:
             if m.contains("kick") || m.contains("replaced") || m.contains("took over") || m.contains("superseded") {
-                return .peerTaken
+                return .peerTaken(peer: "")
             }
             if m.contains("ticket") || (m.contains("session") && m.contains("invalid")) {
                 return .ticketRejected
