@@ -141,9 +141,12 @@ lower-level negative tests remain in
 
 ### KFT-DESK-004 — Quality and freeze recovery (P0, Matrix `lan`+`wss`, Air)
 - **Steps:** Run quality matrix, introduce a brief path interruption and
-  request a keyframe.
+  request a keyframe. On WSS, separately make soft video reopen and Noise
+  recovery fail while keeping the saved pairing valid.
 - **Expected:** Each selected quality paints and continues, no stale-size frame
-  persists, last frame remains visible during stall, and painting resumes.
+  persists, and the last frame remains visible during recovery. Exhausting
+  video-only recovery automatically performs a full BIND→Noise→OPEN reconnect;
+  the user does not have to leave and re-enter the viewer.
 
 ### KFT-DESK-005 — Desktop chrome and controls (P0, Matrix, Air+14PM)
 - **Steps:** Enter/exit viewer; reveal controls; use reconnect and disconnect.
@@ -163,9 +166,12 @@ lower-level negative tests remain in
   control, and cancel/background releases all buttons.
 
 ### KFT-GEST-003 — Vertical/horizontal scroll and pinch (P1, Matrix, Air)
-- **Steps:** Scroll a two-axis document and pinch in a zoomable app.
+- **Steps:** Scroll a two-axis document while deliberately varying finger
+  spacing by 3–8%; then perform a deliberate pinch whose centroid drifts.
 - **Expected:** Axis and direction are correct; pinch affects host content and
-  does not accidentally navigate KoKo.
+  does not accidentally navigate KoKo. Each touch sequence locks to one intent:
+  spacing drift during scroll never zooms, and centroid drift during pinch
+  never scrolls the remote document.
 
 ### KFT-GEST-004 — Spaces and Mission Control (P0, Matrix, 14PM)
 - **Steps:** Three-finger left/right and up/down gestures.

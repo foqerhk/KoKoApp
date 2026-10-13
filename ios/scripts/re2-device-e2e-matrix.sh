@@ -32,6 +32,7 @@ Cases:
   gestures | gestures-relay | gestures-wss
   pip | pip-relay | 5k | 5k-relay
   8k-wss             Virtual 8K boundary over WSS (requires RE_VDISPLAY=8k)
+  wss-stall-reconnect Exhaust video recovery and require full-session repaint
   all                 Safe unattended set: ${SAFE_ALL_CASES[*]}
 
 "all" excludes cases that foreground another app, inject gestures, require
@@ -127,6 +128,8 @@ if name == "external-life":
     checks["externalLife"]=p.get("externalLife") is True
 if name == "display-switch":
     checks["dispSwitchOK"]=p.get("dispSwitchOK") is True
+if name == "wss-stall-reconnect":
+    checks["stallReconnectOK"]=p.get("stallReconnectOK") is True
 if name in ("data-chat", "cellular-data-chat"):
     checks["chatOK"]=p.get("chatOK") is True
 if name == "stored-reconnect":
@@ -278,6 +281,7 @@ PY
   gestures-wss) run_case gestures-wss '{"e2e":true,"gestures":true,"forceWSS":true,"stripLAN":true}' 600 ;;
   pip) run_case pip '{"e2e":true,"pip":true}' 600 ;;
   pip-relay) run_case pip-relay '{"e2e":true,"pip":true,"forceUDP":true,"stripLAN":true}' 700 ;;
+  wss-stall-reconnect) run_case wss-stall-reconnect '{"e2e":true,"forceWSS":true,"stripLAN":true,"testStallReconnect":true}' 700 ;;
   5k) run_case 5k '{"e2e":true,"test5K":true}' 900 ;;
   5k-relay) run_case 5k-relay '{"e2e":true,"forceUDP":true,"stripLAN":true,"test5K":true}' 900 ;;
   8k-wss) run_case 8k-wss '{"e2e":true,"forceWSS":true,"stripLAN":true,"test8K":true}' 600 ;;

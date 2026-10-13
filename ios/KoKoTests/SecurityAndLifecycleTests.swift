@@ -63,4 +63,58 @@ final class SecurityAndLifecycleTests: XCTestCase {
         locked.screenLocked = true
         XCTAssertEqual(HostGUIBlocker.detect(from: locked), .screenLocked)
     }
+
+    func testTwoFingerScrollWinsOverSpacingDriftAndStaysLocked() {
+        let intent = DesktopGestureMath.twoFingerIntent(
+            translation: CGPoint(x: 1, y: 18),
+            scale: 1.06
+        )
+        XCTAssertEqual(intent, .scroll)
+        XCTAssertEqual(
+            DesktopGestureMath.twoFingerIntent(
+                translation: CGPoint(x: 2, y: 30),
+                scale: 1.30,
+                current: intent
+            ),
+            .scroll
+        )
+    }
+
+    func testTwoFingerPinchWinsBeforeCentroidDriftAndStaysLocked() {
+        let intent = DesktopGestureMath.twoFingerIntent(
+            translation: CGPoint(x: 1, y: 2),
+            scale: 1.12
+        )
+        XCTAssertEqual(intent, .pinch)
+        XCTAssertEqual(
+            DesktopGestureMath.twoFingerIntent(
+                translation: CGPoint(x: 12, y: 12),
+                scale: 1.20,
+                current: intent
+            ),
+            .pinch
+        )
+    }
+
+    func testTwoFingerAmbiguousJitterWaitsForIntent() {
+        XCTAssertEqual(
+            DesktopGestureMath.twoFingerIntent(
+                translation: CGPoint(x: 2, y: 3),
+                scale: 1.03
+            ),
+            .undecided
+        )
+    }
+
+    func testPanEndingFirstDoesNotLeaveViewportPinchActive() {
+        var lifecycle = DesktopGestureMath.TwoFingerLifecycle(intent: .pinch)
+        XCTAssertTrue(lifecycle.beginPinchIfNeeded())
+
+        // Pan may end first and reset intent, but Pinch must still deliver its
+        // own end callback so DesktopViewerView clears `isPinching`.
+        lifecycle.resetIntent()
+        XCTAssertTrue(lifecycle.pinchIsActive)
+        XCTAssertTrue(lifecycle.endPinchIfNeeded())
+        XCTAssertFalse(lifecycle.pinchIsActive)
+    }
 }

@@ -115,10 +115,57 @@ enum DesktopSpaceSwipe: Equatable {
 }
 
 enum DesktopGestureMath {
+    enum TwoFingerIntent: Equatable {
+        case undecided
+        case scroll
+        case pinch
+    }
+
+    struct TwoFingerLifecycle {
+        var intent: TwoFingerIntent = .undecided
+        private(set) var pinchIsActive = false
+
+        mutating func beginPinchIfNeeded() -> Bool {
+            guard !pinchIsActive else { return false }
+            pinchIsActive = true
+            return true
+        }
+
+        mutating func endPinchIfNeeded() -> Bool {
+            guard pinchIsActive else { return false }
+            pinchIsActive = false
+            return true
+        }
+
+        mutating func resetIntent() {
+            intent = .undecided
+        }
+    }
+
     /// Shared by the viewer and E2E so pinch bounds are tested against the
     /// production calculation rather than a duplicate approximation.
     static func pinchScale(anchor: CGFloat, gestureScale: CGFloat) -> CGFloat {
         min(max(max(anchor, 1) * gestureScale, 1), 4)
+    }
+
+    /// Resolve two-finger ambiguity once, then lock that intent until both
+    /// recognizers finish. Translation wins over normal finger-spacing drift.
+    static func twoFingerIntent(
+        translation: CGPoint,
+        scale: CGFloat,
+        current: TwoFingerIntent = .undecided
+    ) -> TwoFingerIntent {
+        guard current == .undecided else { return current }
+        let pan = hypot(translation.x, translation.y)
+        let scaleDelta = abs(log(max(Double(scale), 0.01)))
+        let pinchSignal = CGFloat(scaleDelta * 120)
+        if scaleDelta >= 0.08, pinchSignal > max(8, pan * 1.25) {
+            return .pinch
+        }
+        if pan >= 8, scaleDelta < 0.10 || pan >= pinchSignal {
+            return .scroll
+        }
+        return .undecided
     }
 }
 
@@ -175,7 +222,7 @@ struct DesktopInputSurface: UIViewRepresentable {
         let selectMoveSlop: CGFloat = 28
 
         private var twoLast: CGPoint = .zero
-        private var pinchBegan = false
+        private var twoFinger = DesktopGestureMath.TwoFingerLifecycle()
         private var longSent = false
         private var threeFired = false
         weak var pinch: UIPinchGestureRecognizer?
@@ -324,17 +371,21 @@ struct DesktopInputSurface: UIViewRepresentable {
         }
 
         @objc func handleTwo(_ g: UIPanGestureRecognizer) {
-            if g.state == .began { oneFingerCancelAll() }
-            // If fingers are clearly pinching, don't emit scroll.
-            if let pinch, pinch.state == .began || pinch.state == .changed,
-               abs(pinch.scale - 1) > 0.04 {
-                return
-            }
             let p = g.translation(in: g.view)
             switch g.state {
             case .began:
+                oneFingerCancelAll()
+                // Pinch may receive `.began` first and already lock the intent.
+                let pinchActive = pinch?.state == .began || pinch?.state == .changed
+                if !pinchActive { twoFinger.resetIntent() }
                 twoLast = p
             case .changed:
+                twoFinger.intent = DesktopGestureMath.twoFingerIntent(
+                    translation: p,
+                    scale: pinch?.scale ?? 1,
+                    current: twoFinger.intent
+                )
+                guard twoFinger.intent == .scroll else { return }
                 let dx = p.x - twoLast.x
                 let dy = p.y - twoLast.y
                 twoLast = p
@@ -342,7 +393,7 @@ struct DesktopInputSurface: UIViewRepresentable {
                     onTwoFingerScroll?(dx, dy)
                 }
             default:
-                twoLast = .zero
+                resetTwoFingerIntentIfFinished()
             }
         }
 
@@ -366,25 +417,40 @@ struct DesktopInputSurface: UIViewRepresentable {
         @objc func handlePinch(_ g: UIPinchGestureRecognizer) {
             if g.state == .began { oneFingerCancelAll() }
             let loc = g.location(in: g.view)
+            let translation = twoPan?.translation(in: g.view) ?? .zero
             switch g.state {
-            case .began:
-                if abs(g.scale - 1) < 0.03 { return }
-                pinchBegan = true
-                onPinch?(g.scale, loc, g.state)
-            case .changed:
-                if !pinchBegan {
-                    if abs(g.scale - 1) < 0.04 { return }
-                    pinchBegan = true
+            case .began, .changed:
+                twoFinger.intent = DesktopGestureMath.twoFingerIntent(
+                    translation: translation,
+                    scale: g.scale,
+                    current: twoFinger.intent
+                )
+                guard twoFinger.intent == .pinch else { return }
+                if twoFinger.beginPinchIfNeeded() {
+                    onPinch?(g.scale, loc, .began)
+                } else {
+                    onPinch?(g.scale, loc, .changed)
                 }
-                onPinch?(g.scale, loc, g.state)
             case .ended, .cancelled, .failed:
-                if pinchBegan {
-                    pinchBegan = false
+                if twoFinger.endPinchIfNeeded() {
                     onPinch?(g.scale, loc, g.state)
                 }
+                resetTwoFingerIntentIfFinished()
             default:
                 break
             }
+        }
+
+        private func resetTwoFingerIntentIfFinished() {
+            let active: (UIGestureRecognizer.State) -> Bool = {
+                $0 == .began || $0 == .changed
+            }
+            guard !active(twoPan?.state ?? .possible),
+                  !active(pinch?.state ?? .possible) else { return }
+            twoFinger.resetIntent()
+            twoLast = .zero
+            // Do not end pinch here. Pan's `.ended` callback may run before
+            // Pinch's `.ended`; only handlePinch may finish that lifecycle.
         }
 
         func gestureRecognizer(

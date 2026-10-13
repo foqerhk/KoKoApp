@@ -31,6 +31,7 @@ final class RE2DesktopSession: ObservableObject {
     private(set) var debugVideoKeyFrames: Int = 0
     private(set) var debugVideoDeltaFrames: Int = 0
     private(set) var debugAssemblerPeak: String = "-"
+    private(set) var debugFullVideoReconnects: Int = 0
     var decoderLastError: String { decoder.lastError }
     var decoderBackend: String { decoder.lastSessionBackend }
 
@@ -147,6 +148,8 @@ final class RE2DesktopSession: ObservableObject {
     /// Full WSS Noise re-handshake budget (desync → idle timeout + dead input).
     private var wssNoiseRecoverCount = 0
     private var lastWSSNoiseRecoverAt: Date?
+    /// Prevent duplicate full reconnect tasks while consecutive keepalive ticks see one stall.
+    private var videoStallReconnectScheduled = false
     /// Throttle keyframe asks while a frozen picture is on screen.
     private var lastKeyframeAskAt: Date?
     /// Agent cursor heartbeat is authenticated and arrives even when a static
@@ -309,6 +312,7 @@ final class RE2DesktopSession: ObservableObject {
         wssSoftReopenCount = 0
         wssNoiseRecoverCount = 0
         lastWSSNoiseRecoverAt = nil
+        videoStallReconnectScheduled = false
         lastKeyframeAskAt = nil
         lastCursorHeartbeatAt = nil
         remoteCursorEpoch = 0
@@ -2247,7 +2251,9 @@ final class RE2DesktopSession: ObservableObject {
     }
 
     /// Wi‑Fi↔蜂窝 / 内网↔跨网：清掉粘性路径，整链 BIND→探 LAN→UDP/WSS→OPEN。
-    private func reconnectAfterNetworkChange() async {
+    private func reconnectAfterNetworkChange(
+        status reconnectStatus: String = String(localized: "Network changed — reconnecting…")
+    ) async {
         guard let profile = paired, profile.canReconnect else { return }
         if networkReconnectInFlight {
             // The running attempt may sit on sockets from the previous network (or ones iOS
@@ -2263,7 +2269,10 @@ final class RE2DesktopSession: ObservableObject {
         while true {
             networkReconnectRerun = false
             attempts += 1
-            let ok = await runNetworkReconnect(profile: paired ?? profile)
+            let ok = await runNetworkReconnect(
+                profile: paired ?? profile,
+                status: reconnectStatus
+            )
             if ok { return }
             let active = UIApplication.shared.applicationState == .active
             guard autoReconnect, active, paired?.canReconnect == true, attempts < 4 else { return }
@@ -2280,7 +2289,7 @@ final class RE2DesktopSession: ObservableObject {
 
     /// One full reconnect after a path change. On failure leaves `phase == .failed` so the
     /// next path change / foreground can start another one (a stuck `.binding` blocked both).
-    private func runNetworkReconnect(profile: PairedDesktop) async -> Bool {
+    private func runNetworkReconnect(profile: PairedDesktop, status reconnectStatus: String) async -> Bool {
         awaitingNetworkRestore = false
         autoReconnect = true
         // Force re-evaluation of LAN vs relay (don't sticky-WSS across networks).
@@ -2288,7 +2297,7 @@ final class RE2DesktopSession: ObservableObject {
         cleared.lastMediaPath = nil
         paired = cleared
         lanUpgradeAttempted = false
-        statusText = String(localized: "Network changed — reconnecting…")
+        statusText = reconnectStatus
         do {
             try await reconnect(profile: cleared, accessPassword: accessPassword)
             RE2Log.info("network reconnect OK path=\(pathLabel)")
@@ -2574,6 +2583,12 @@ final class RE2DesktopSession: ObservableObject {
                 "session_id": sessionID, "reason": "client"
             ]), reliable: true)
         }
+    }
+
+    /// Device E2E hook: exercise the same full-reconnect fallback used after
+    /// video-only recovery is exhausted without waiting through both budgets.
+    func e2eForceFullVideoReconnect() {
+        scheduleFullReconnectAfterVideoStall(reason: "E2E forced recovery exhaustion")
     }
 
     func refreshDisplays() {
@@ -4304,8 +4319,13 @@ final class RE2DesktopSession: ObservableObject {
     /// Re-OPEN on WSS with hard-capped size after "kbps>0 but no decode" stall.
     private func reopenDesktopRelaySafe() async {
         guard useWSSTunnel, !isRecoveringWSS, phase == .streaming || phase == .openingDesktop else { return }
+        guard wssSoftReopenCount < 2 else {
+            scheduleFullReconnectAfterVideoStall(reason: "relay-safe reopen budget exhausted")
+            return
+        }
         isRecoveringWSS = true
         defer { isRecoveringWSS = false }
+        wssSoftReopenCount += 1
         recvWithoutDecodeWindows = 0
         RE2Log.error("WSS relay-safe reopen — traffic without decode (torn multi-part frames)")
         statusText = String(localized: "Reconnecting video…")
@@ -4351,7 +4371,8 @@ final class RE2DesktopSession: ObservableObject {
         guard let profile = paired else { return }
         if let last = lastWSSNoiseRecoverAt, Date().timeIntervalSince(last) < 25 { return }
         guard wssNoiseRecoverCount < 2 else {
-            RE2Log.error("WSS Noise recover budget exhausted — stay frozen (reconnect manually)")
+            RE2Log.error("WSS Noise recover budget exhausted — full session reconnect")
+            scheduleFullReconnectAfterVideoStall(reason: "WSS Noise recover budget exhausted")
             return
         }
         isRecoveringWSS = true
@@ -4402,7 +4423,35 @@ final class RE2DesktopSession: ObservableObject {
             qualityChangeStartedAt = nil
             RE2Log.error("WSS Noise recover failed: \(error)")
             lastError = error.localizedDescription
-            statusText = String(localized: "Connected — video stalled")
+            scheduleFullReconnectAfterVideoStall(reason: "WSS Noise recover failed")
+        }
+    }
+
+    /// Video-only recovery could not repaint. Rebuild signaling, Noise and desktop
+    /// ownership rather than leaving a stale picture that requires leaving the viewer.
+    private func scheduleFullReconnectAfterVideoStall(reason: String) {
+        guard !videoStallReconnectScheduled,
+              autoReconnect,
+              paired?.canReconnect == true,
+              UIApplication.shared.applicationState == .active,
+              !suspendedForBackground else { return }
+        videoStallReconnectScheduled = true
+        RE2Log.error("video recovery exhausted (\(reason)) — schedule full session reconnect")
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            defer { self.videoStallReconnectScheduled = false }
+            while self.isRecoveringWSS, !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 100_000_000)
+            }
+            guard !Task.isCancelled,
+                  self.autoReconnect,
+                  self.paired?.canReconnect == true,
+                  UIApplication.shared.applicationState == .active else { return }
+            self.debugFullVideoReconnects += 1
+            self.statusText = String(localized: "Video stalled — reconnecting…")
+            await self.reconnectAfterNetworkChange(
+                status: String(localized: "Video stalled — reconnecting…")
+            )
         }
     }
 
@@ -4537,6 +4586,10 @@ final class RE2DesktopSession: ObservableObject {
                 }
                 if kbpsNow > 50 {
                     recvWithoutDecodeWindows += 1
+                    if useWSSTunnel, !qualityChangeAwaitingPaint,
+                       recvWithoutDecodeWindows >= 5 {
+                        Task { await self.reopenDesktopRelaySafe() }
+                    }
                 } else {
                     recvWithoutDecodeWindows = 0
                 }
@@ -4823,6 +4876,10 @@ final class RE2DesktopSession: ObservableObject {
                         self.frameImage = image
                         self.frameEpoch &+= 1
                         self.lastDecodedAt = Date()
+                        // A real repaint proves the current recovery generation is healthy.
+                        self.wssSoftReopenCount = 0
+                        self.wssNoiseRecoverCount = 0
+                        self.lastWSSNoiseRecoverAt = nil
                         self.debugFramesDecoded += 1
                         self.stats.noteDecoded()
                         // Only clear when paint catches the *requested* rung — leftover

@@ -98,6 +98,9 @@ enum RE2E2EAutoConnect {
         let testChat = args.contains("-RE2E2EChat")
             || env["KOKO_RE2_TEST_CHAT"] == "1"
             || reqFlag(req, "testChat")
+        let testStallReconnect = args.contains("-RE2E2EStallReconnect")
+            || env["KOKO_RE2_TEST_STALL_RECONNECT"] == "1"
+            || reqFlag(req, "testStallReconnect")
         // Data channel only (stored desktop, no video); with -RE2E2EForce takes over.
         let chatOnly = args.contains("-RE2E2EChatOnly")
             || env["KOKO_RE2_CHAT_ONLY"] == "1"
@@ -126,7 +129,8 @@ enum RE2E2EAutoConnect {
             "test16K": test16K,
             "testLife": testLife,
             "testExternalLife": testExternalLife,
-            "testDispSwitch": testDispSwitch
+            "testDispSwitch": testDispSwitch,
+            "testStallReconnect": testStallReconnect
         ])
 
         Task { @MainActor in
@@ -145,7 +149,8 @@ enum RE2E2EAutoConnect {
                 "test16K": test16K,
                 "testLife": testLife,
                 "testExternalLife": testExternalLife,
-                "testDispSwitch": testDispSwitch
+                "testDispSwitch": testDispSwitch,
+                "testStallReconnect": testStallReconnect
             ]
             defer { write(result) }
 
@@ -293,6 +298,39 @@ enum RE2E2EAutoConnect {
                 return
             }
             write(result)
+
+            if testStallReconnect {
+                guard forceWSS else {
+                    result["error"] = "testStallReconnect requires forceWSS"
+                    return
+                }
+                result["phase"] = "stallReconnect"
+                write(result)
+                let reconnectsBefore = session.debugFullVideoReconnects
+                let triggeredAt = Date()
+                session.e2eForceFullVideoReconnect()
+                var recovered = false
+                let deadline = Date().addingTimeInterval(70)
+                while Date() < deadline {
+                    let repainted = session.lastDecodedAt.map { $0 >= triggeredAt } ?? false
+                    if session.debugFullVideoReconnects > reconnectsBefore,
+                       session.phase == .streaming,
+                       session.pathLabel.contains("WSS"),
+                       repainted {
+                        recovered = true
+                        break
+                    }
+                    try? await Task.sleep(nanoseconds: 250_000_000)
+                }
+                result["stallReconnectOK"] = recovered
+                result["stallReconnectCount"] = session.debugFullVideoReconnects - reconnectsBefore
+                result["stallReconnectPhase"] = String(describing: session.phase)
+                result["stallReconnectPath"] = session.pathLabel
+                if !recovered {
+                    result["error"] = "full video-stall reconnect did not repaint phase=\(session.phase) path=\(session.pathLabel)"
+                    return
+                }
+            }
 
             if testChat, let desk = session.currentPaired {
                 let framesBefore = session.frameEpoch
